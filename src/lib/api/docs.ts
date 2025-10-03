@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from '../supabase';
 import { friendlyError, err } from './errors';
 import { ID } from './types';
 

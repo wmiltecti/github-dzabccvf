@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from '../supabase';
 import { Address, ID, PropertyPayload, PropertyTitlePayload } from './types';
 import { friendlyError, err } from './errors';
 import { createAddress } from './address';

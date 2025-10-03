@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isConfigured: boolean;
+  isSupabaseHealthy: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isConfigured] = useState(isSupabaseConfigured());
+  const [isSupabaseHealthy, setIsSupabaseHealthy] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -39,11 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           if (error) {
             console.error('Session error:', error);
+            setIsSupabaseHealthy(false);
             // Clear invalid session data
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
           } else {
+            setIsSupabaseHealthy(true);
             setSession(session);
             setUser(session?.user ?? null);
           }
@@ -51,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setIsSupabaseHealthy(false);
           // Clear any corrupted session data
           await supabase.auth.signOut();
           setSession(null);
@@ -223,6 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     isConfigured,
+    isSupabaseHealthy,
     signIn,
     signUp,
     signOut,

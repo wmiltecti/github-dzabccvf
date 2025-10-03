@@ -1,126 +1,149 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
-import { upsertParticipant } from '../../lib/api/process';
-import { supabase } from '../../lib/supabase';
 import { FileCheck, ArrowLeft, Send, Users, Home, Building, CheckCircle, AlertTriangle } from 'lucide-react';
-import { linkProperty, getParticipants } from "../../lib/api/process";
 
+// use o mesmo client do restante do app
+import { supabase } from '../../lib/supabase';
+
+// Services centralizados
+import { linkProperty, getParticipants, linkActivity } from '../../lib/api/process';
 
 export default function RevisaoPage() {
   const navigate = useNavigate();
-  const { 
+  const {
     processId,
     propertyId,
     participants,
     property,
     titles,
     atividadeId,
-    reset
+    reset,
   } = useInscricaoStore();
-  
+
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-  if (!processId) {
-    alert('Erro: Processo não encontrado');
-    return;
-  }
-
-  setSubmitting(true);
-  try {
-    // 0) Usuário atual (UUID para comparar com created_by, perfis etc.)
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) throw new Error('Usuário não autenticado');
-
-    // 1) Vincula imóvel ao processo (filtra por id = bigint)
-    if (propertyId) {
-      const { error: linkError } = await linkProperty(processId, propertyId);
-      if (linkError) throw new Error('Erro ao vincular imóvel: ' + linkError.message);
+    if (!processId) {
+      alert('Erro: Processo não encontrado');
+      return;
     }
 
-    // 2) Valida participantes direto no BD (nada de re-upsert aqui)
-    const partsRes = await getParticipants(processId);
-    if (partsRes.error) throw new Error(partsRes.error.message);
-    const parts = partsRes.data || [];
-    const hasReq = parts.some(p => (p.role ?? '').toUpperCase() === 'REQUERENTE');
-    const procuradorSemProc = parts.some(p => (p.role ?? '').toUpperCase() === 'PROCURADOR' && !p.procuracao_file_id);
-    if (!hasReq) throw new Error('É obrigatório ter 1 Requerente.');
-    if (procuradorSemProc) throw new Error('Procurador exige upload da procuração (PDF).');
+    setSubmitting(true);
+    try {
+      // 0) Usuário atual (UUID p/ comparar com created_by)
+      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !user) throw new Error('Usuário não autenticado');
 
-    // 3) Confere processo (usa id bigint; compara dono com UUID)
-    const { data: proc, error: gErr } = await supabase
-      .from('processes')
-      .select('id, created_by, property_id, atividade_id, status')
-      .eq('id', processId)                    // ✅ bigint
-      .single();
-    if (gErr) throw new Error(gErr.message);
+      // 1) Vincula imóvel ao processo (id bigint)
+      if (propertyId) {
+        const { error: linkError } = await linkProperty(processId, propertyId);
+        if (linkError) throw new Error('Erro ao vincular imóvel: ' + linkError.message);
+      }
 
-    if (proc.created_by !== user.id) {       // ✅ compara UUID com UUID
-      throw new Error('Você não é o criador deste processo.');
+      // 2) Valida participantes no BD
+      const partsRes = await getParticipants(processId);
+      if (partsRes.error) throw new Error(partsRes.error.message);
+      const parts = partsRes.data || [];
+      const hasReq = parts.some((p: any) => (p.role ?? '').toUpperCase() === 'REQUERENTE');
+      const procuradorSemProc = parts.some(
+        (p: any) => (p.role ?? '').toUpperCase() === 'PROCURADOR' && !p.procuracao_file_id
+      );
+      if (!hasReq) throw new Error('É obrigatório ter 1 Requerente.');
+      if (procuradorSemProc) throw new Error('Procurador exige upload da procuração (PDF).');
+
+      // 3) Carrega processo (bigint id) p/ checar dono e campos
+      let { data: proc, error: gErr } = await supabase
+        .from('license_processes')
+        .select('id, user_id, company_id, activity, status')
+        .eq('id', processId)
+        .single();
+      if (gErr) throw new Error(gErr.message);
+
+      if (proc.user_id !== user.id) {
+        throw new Error('Você não é o criador deste processo.');
+      }
+      if (!proc.company_id) throw new Error('Empresa não vinculada ao processo.');
+
+      // 4) Se a atividade está no store mas ainda não foi gravada no BD, grava agora
+      if (!proc.activity && atividadeId) {
+        const { error: linkActErr } = await linkActivity(processId, atividadeId);
+        if (linkActErr) throw new Error('Erro ao vincular atividade: ' + linkActErr.message);
+
+        // recarrega o processo após gravar a atividade
+        const refetch = await supabase
+          .from('license_processes')
+          .select('id, user_id, company_id, activity, status')
+          .eq('id', processId)
+          .single();
+        if (refetch.error) throw new Error(refetch.error.message);
+        proc = refetch.data;
+      }
+
+      if (!proc.activity) throw new Error('Atividade não selecionada.');
+
+      // 5) Atualiza status do processo (evite license_processes aqui)
+      const { error: updErr } = await supabase
+        .from('license_processes')
+        .update({
+          status: 'submitted',
+          progress: 25,
+        })
+        .eq('id', processId);
+      if (updErr) throw new Error('Erro ao finalizar inscrição: ' + updErr.message);
+
+      alert('Inscrição submetida com sucesso!');
+      reset();
+      navigate('/');
+    } catch (error) {
+      console.error('Error submitting inscription:', error);
+      alert('Erro ao submeter inscrição: ' + (error as Error).message);
+    } finally {
+      setSubmitting(false);
     }
-    if (!proc.property_id) throw new Error('Imóvel não vinculado ao processo.');
-    if (!proc.atividade_id) throw new Error('Atividade não selecionada.');
-
-    // 4) Atualiza status do processo (use a tabela correta; evite license_processes)
-    const { error: updErr } = await supabase
-      .from('processes')
-      .update({
-        status: 'INSCRICAO_CONCLUIDA',
-        // se quiser registrar a origem:
-        // created_via: 'INSCRICAO',
-        // progress: 25,
-      })
-      .eq('id', processId);                   // ✅ bigint
-    if (updErr) throw new Error('Erro ao finalizar inscrição: ' + updErr.message);
-
-    alert('Inscrição submetida com sucesso!');
-    reset();
-    navigate('/');
-  } catch (error) {
-    console.error('Error submitting inscription:', error);
-    alert('Erro ao submeter inscrição: ' + (error as Error).message);
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   const handleBack = () => {
     navigate('/inscricao/empreendimento');
   };
 
-  const mockActivity = atividadeId ? {
-    id: atividadeId,
-    code: '1.1',
-    name: 'Extração de areia',
-    description: 'Extração de areia em leito de rio'
-  } : null;
+  const mockActivity = atividadeId
+    ? {
+        id: atividadeId,
+        code: '1.1',
+        name: 'Extração de areia',
+        description: 'Extração de areia em leito de rio',
+      }
+    : null;
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'REQUERENTE': return 'Requerente';
-      case 'PROCURADOR': return 'Procurador';
-      case 'RESP_TECNICO': return 'Responsável Técnico';
-      default: return role;
+      case 'REQUERENTE':
+        return 'Requerente';
+      case 'PROCURADOR':
+        return 'Procurador';
+      case 'RESP_TECNICO':
+        return 'Responsável Técnico';
+      default:
+        return role;
     }
   };
 
-  const allStepsComplete = participants.length > 0 && 
-                          participants.some(p => p.role === 'REQUERENTE') &&
-                          propertyId &&
-                          atividadeId;
+  const allStepsComplete =
+    participants.length > 0 &&
+    participants.some((p) => p.role === 'REQUERENTE') &&
+    !!propertyId &&
+    !!atividadeId;
 
   return (
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Revisão e Submissão</h2>
-        <p className="text-gray-600">
-          Revise todas as informações antes de submeter o processo para análise.
-        </p>
+        <p className="text-gray-600">Revise todas as informações antes de submeter o processo para análise.</p>
       </div>
 
       <div className="space-y-8">
-        {/* Process Summary */}
+        {/* Resumo */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-medium text-blue-900 mb-4 flex items-center gap-2">
             <FileCheck className="w-5 h-5" />
@@ -138,13 +161,13 @@ export default function RevisaoPage() {
           </div>
         </div>
 
-        {/* Participants Review */}
+        {/* Participantes */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Users className="w-5 h-5" />
             Participantes ({participants.length})
           </h3>
-          
+
           {participants.length > 0 ? (
             <div className="space-y-3">
               {participants.map((participant, index) => (
@@ -165,9 +188,7 @@ export default function RevisaoPage() {
                       <p className="text-sm text-gray-600">
                         {participant.type === 'PF' ? participant.cpf : participant.cnpj}
                       </p>
-                      {participant.email && (
-                        <p className="text-sm text-gray-500">{participant.email}</p>
-                      )}
+                      {participant.email && <p className="text-sm text-gray-500">{participant.email}</p>}
                     </div>
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   </div>
@@ -182,13 +203,13 @@ export default function RevisaoPage() {
           )}
         </div>
 
-        {/* Property Review */}
+        {/* Imóvel */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Home className="w-5 h-5" />
             Imóvel
           </h3>
-          
+
           {property && propertyId ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
@@ -244,13 +265,13 @@ export default function RevisaoPage() {
           )}
         </div>
 
-        {/* Activity Review */}
+        {/* Atividade */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Building className="w-5 h-5" />
             Atividade do Empreendimento
           </h3>
-          
+
           {mockActivity ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
@@ -274,12 +295,12 @@ export default function RevisaoPage() {
           )}
         </div>
 
-        {/* Validation Summary */}
-        <div className={`rounded-lg p-4 ${
-          allStepsComplete 
-            ? 'bg-green-50 border border-green-200' 
-            : 'bg-red-50 border border-red-200'
-        }`}>
+        {/* Validação final */}
+        <div
+          className={`rounded-lg p-4 ${
+            allStepsComplete ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+          }`}
+        >
           <div className="flex items-start space-x-2">
             {allStepsComplete ? (
               <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
@@ -297,9 +318,7 @@ export default function RevisaoPage() {
               ) : (
                 <>
                   <h4 className="font-medium text-red-900">Inscrição incompleta</h4>
-                  <p className="text-sm mt-1 text-red-800">
-                    Complete todas as etapas antes de submeter a inscrição.
-                  </p>
+                  <p className="text-sm mt-1 text-red-800">Complete todas as etapas antes de submeter a inscrição.</p>
                 </>
               )}
             </div>
@@ -307,7 +326,7 @@ export default function RevisaoPage() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navegação */}
       <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
         <button
           onClick={handleBack}
@@ -316,7 +335,7 @@ export default function RevisaoPage() {
           <ArrowLeft className="w-4 h-4" />
           Voltar: Empreendimento
         </button>
-        
+
         <button
           onClick={handleSubmit}
           disabled={!allStepsComplete || submitting}

@@ -36,7 +36,7 @@ import {
 import GeoVisualization from './components/geo/GeoVisualization';
 
 function AppContent() {
-  const { user, userMetadata, signOut, loading, isConfigured } = useAuth();
+  const { user, userMetadata, signOut, loading, isConfigured, isSupabaseHealthy } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -57,11 +57,11 @@ function AppContent() {
 
   // Load processes when user is authenticated
   React.useEffect(() => {
-    if (user && isConfigured) {
+    if (user && isConfigured && isSupabaseHealthy) {
       loadProcesses();
       loadStats();
     }
-  }, [user, searchTerm, filterStatus, isConfigured]);
+  }, [user, searchTerm, filterStatus, isConfigured, isSupabaseHealthy]);
 
   const loadProcesses = async () => {
     try {
@@ -161,16 +161,21 @@ function AppContent() {
   }
 
   // Show configuration error if Supabase is not configured
-  if (!isConfigured) {
+  if (!isConfigured || !isSupabaseHealthy) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-2xl mx-4">
           <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertTriangle className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema Não Configurado</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {!isConfigured ? 'Sistema Não Configurado' : 'Erro de Conexão'}
+          </h1>
           <p className="text-gray-600 mb-4">
-            As variáveis de ambiente do Supabase não estão configuradas corretamente.
+            {!isConfigured 
+              ? 'As variáveis de ambiente do Supabase não estão configuradas corretamente.'
+              : 'Não foi possível conectar ao Supabase. Verifique se as credenciais estão corretas e se o serviço está disponível.'
+            }
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
             <h3 className="font-medium text-blue-900 mb-3">📋 Passo a passo para configurar:</h3>
@@ -181,6 +186,7 @@ function AppContent() {
               <li><strong>4.</strong> Copie a "Project URL" e "anon public" key</li>
               <li><strong>5.</strong> Clique no botão "Connect to Supabase" no canto superior direito desta tela</li>
               <li><strong>6.</strong> Cole suas credenciais reais do Supabase</li>
+              {!isConfigured && <li><strong>7.</strong> Certifique-se de que o projeto Supabase está ativo e acessível</li>}
             </ol>
           </div>
           <button
@@ -572,7 +578,7 @@ function AppContent() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredLicenses.filter(license => license.created_via === 'inscription').map((license) => (
+                  {processes.filter(license => license.created_via === 'inscription').map((license) => (
                     <tr 
                       key={license.id} 
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -609,7 +615,7 @@ function AppContent() {
                       </td>
                     </tr>
                   ))}
-                  {filteredLicenses.filter(license => license.created_via === 'inscription').length === 0 && (
+                  {processes.filter(license => license.created_via === 'inscription').length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center">
                         <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
