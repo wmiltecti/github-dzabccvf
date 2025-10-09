@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { X, Save, Calculator, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -158,7 +159,7 @@ export default function BillingConfigurationForm({
 
     } catch (error) {
       console.error('Error loading dropdown data:', error);
-      alert('Erro ao carregar dados: ' + (error as Error).message);
+      toast.error('Erro ao carregar dados: ' + (error as Error).message);
     }
   };
 
@@ -174,19 +175,19 @@ export default function BillingConfigurationForm({
 
   const validateForm = () => {
     if (!formData.activity_id) {
-      alert('Selecione uma atividade');
+      toast.error('Selecione uma atividade');
       return false;
     }
     if (!formData.license_type_id) {
-      alert('Selecione um tipo de licença');
+      toast.error('Selecione um tipo de licença');
       return false;
     }
     if (!formData.reference_unit_id) {
-      alert('Selecione uma unidade de referência');
+      toast.error('Selecione uma unidade de referência');
       return false;
     }
     if (!formData.unit_value || parseFloat(formData.unit_value) <= 0) {
-      alert('Informe um valor base válido');
+      toast.error('Informe um valor base válido');
       return false;
     }
     
@@ -196,7 +197,7 @@ export default function BillingConfigurationForm({
       const statePerc = parseFloat(formData.state_percentage) || 0;
       
       if (municipalityPerc + statePerc !== 100) {
-        alert('A soma dos percentuais deve ser igual a 100%');
+        toast.error('A soma dos percentuais deve ser igual a 100%');
         return false;
       }
     }
@@ -231,7 +232,7 @@ export default function BillingConfigurationForm({
           .eq('id', item.id);
         
         if (error) throw error;
-        alert('Configuração atualizada com sucesso!');
+        toast.success('Configuração atualizada com sucesso!');
       } else {
         const { error } = await supabase
           .from('billing_configurations')
@@ -243,14 +244,14 @@ export default function BillingConfigurationForm({
           }
           throw error;
         }
-        alert('Configuração criada com sucesso!');
+        toast.success('Configuração criada com sucesso!');
       }
 
       onSave();
       onClose();
     } catch (error) {
       console.error('Error saving billing configuration:', error);
-      alert('Erro ao salvar configuração: ' + (error as Error).message);
+      toast.error('Erro ao salvar configuração: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }

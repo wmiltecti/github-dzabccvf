@@ -42,10 +42,12 @@ export interface ActivityLog {
 export class CollaborationService {
   // Obter colaboradores de um processo
   static async getProcessCollaborators(processId: string): Promise<Collaborator[]> {
-    // First, get the collaborators
-    const { data: collaborators, error } = await supabase
+    const { data, error } = await supabase
       .from('process_collaborators')
-      .select('*')
+      .select(`
+        *,
+        user_profiles(name, email, organization)
+      `)
       .eq('process_id', processId)
       .eq('status', 'accepted')
       .order('invited_at', { ascending: false });
@@ -55,32 +57,7 @@ export class CollaborationService {
       throw error;
     }
 
-    if (!collaborators || collaborators.length === 0) {
-      return [];
-    }
-
-    // Get unique user IDs
-    const userIds = [...new Set(collaborators.map(c => c.user_id))];
-
-    // Fetch user profiles separately
-    const { data: profiles, error: profilesError } = await supabase
-      .from('user_profiles')
-      .select('user_id, name, email, organization')
-      .in('user_id', userIds);
-
-    if (profilesError) {
-      console.error('Error fetching user profiles:', profilesError);
-      // Return collaborators without profile data if profiles fail
-      return collaborators.map(c => ({ ...c, user_profiles: undefined }));
-    }
-
-    // Merge profiles with collaborators
-    const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-    
-    return collaborators.map(collaborator => ({
-      ...collaborator,
-      user_profiles: profilesMap.get(collaborator.user_id)
-    }));
+    return data || [];
   }
 
   // Convidar colaborador

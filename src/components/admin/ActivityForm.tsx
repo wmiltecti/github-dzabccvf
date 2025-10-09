@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -157,7 +158,7 @@ export default function ActivityForm({
 
     } catch (error) {
       console.error('Error loading dropdown data:', error);
-      alert('Erro ao carregar dados: ' + (error as Error).message);
+      toast.error('Erro ao carregar dados: ' + (error as Error).message);
     }
   };
 
@@ -261,23 +262,23 @@ export default function ActivityForm({
 
   const validateForm = () => {
     if (!formData.code) {
-      alert('Código da atividade é obrigatório');
+      toast.error('Código da atividade é obrigatório');
       return false;
     }
     if (!formData.name) {
-      alert('Nome da atividade é obrigatório');
+      toast.error('Nome da atividade é obrigatório');
       return false;
     }
     if (formData.license_types.length === 0) {
-      alert('Selecione pelo menos um tipo de licença');
+      toast.error('Selecione pelo menos um tipo de licença');
       return false;
     }
     if (!formData.enterprise_size_id) {
-      alert('Selecione o porte do empreendimento');
+      toast.error('Selecione o porte do empreendimento');
       return false;
     }
     if (!formData.pollution_potential_id) {
-      alert('Selecione o potencial poluidor');
+      toast.error('Selecione o potencial poluidor');
       return false;
     }
     
@@ -286,7 +287,7 @@ export default function ActivityForm({
       const start = parseFloat(formData.range_start);
       const end = parseFloat(formData.range_end);
       if (start >= end) {
-        alert('A faixa inicial deve ser menor que a faixa final');
+        toast.error('A faixa inicial deve ser menor que a faixa final');
         return false;
       }
     }
@@ -331,7 +332,7 @@ export default function ActivityForm({
         }
         
         activityId = data.id;
-        alert('Atividade atualizada com sucesso!');
+        toast.success('Atividade atualizada com sucesso!');
       } else {
         // Create new activity
         const { data, error } = await supabase
@@ -348,7 +349,7 @@ export default function ActivityForm({
         }
         
         activityId = data.id;
-        alert('Atividade criada com sucesso!');
+        toast.success('Atividade criada com sucesso!');
       }
 
       // Update license types relationships
@@ -395,7 +396,7 @@ export default function ActivityForm({
       onClose();
     } catch (error) {
       console.error('Error saving activity:', error);
-      alert('Erro ao salvar atividade: ' + (error as Error).message);
+      toast.error('Erro ao salvar atividade: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
