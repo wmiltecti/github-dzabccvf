@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Calendar, Building2, FileText, MapPin, Zap } from 'lucide-react';
+import { X, Upload, Calendar, Building2, FileText, MapPin } from 'lucide-react';
 
 interface NewProcessModalProps {
   isOpen: boolean;
@@ -25,43 +25,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
-
-  // Test data for each step
-  const testData = {
-    step1: {
-      licenseType: 'LP',
-      environmentalImpact: 'medio',
-      company: 'Mineração São Paulo Ltda',
-      cnpj: '12.345.678/0001-90',
-      activity: 'Extração de areia e cascalho'
-    },
-    step2: {
-      state: 'SP',
-      city: 'Campinas',
-      location: 'Rodovia Dom Pedro I, km 143, Distrito Industrial',
-      area: '25.5',
-      coordinates: '-22.9056, -47.0608'
-    },
-    step3: {
-      description: 'Empreendimento destinado à extração de areia e cascalho para construção civil, com capacidade de produção de 50.000 m³/mês. O projeto contempla área de lavra de 25,5 hectares, com sistema de drenagem e controle de particulados. Inclui instalação de britador, peneiras e sistema de lavagem do material extraído.',
-      estimatedValue: '2500000'
-    }
-  };
-
-  const fillTestData = (step: number) => {
-    switch (step) {
-      case 1:
-        setFormData(prev => ({ ...prev, ...testData.step1 }));
-        break;
-      case 2:
-        setFormData(prev => ({ ...prev, ...testData.step2 }));
-        break;
-      case 3:
-        setFormData(prev => ({ ...prev, ...testData.step3 }));
-        break;
-    }
-  };
+  const totalSteps = 4;
 
   if (!isOpen) return null;
 
@@ -80,97 +44,25 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Apenas avança para próxima etapa, não salva ainda
-    if (currentStep < totalSteps) {
-      nextStep();
-      return;
-    }
 
-    // Só salva quando estiver na última etapa (step 4)
-
-    try {
-      // Mostrar feedback visual de que está processando
-      const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = '⏳ Criando processo...';
-      }
-
-      // Submeter o processo e obter o ID do processo criado
-      const createdProcess = await onSubmit(formData);
-      
-      // Se há documentos para upload, fazer upload após criar o processo
-      if (formData.documents.length > 0 && createdProcess?.id) {
-        console.log('📁 Uploading documents for new process:', createdProcess.id);
-        
-        // Importar o DocumentService
-        const { DocumentService } = await import('../services/documentService');
-        const { useAuth } = await import('../contexts/AuthContext');
-        
-        // Obter o usuário atual
-        const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
-        
-        if (user) {
-          // Atualizar texto do botão
-          if (submitButton) {
-            submitButton.innerHTML = '📎 Enviando documentos...';
-          }
-          
-          // Upload cada documento
-          for (const file of formData.documents) {
-            try {
-              await DocumentService.uploadDocument(createdProcess.id, file, user.id);
-              console.log('✅ Document uploaded:', file.name);
-            } catch (uploadError) {
-              console.error('❌ Error uploading document:', file.name, uploadError);
-              // Continua com outros documentos mesmo se um falhar
-            }
-          }
-          
-          console.log('✅ All documents processed');
-        }
-      }
-      
-      // Mostrar mensagem de sucesso
-      const successMessage = formData.documents.length > 0 
-        ? `✅ Processo criado com sucesso! ${formData.documents.length} documento(s) anexado(s).`
-        : '✅ Processo criado com sucesso!';
-      alert(successMessage);
-      
-      // Fechar modal e resetar formulário
-      onClose();
-      setFormData({
-        licenseType: 'LP',
-        company: '',
-        cnpj: '',
-        activity: '',
-        location: '',
-        state: '',
-        city: '',
-        description: '',
-        estimatedValue: '',
-        area: '',
-        coordinates: '',
-        environmentalImpact: 'baixo',
-        documents: []
-      });
-      setCurrentStep(1);
-      
-      // Redirecionar para a tela de processos (se não estiver já)
-      // Isso será feito pelo componente pai (App.tsx) automaticamente
-      
-    } catch (error) {
-      console.error('Erro ao criar processo:', error);
-      alert('❌ Erro ao criar processo: ' + (error as Error).message);
-      
-      // Restaurar botão em caso de erro
-      const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.innerHTML = '🎯 Finalizar Cadastro do Processo';
-      }
-    }
+    await onSubmit(formData);
+    onClose();
+    setFormData({
+      licenseType: 'LP',
+      company: '',
+      cnpj: '',
+      activity: '',
+      location: '',
+      state: '',
+      city: '',
+      description: '',
+      estimatedValue: '',
+      area: '',
+      coordinates: '',
+      environmentalImpact: 'baixo',
+      documents: []
+    });
+    setCurrentStep(1);
   };
 
   const nextStep = () => {
@@ -183,18 +75,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Informações Básicas</h3>
-        <button
-          type="button"
-          onClick={() => fillTestData(1)}
-          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          title="Preencher com dados de teste"
-        >
-          <Zap className="w-4 h-4" />
-          Dados de Teste
-        </button>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900">Informações Básicas</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -276,18 +157,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Localização do Empreendimento</h3>
-        <button
-          type="button"
-          onClick={() => fillTestData(2)}
-          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          title="Preencher com dados de teste"
-        >
-          <Zap className="w-4 h-4" />
-          Dados de Teste
-        </button>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900">Localização do Empreendimento</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -393,18 +263,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep3 = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Detalhes do Projeto</h3>
-        <button
-          type="button"
-          onClick={() => fillTestData(3)}
-          className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          title="Preencher com dados de teste"
-        >
-          <Zap className="w-4 h-4" />
-          Dados de Teste
-        </button>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900">Detalhes do Projeto</h3>
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -447,15 +306,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
   const renderStep4 = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Documentação</h3>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1">
-          <span className="text-xs text-blue-700 flex items-center gap-1">
-            <Zap className="w-3 h-3" />
-            Etapa final - sem dados de teste
-          </span>
-        </div>
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900">Documentação</h3>
       
       <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
         <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -491,7 +342,6 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 <span className="text-sm text-gray-900">{file.name}</span>
               </div>
               <button
-                type="button"
                 onClick={() => {
                   setFormData(prev => ({
                     ...prev,
@@ -517,17 +367,6 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
           <li>• Planta de situação e localização</li>
           <li>• Memorial descritivo do empreendimento</li>
         </ul>
-        <div className="mt-3 pt-3 border-t border-yellow-300">
-          <p className="text-sm text-yellow-800 font-medium">
-            📋 Como finalizar o cadastro:
-          </p>
-          <ol className="text-sm text-yellow-800 mt-2 space-y-1 ml-4">
-            <li>1. Anexe os documentos obrigatórios (recomendado)</li>
-            <li>2. Clique em "Finalizar Cadastro do Processo"</li>
-            <li>3. O sistema criará o processo e retornará à lista</li>
-            <li>4. Você poderá adicionar mais documentos depois</li>
-          </ol>
-        </div>
       </div>
     </div>
   );
@@ -538,14 +377,12 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Novo Processo de Licenciamento</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Etapa {currentStep} de {totalSteps}
-            </p>
+            <h2 className="text-2xl font-bold text-gray-900">Novo Processo de Licenciamento</h2>
+            <p className="text-sm text-gray-500">Passo {currentStep} de {totalSteps}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -553,42 +390,35 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
         {/* Progress Bar */}
         <div className="px-6 py-4 bg-gray-50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Progresso</span>
-            <span className="text-sm text-gray-500">{Math.round((currentStep / totalSteps) * 100)}%</span>
-          </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
+            <div 
               className="bg-green-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            />
+            ></div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Content */}
-          <div className="p-6 max-h-[60vh] overflow-y-auto">
+        {/* Content */}
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <div className="flex-1 p-6 overflow-y-auto">
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
             {currentStep === 4 && renderStep4()}
           </div>
 
-          {/* Footer with Navigation Buttons */}
+          {/* Footer */}
           <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+            <button
+              type="button"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
+            </button>
+            
             <div className="flex space-x-3">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Anterior
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-4">
               {currentStep < totalSteps ? (
                 <button
                   type="button"
@@ -600,10 +430,9 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
               ) : (
                 <button
                   type="submit"
-                  data-submit-button
-                  className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  💾 Salvar
+                  Criar Processo
                 </button>
               )}
             </div>

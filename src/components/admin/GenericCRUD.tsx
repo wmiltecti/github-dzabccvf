@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  Filter,
-  ToggleLeft,
-  ToggleRight,
-  AlertTriangle,
-  X
-} from 'lucide-react';
+import { toast } from 'react-toastify';
+import { Plus, Search, CreditCard as Edit, Trash2, Eye, Filter, ToggleLeft, ToggleRight, AlertTriangle, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Column {
@@ -99,7 +89,7 @@ export default function GenericCRUD({
       setItems(data);
     } catch (error) {
       console.error('Error loading items:', error);
-      alert('Erro ao carregar dados: ' + (error as Error).message);
+      toast.error('Erro ao carregar dados: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -118,10 +108,10 @@ export default function GenericCRUD({
       
       await loadItems();
       setDeleteConfirm(null);
-      alert('Item excluído com sucesso!');
+      toast.success('Item excluído com sucesso!');
     } catch (error) {
       console.error('Error deleting item:', error);
-      alert('Erro ao excluir item: ' + (error as Error).message);
+      toast.error('Erro ao excluir item: ' + (error as Error).message);
     }
   };
 
@@ -137,10 +127,10 @@ export default function GenericCRUD({
       }
       
       await loadItems();
-      alert(`Item ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`);
+      toast.success(`Item ${!currentStatus ? 'ativado' : 'desativado'} com sucesso!`);
     } catch (error) {
       console.error('Error toggling active status:', error);
-      alert('Erro ao alterar status: ' + (error as Error).message);
+      toast.error('Erro ao alterar status: ' + (error as Error).message);
     }
   };
 

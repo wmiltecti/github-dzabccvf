@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Download, FileText, Map, Image, X } from 'lucide-react';
 
 interface GeoExportProps {
@@ -72,7 +73,7 @@ export default function GeoExport({ isOpen, onClose, data }: GeoExportProps) {
       onClose();
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Erro ao exportar dados: ' + (error as Error).message);
+      toast.error('Erro ao exportar dados: ' + (error as Error).message);
     } finally {
       setExporting(false);
     }

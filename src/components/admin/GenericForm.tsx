@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { X, Save, Upload, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -132,12 +133,12 @@ export default function GenericForm({
         console.log('Item created successfully:', data);
       }
 
-      alert(item?.id ? 'Item atualizado com sucesso!' : 'Item criado com sucesso!');
+      toast.success(item?.id ? 'Item atualizado com sucesso!' : 'Item criado com sucesso!');
       onSave(); // This will trigger the refresh
       onClose();
     } catch (error) {
       console.error('Error saving item:', error);
-      alert('Erro ao salvar item: ' + (error as Error).message);
+      toast.error('Erro ao salvar item: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }

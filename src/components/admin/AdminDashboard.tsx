@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import AdminLayout from './AdminLayout';
 import GenericCRUD from './GenericCRUD';
 import GenericForm from './GenericForm';
@@ -317,11 +318,19 @@ const entityConfigs = {
   }
 };
 
-export default function AdminDashboard() {
-  const [activeSection, setActiveSection] = useState('property-types');
+interface AdminDashboardProps {
+  initialSection?: string;
+}
+
+export default function AdminDashboard({ initialSection = 'property-types' }: AdminDashboardProps) {
+  const [activeSection, setActiveSection] = useState(initialSection);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  React.useEffect(() => {
+    setActiveSection(initialSection);
+  }, [initialSection]);
 
   const currentConfig = entityConfigs[activeSection as keyof typeof entityConfigs];
 
@@ -366,7 +375,7 @@ export default function AdminDashboard() {
         return `${labels[key] || key}: ${formatValue(key, value)}`;
       })
       .join('\n');
-    alert(`Detalhes do Item:\n\n${details}`);
+    toast.info(details, { autoClose: 5000 });
   };
 
   const handleFormSave = () => {

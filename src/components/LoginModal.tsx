@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { X, LogIn, UserPlus, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -38,7 +39,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       // Mostrar mensagem específica baseada no erro
       if (err.message.includes('Cadastro realizado! Verifique seu email')) {
         // Para cadastros que requerem confirmação de email
-        alert(err.message);
+        toast.success(err.message);
         onClose();
       } else {
         setError(err.message || 'Ocorreu um erro. Tente novamente.');
@@ -62,24 +63,25 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      <div className="relative login-modal rounded-lg shadow-xl w-full max-w-md">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark-header rounded-t-lg">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-white">
                 {isLogin ? 'Entrar no Sistema' : 'Criar Conta'}
               </h2>
-              <p className="text-sm text-gray-500">Sistema de Licenciamento Ambiental</p>
+              <p className="text-sm text-gray-300">Sistema de Licenciamento Ambiental</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-300 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -185,7 +187,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         {/* Demo Credentials */}
         {isLogin && (
           <div className="px-6 pb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="bg-blue-50 bg-opacity-80 border border-blue-200 rounded-lg p-3">
               <h4 className="text-sm font-medium text-blue-900 mb-2">Contas de Demonstração:</h4>
               <div className="text-xs text-blue-800 space-y-1">
                 <p><strong>Analista:</strong> ana.silva@meioambiente.gov.br / 123456</p>

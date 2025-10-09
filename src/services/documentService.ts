@@ -19,8 +19,6 @@ export class DocumentService {
       throw new Error('Process ID is required');
     }
 
-    console.log('🔍 Loading documents for process:', processId);
-
     const { data, error } = await supabase
       .from('process_documents')
       .select('*')
@@ -33,18 +31,10 @@ export class DocumentService {
       throw error;
     }
 
-    console.log('✅ Documents loaded from database:', {
-      processId,
-      count: data?.length || 0,
-      documents: data?.map(d => ({ 
-        id: d.id, 
-        file_name: d.file_name, 
-        file_path: d.file_path,
-        user_id: d.user_id 
-      })) || []
-    });
+    console.log('Documents loaded:', data?.length || 0);
 
-    return (data || []).map(doc => ({
+    // Add mock user data since we don't have user relation in documents table
+    return data.map(doc => ({
       ...doc,
       users: {
         id: 'user',
@@ -95,7 +85,7 @@ export class DocumentService {
       const newDocument: DocumentInsert = {
         user_id: userId,
         process_id: processId,
-        file_name: file.name,
+        name: file.name,
         file_size: file.size,
         file_type: file.type || 'application/octet-stream',
         file_path: uploadData.path,
@@ -146,7 +136,7 @@ export class DocumentService {
     // First, get the document with file path for storage cleanup
     const { data: existingDoc, error: checkError } = await supabase
       .from('process_documents')
-      .select('id, file_name, user_id, file_path')
+      .select('id, name, user_id, file_path')
       .eq('id', documentId)
       .single();
     
@@ -165,7 +155,7 @@ export class DocumentService {
     
     console.log('✅ Document found:', { 
       id: existingDoc.id, 
-      name: existingDoc.file_name, 
+      name: existingDoc.name, 
       owner: existingDoc.user_id,
       currentUser: user.id,
       filePath: existingDoc.file_path
@@ -234,50 +224,35 @@ export class DocumentService {
 
   static async downloadDocument(fileData: any): Promise<void> {
     try {
-      console.log('🔽 Starting download for:', {
-        id: fileData.id,
-        file_name: fileData.file_name,
-        file_path: fileData.file_path,
-        file_type: fileData.file_type
-      });
+      console.log('Starting download for:', fileData);
       
       // PRODUCTION: Download from Supabase Storage
       if (fileData.file_path) {
-        console.log('📁 Downloading from storage path:', fileData.file_path);
-        
         const { data, error } = await supabase.storage
           .from('documents')
           .download(fileData.file_path);
         
         if (error) {
           console.error('Storage download error:', error);
-          console.error('Download error details:', {
-            file_path: fileData.file_path,
-            bucket: 'documents',
-            error_code: error.message
-          });
           throw new Error(`Erro ao baixar arquivo: ${error.message}`);
         }
-        
-        console.log('✅ File downloaded from storage, creating download link');
         
         // Create download link
         const url = URL.createObjectURL(data);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileData.file_name || 'documento';
+        link.download = fileData.name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        console.log('✅ Document downloaded successfully:', fileData.file_name);
+        console.log('Document downloaded successfully:', fileData.name);
         return;
       }
       
       // Fallback: If no file_path, show error
-      console.error('❌ No file_path found in document data:', fileData);
-      throw new Error('Caminho do arquivo não encontrado. Documento pode estar corrompido.');
+      throw new Error('Caminho do arquivo não encontrado');
       
     } catch (error) {
       console.error('Error downloading document:', error);
@@ -306,8 +281,8 @@ export class DocumentService {
       }
       
       // For other file types or if download fails, show metadata
-      if (fileData.file_type?.includes('text') || fileData.file_name.endsWith('.txt')) {
-        return `Documento: ${fileData.file_name}
+      if (fileData.file_type?.includes('text') || fileData.name.endsWith('.txt')) {
+        return `Documento: ${fileData.name}
 Tipo: ${fileData.file_type}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 Enviado em: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}
@@ -317,10 +292,10 @@ Para visualizar o conteúdo completo, faça o download do arquivo.
 ID do documento: ${fileData.id}
 Processo: ${fileData.process_id}`;
       } else if (fileData.file_type?.includes('pdf')) {
-        return `Documento PDF: ${fileData.file_name}
+        return `Documento PDF: ${fileData.name}
 
 INFORMAÇÕES DO ARQUIVO:
-- Nome: ${fileData.file_name}
+- Nome: ${fileData.name}
 - Tipo: ${fileData.file_type}
 - Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 - Data: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}
@@ -331,7 +306,7 @@ Para visualizar o conteúdo completo, faça o download do arquivo.
 ID: ${fileData.id}
 Processo: ${fileData.process_id}`;
       } else if (fileData.file_type?.includes('image/')) {
-        return `Imagem: ${fileData.file_name}
+        return `Imagem: ${fileData.name}
 Tipo: ${fileData.file_type}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 
@@ -343,7 +318,7 @@ Informações do arquivo:
 - Processo: ${fileData.process_id}
 - Enviado em: ${new Date(fileData.uploaded_at).toLocaleString('pt-BR')}`;
       } else {
-        return `Arquivo: ${fileData.file_name}
+        return `Arquivo: ${fileData.name}
 Tipo: ${fileData.file_type || 'Desconhecido'}
 Tamanho: ${fileData.file_size ? (fileData.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
 

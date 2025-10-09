@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { CollaborationService, type Collaborator, type CollaborationInvite } from '../services/collaborationService';
-import { Users, UserPlus, Mail, Shield, Trash2, Edit3, Eye, Crown, AlertCircle, Check, X } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, Trash2, CreditCard as Edit3, Eye, Crown, AlertCircle, Check, X } from 'lucide-react';
 
 interface CollaborationPanelProps {
   processId: string;
@@ -50,10 +51,10 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
       setInviteEmail('');
       setShowInviteForm(false);
       loadInvites();
-      alert('Convite enviado com sucesso!');
+      toast.success('Convite enviado com sucesso!');
     } catch (error) {
       console.error('Error sending invite:', error);
-      alert('Erro ao enviar convite: ' + (error as Error).message);
+      toast.error('Erro ao enviar convite: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -65,10 +66,10 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
     try {
       await CollaborationService.removeCollaborator(processId, userId);
       loadCollaborators();
-      alert('Colaborador removido com sucesso!');
+      toast.success('Colaborador removido com sucesso!');
     } catch (error) {
       console.error('Error removing collaborator:', error);
-      alert('Erro ao remover colaborador: ' + (error as Error).message);
+      toast.error('Erro ao remover colaborador: ' + (error as Error).message);
     }
   };
 
@@ -76,10 +77,10 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
     try {
       await CollaborationService.updateCollaboratorPermission(processId, userId, newPermission);
       loadCollaborators();
-      alert('Permissão atualizada com sucesso!');
+      toast.success('Permissão atualizada com sucesso!');
     } catch (error) {
       console.error('Error updating permission:', error);
-      alert('Erro ao atualizar permissão: ' + (error as Error).message);
+      toast.error('Erro ao atualizar permissão: ' + (error as Error).message);
     }
   };
 
