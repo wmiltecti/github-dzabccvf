@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../lib/api/auth';
 import { PessoaTipo } from '../types/auth';
 
 export default function Login() {
+  const navigate = useNavigate();
   const [pessoaTipo, setPessoaTipo] = useState<PessoaTipo>('PF');
   const [tipoDeIdentificacao, setTipoDeIdentificacao] = useState<"CPF" | "CNPJ" | "PASSAPORTE" | "ID_ESTRANGEIRA">('CPF');
   const [numeroIdentificacao, setNumeroIdentificacao] = useState('');
@@ -49,6 +51,7 @@ export default function Login() {
 
       await login(pessoaTipo, credenciais);
       console.log('Login OK');
+      navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
     } finally {
