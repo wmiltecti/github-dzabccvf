@@ -7,6 +7,7 @@ import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
+import { calcularBufferComSubtracao } from '../../lib/geo/bufferCalculations';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -577,14 +578,14 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     }
   }, [contextMenu]);
 
-  const handleBufferZoneConfirm = (baseLayerId: string, referenceLayerId: string) => {
+  const handleBufferZoneConfirm = (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
     setSelectedBaseLayer(baseLayerId);
     setSelectedReferenceLayer(referenceLayerId);
     setShowBufferZoneSelector(false);
-    iniciarCalculoZonaAmortecimento(baseLayerId, referenceLayerId);
+    iniciarCalculoZonaAmortecimento(baseLayerId, referenceLayerId, distanciaMetros);
   };
 
-  const iniciarCalculoZonaAmortecimento = (baseLayerId: string, referenceLayerId: string) => {
+  const iniciarCalculoZonaAmortecimento = (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
     const baseLayer = layers.find(l => l.id === baseLayerId);
     const referenceLayer = layers.find(l => l.id === referenceLayerId);
 
@@ -596,8 +597,25 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     console.log('🎯 Iniciando cálculo de zona de amortecimento');
     console.log('📍 Camada Base:', baseLayer.name, '- Features:', baseLayer.featureCount);
     console.log('📍 Camada Referência:', referenceLayer.name, '- Features:', referenceLayer.featureCount);
+    console.log('📏 Distância:', distanciaMetros, 'metros');
 
-    alert(`Cálculo iniciado!\n\nCamada Base: ${baseLayer.name}\nCamada Referência: ${referenceLayer.name}\n\nO buffer será calculado e as áreas de sobreposição serão subtraídas.`);
+    try {
+      const bufferLayer = calcularBufferComSubtracao(baseLayer, referenceLayer, distanciaMetros);
+
+      console.log('✅ Zona de amortecimento calculada com sucesso!');
+      console.log('📊 Nova camada:', bufferLayer.name, '- Features:', bufferLayer.featureCount);
+
+      setLayers(prev => [...prev, bufferLayer]);
+
+      setTimeout(() => {
+        setZoomToLayerId(bufferLayer.id);
+      }, 100);
+
+      alert(`✅ Zona de amortecimento calculada!\n\nNova camada: ${bufferLayer.name}\nFeatures: ${bufferLayer.featureCount}\n\nA camada foi adicionada e o mapa foi centralizado nela.`);
+    } catch (error) {
+      console.error('❌ Erro ao calcular zona de amortecimento:', error);
+      alert(`Erro ao calcular zona de amortecimento:\n\n${(error as Error).message}`);
+    }
   };
 
   React.useEffect(() => {

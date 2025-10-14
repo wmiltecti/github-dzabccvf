@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Layers, Circle } from 'lucide-react';
+import { X, Layers, Circle, Ruler } from 'lucide-react';
 
 interface GeoLayer {
   id: string;
@@ -12,7 +12,7 @@ interface BufferZoneSelectorProps {
   isOpen: boolean;
   onClose: () => void;
   layers: GeoLayer[];
-  onConfirm: (baseLayerId: string, referenceLayerId: string) => void;
+  onConfirm: (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => void;
 }
 
 export default function BufferZoneSelector({
@@ -23,6 +23,7 @@ export default function BufferZoneSelector({
 }: BufferZoneSelectorProps) {
   const [selectedBaseLayer, setSelectedBaseLayer] = useState<string>('');
   const [selectedReferenceLayer, setSelectedReferenceLayer] = useState<string>('');
+  const [distanciaMetros, setDistanciaMetros] = useState<number>(100);
 
   useEffect(() => {
     if (isOpen && layers.length > 0) {
@@ -49,7 +50,11 @@ export default function BufferZoneSelector({
       alert('As camadas base e de referência devem ser diferentes');
       return;
     }
-    onConfirm(selectedBaseLayer, selectedReferenceLayer);
+    if (distanciaMetros <= 0) {
+      alert('A distância do buffer deve ser maior que zero');
+      return;
+    }
+    onConfirm(selectedBaseLayer, selectedReferenceLayer, distanciaMetros);
   };
 
   if (!isOpen) return null;
@@ -147,8 +152,68 @@ export default function BufferZoneSelector({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <div className="flex items-center space-x-2">
+                      <Ruler className="w-4 h-4 text-purple-600" />
+                      <span>2. Distância do Buffer (metros)</span>
+                    </div>
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="number"
+                      value={distanciaMetros}
+                      onChange={(e) => setDistanciaMetros(Number(e.target.value))}
+                      min="1"
+                      step="10"
+                      className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                      placeholder="Ex: 100"
+                    />
+                    <span className="text-gray-600 font-medium">metros</span>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Zona de {distanciaMetros}m será criada ao redor das geometrias
+                  </p>
+                  <div className="mt-2 flex items-center space-x-2">
+                    <button
+                      onClick={() => setDistanciaMetros(50)}
+                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      50m
+                    </button>
+                    <button
+                      onClick={() => setDistanciaMetros(100)}
+                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      100m
+                    </button>
+                    <button
+                      onClick={() => setDistanciaMetros(500)}
+                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      500m
+                    </button>
+                    <button
+                      onClick={() => setDistanciaMetros(1000)}
+                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      1km
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-1/2 -translate-x-1/2 -top-3 bg-white px-2">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
                       <Layers className="w-4 h-4 text-blue-600" />
-                      <span>2. Camada de Referência (para subtração)</span>
+                      <span>3. Camada de Referência (para subtração)</span>
                     </div>
                   </label>
                   <select
@@ -173,7 +238,7 @@ export default function BufferZoneSelector({
                 </div>
               </div>
 
-              {selectedBaseLayer && selectedReferenceLayer && (
+              {selectedBaseLayer && selectedReferenceLayer && distanciaMetros > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-green-900 mb-2">Resumo da Operação:</h4>
                   <div className="space-y-2 text-sm text-green-800">
@@ -181,6 +246,12 @@ export default function BufferZoneSelector({
                       <span className="text-green-600 mt-0.5">→</span>
                       <span>
                         <strong>Base:</strong> {visibleLayers.find(l => l.id === selectedBaseLayer)?.name}
+                      </span>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-green-600 mt-0.5">→</span>
+                      <span>
+                        <strong>Buffer:</strong> {distanciaMetros} metros
                       </span>
                     </div>
                     <div className="flex items-start space-x-2">
