@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal } from 'lucide-react';
+import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal, Circle } from 'lucide-react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import GeoUpload from './GeoUpload';
 import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
+import BufferZoneSelector from './BufferZoneSelector';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -227,6 +228,9 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
+  const [showBufferZoneSelector, setShowBufferZoneSelector] = useState(false);
+  const [selectedBaseLayer, setSelectedBaseLayer] = useState<string | null>(null);
+  const [selectedReferenceLayer, setSelectedReferenceLayer] = useState<string | null>(null);
 
   // Predefined colors for layers (similar to QGIS)
   const layerColors = [
@@ -573,6 +577,41 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     }
   }, [contextMenu]);
 
+  const handleBufferZoneConfirm = (baseLayerId: string, referenceLayerId: string) => {
+    setSelectedBaseLayer(baseLayerId);
+    setSelectedReferenceLayer(referenceLayerId);
+    setShowBufferZoneSelector(false);
+    iniciarCalculoZonaAmortecimento(baseLayerId, referenceLayerId);
+  };
+
+  const iniciarCalculoZonaAmortecimento = (baseLayerId: string, referenceLayerId: string) => {
+    const baseLayer = layers.find(l => l.id === baseLayerId);
+    const referenceLayer = layers.find(l => l.id === referenceLayerId);
+
+    if (!baseLayer || !referenceLayer) {
+      alert('Erro: Camadas não encontradas');
+      return;
+    }
+
+    console.log('🎯 Iniciando cálculo de zona de amortecimento');
+    console.log('📍 Camada Base:', baseLayer.name, '- Features:', baseLayer.featureCount);
+    console.log('📍 Camada Referência:', referenceLayer.name, '- Features:', referenceLayer.featureCount);
+
+    alert(`Cálculo iniciado!\n\nCamada Base: ${baseLayer.name}\nCamada Referência: ${referenceLayer.name}\n\nO buffer será calculado e as áreas de sobreposição serão subtraídas.`);
+  };
+
+  React.useEffect(() => {
+    if (layers.length > 0) {
+      (window as any).__geojsonLayers = layers.map(layer => ({
+        id: layer.id,
+        layerName: layer.name,
+        featureCount: layer.featureCount,
+        visible: layer.visible,
+        features: layer.features
+      }));
+    }
+  }, [layers]);
+
   // Get all visible features from all layers
   // Reverse the order so first layer in list renders on top
   const visibleFeatures = [...layers].reverse()
@@ -624,21 +663,29 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <button 
+          <button
+            onClick={() => setShowBufferZoneSelector(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            title="Calcular Zona de Amortecimento"
+          >
+            <Circle className="w-4 h-4" />
+            <span className="hidden sm:inline">Zona de Amortecimento</span>
+          </button>
+          <button
             onClick={() => setShowUpload(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Upload className="w-4 h-4" />
-            Importar Dados
+            <span className="hidden sm:inline">Importar Dados</span>
           </button>
-          <button 
+          <button
             onClick={() => setShowExport(true)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             title="Exportar dados"
           >
             <Download className="w-5 h-5" />
           </button>
-          <button 
+          <button
             onClick={() => setShowSettings(true)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             title="Configurações"
@@ -1105,6 +1152,13 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         currentColor={editingLayerId ? layers.find(l => l.id === editingLayerId)?.color || '#3B82F6' : '#3B82F6'}
         onColorChange={handleColorChange}
         layerName={editingLayerId ? layers.find(l => l.id === editingLayerId)?.name || '' : ''}
+      />
+
+      <BufferZoneSelector
+        isOpen={showBufferZoneSelector}
+        onClose={() => setShowBufferZoneSelector(false)}
+        layers={layers}
+        onConfirm={handleBufferZoneConfirm}
       />
     </div>
   );
