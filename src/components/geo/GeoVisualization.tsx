@@ -8,6 +8,7 @@ import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
+import CalculationProgress from './CalculationProgress';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
@@ -183,17 +184,51 @@ function PolygonLayer({
         }
       }}
     >
-      <Popup>
+      <Popup maxWidth={300}>
         <div className="text-sm">
-          <h4 className="font-medium text-gray-900 mb-1">{feature.name}</h4>
-          <p className="text-gray-600">Tipo: {feature.type}</p>
+          <h4 className="font-semibold text-gray-900 mb-2 text-base">{feature.name}</h4>
+          <div className="space-y-1 mb-2">
+            <p className="text-gray-600 flex items-center justify-between">
+              <span className="font-medium">Tipo:</span>
+              <span className="text-gray-800">{feature.type}</span>
+            </p>
+            {feature.properties?.area_ha && (
+              <p className="text-green-600 flex items-center justify-between">
+                <span className="font-medium">Área:</span>
+                <span className="font-semibold">{Number(feature.properties.area_ha).toFixed(2)} ha</span>
+              </p>
+            )}
+            {feature.properties?.area_m2 && (
+              <p className="text-gray-500 flex items-center justify-between text-xs">
+                <span>Área (m²):</span>
+                <span>{Number(feature.properties.area_m2).toLocaleString('pt-BR')} m²</span>
+              </p>
+            )}
+            {feature.properties?.perimeter_km && (
+              <p className="text-blue-600 flex items-center justify-between">
+                <span className="font-medium">Perímetro:</span>
+                <span className="font-semibold">{Number(feature.properties.perimeter_km).toFixed(2)} km</span>
+              </p>
+            )}
+            {feature.properties?.buffer_distance && (
+              <p className="text-cyan-600 flex items-center justify-between">
+                <span className="font-medium">Buffer:</span>
+                <span className="font-semibold">{feature.properties.buffer_distance} m</span>
+              </p>
+            )}
+          </div>
           {feature.properties && Object.keys(feature.properties).length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
-              {Object.entries(feature.properties).slice(0, 3).map(([key, value]) => (
-                <div key={key} className="text-xs text-gray-500">
-                  <strong>{key}:</strong> {String(value)}
-                </div>
-              ))}
+              <p className="text-xs text-gray-400 mb-1">Propriedades adicionais:</p>
+              {Object.entries(feature.properties)
+                .filter(([key]) => !['area_ha', 'area_m2', 'perimeter_km', 'buffer_distance', 'base_layer', 'reference_layer'].includes(key))
+                .slice(0, 3)
+                .map(([key, value]) => (
+                  <div key={key} className="text-xs text-gray-500 flex justify-between">
+                    <strong className="text-gray-600">{key}:</strong>
+                    <span className="ml-2 text-right">{String(value).substring(0, 50)}</span>
+                  </div>
+                ))}
             </div>
           )}
         </div>
@@ -239,6 +274,11 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   const [currentMetrics, setCurrentMetrics] = useState<LayerMetrics | null>(null);
   const [currentMetricsLayerName, setCurrentMetricsLayerName] = useState<string>('');
   const [currentFeatureCollection, setCurrentFeatureCollection] = useState<any>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [calculationStep, setCalculationStep] = useState('');
+  const [calculationProgress, setCalculationProgress] = useState(0);
+  const [calculationError, setCalculationError] = useState<string>('');
+  const [calculationSuccess, setCalculationSuccess] = useState(false);
 
   // Predefined colors for layers (similar to QGIS)
   const layerColors = [
@@ -592,23 +632,37 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     iniciarCalculoZonaAmortecimento(baseLayerId, referenceLayerId, distanciaMetros);
   };
 
-  const iniciarCalculoZonaAmortecimento = (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
+  const iniciarCalculoZonaAmortecimento = async (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
     const baseLayer = layers.find(l => l.id === baseLayerId);
     const referenceLayer = layers.find(l => l.id === referenceLayerId);
 
     if (!baseLayer || !referenceLayer) {
-      alert('Erro: Camadas não encontradas');
+      setCalculationError('Camadas não encontradas');
+      setTimeout(() => setCalculationError(''), 3000);
       return;
     }
 
-    console.log('🎯 Iniciando cálculo de zona de amortecimento');
-    console.log('📍 Camada Base:', baseLayer.name, '- Features:', baseLayer.featureCount);
-    console.log('📍 Camada Referência:', referenceLayer.name, '- Features:', referenceLayer.featureCount);
-    console.log('📏 Distância:', distanciaMetros, 'metros');
+    setIsCalculating(true);
+    setCalculationError('');
+    setCalculationSuccess(false);
+    setCalculationProgress(0);
 
     try {
+      setCalculationStep('Preparando camadas...');
+      setCalculationProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      console.log('🎯 Iniciando cálculo de zona de amortecimento');
+      console.log('📍 Camada Base:', baseLayer.name, '- Features:', baseLayer.featureCount);
+      console.log('📍 Camada Referência:', referenceLayer.name, '- Features:', referenceLayer.featureCount);
+      console.log('📏 Distância:', distanciaMetros, 'metros');
+
       const baseFC = geoLayerToFeatureCollection(baseLayer);
       const referenceFC = geoLayerToFeatureCollection(referenceLayer);
+
+      setCalculationStep('Calculando zona de amortecimento (buffer)...');
+      setCalculationProgress(30);
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       console.log('📊 Passo 1: Calculando buffer...');
       const bufferFC = calcularBuffer(baseFC, distanciaMetros);
@@ -632,20 +686,41 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         featureCount: bufferFC.features.length
       };
 
+      setCalculationStep('Subtraindo áreas de referência...');
+      setCalculationProgress(60);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       console.log('📊 Passo 2: Calculando diferença (subtraindo referência)...');
       const resultFC = calcularDiferenca(bufferFC, referenceFC);
+
+      setCalculationStep('Calculando área e perímetro...');
+      setCalculationProgress(80);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const metrics = calcularArea(resultFC);
 
       const resultGeoLayer: GeoLayer = {
         id: `${baseLayer.id}-result-${Date.now()}`,
         name: `Zona de Amortecimento Final - ${baseLayer.name}`,
-        features: resultFC.features.map((feat, idx) => ({
-          id: `result-feat-${idx}`,
-          name: feat.properties?.name || `Resultado Feature ${idx + 1}`,
-          type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
-          coordinates: feat.geometry.coordinates,
-          properties: feat.properties || {},
-          layerId: `${baseLayer.id}-result-${Date.now()}`
-        })),
+        features: resultFC.features.map((feat, idx) => {
+          const featMetrics = metrics.features[idx];
+          return {
+            id: `result-feat-${idx}`,
+            name: feat.properties?.name || featMetrics?.name || `Resultado Feature ${idx + 1}`,
+            type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+            coordinates: feat.geometry.coordinates,
+            properties: {
+              ...feat.properties,
+              buffer_distance: distanciaMetros,
+              base_layer: baseLayer.name,
+              reference_layer: referenceLayer.name,
+              area_ha: featMetrics?.areaHa,
+              area_m2: featMetrics?.areaM2,
+              perimeter_km: featMetrics?.perimetroKm
+            },
+            layerId: `${baseLayer.id}-result-${Date.now()}`
+          };
+        }),
         visible: true,
         color: '#EF4444',
         opacity: 0.5,
@@ -658,22 +733,35 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
       console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
 
+      setCalculationStep('Finalizando e exibindo resultado...');
+      setCalculationProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer]);
 
       setTimeout(() => {
         setZoomToLayerId(resultGeoLayer.id);
       }, 100);
 
-      const metrics = calcularArea(resultFC);
       setCurrentMetrics(metrics);
       setCurrentMetricsLayerName(resultGeoLayer.name);
       setCurrentFeatureCollection(resultFC);
-      setShowAreaMetricsPanel(true);
 
       console.log(`📐 Área total calculada: ${metrics.totalAreaHa.toFixed(2)} ha`);
+
+      setCalculationSuccess(true);
+      setIsCalculating(false);
+
+      setTimeout(() => {
+        setCalculationSuccess(false);
+        setShowAreaMetricsPanel(true);
+      }, 2000);
+
     } catch (error) {
       console.error('❌ Erro ao calcular zona de amortecimento:', error);
-      alert(`Erro ao calcular zona de amortecimento:\n\n${(error as Error).message}`);
+      setCalculationError((error as Error).message || 'Erro desconhecido ao calcular zona de amortecimento');
+      setIsCalculating(false);
+      setTimeout(() => setCalculationError(''), 5000);
     }
   };
 
@@ -1378,6 +1466,14 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         featureCollection={currentFeatureCollection}
         onExportGeoJSON={handleExportarGeoJSON}
         onExportKML={handleExportarKML}
+      />
+
+      <CalculationProgress
+        isCalculating={isCalculating}
+        currentStep={calculationStep}
+        progress={calculationProgress}
+        error={calculationError}
+        success={calculationSuccess}
       />
     </div>
   );
