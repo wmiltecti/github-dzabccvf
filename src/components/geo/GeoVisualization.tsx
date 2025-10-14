@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal, Circle } from 'lucide-react';
+import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal, Circle, Calculator } from 'lucide-react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import GeoUpload from './GeoUpload';
@@ -7,8 +7,10 @@ import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
+import AreaMetricsPanel from './AreaMetricsPanel';
+import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
+import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import 'leaflet/dist/leaflet.css';
-import { calcularBufferComSubtracao } from '@/lib/geo/bufferCalculations'
 
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -232,6 +234,9 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   const [showBufferZoneSelector, setShowBufferZoneSelector] = useState(false);
   const [selectedBaseLayer, setSelectedBaseLayer] = useState<string | null>(null);
   const [selectedReferenceLayer, setSelectedReferenceLayer] = useState<string | null>(null);
+  const [showAreaMetricsPanel, setShowAreaMetricsPanel] = useState(false);
+  const [currentMetrics, setCurrentMetrics] = useState<LayerMetrics | null>(null);
+  const [currentMetricsLayerName, setCurrentMetricsLayerName] = useState<string>('');
 
   // Predefined colors for layers (similar to QGIS)
   const layerColors = [
@@ -600,21 +605,95 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     console.log('📏 Distância:', distanciaMetros, 'metros');
 
     try {
-      const bufferLayer = calcularBufferComSubtracao(baseLayer, referenceLayer, distanciaMetros);
+      const baseFC = geoLayerToFeatureCollection(baseLayer);
+      const referenceFC = geoLayerToFeatureCollection(referenceLayer);
+
+      console.log('📊 Passo 1: Calculando buffer...');
+      const bufferFC = calcularBuffer(baseFC, distanciaMetros);
+
+      const bufferGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-buffer-${Date.now()}`,
+        name: `Buffer ${distanciaMetros}m - ${baseLayer.name}`,
+        features: bufferFC.features.map((feat, idx) => ({
+          id: `buffer-feat-${idx}`,
+          name: feat.properties?.name || `Buffer Feature ${idx + 1}`,
+          type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+          coordinates: feat.geometry.coordinates,
+          properties: feat.properties || {},
+          layerId: `${baseLayer.id}-buffer-${Date.now()}`
+        })),
+        visible: true,
+        color: '#3B82F6',
+        opacity: 0.3,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: bufferFC.features.length
+      };
+
+      console.log('📊 Passo 2: Calculando diferença (subtraindo referência)...');
+      const resultFC = calcularDiferenca(bufferFC, referenceFC);
+
+      const resultGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-result-${Date.now()}`,
+        name: `Zona de Amortecimento Final - ${baseLayer.name}`,
+        features: resultFC.features.map((feat, idx) => ({
+          id: `result-feat-${idx}`,
+          name: feat.properties?.name || `Resultado Feature ${idx + 1}`,
+          type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+          coordinates: feat.geometry.coordinates,
+          properties: feat.properties || {},
+          layerId: `${baseLayer.id}-result-${Date.now()}`
+        })),
+        visible: true,
+        color: '#EF4444',
+        opacity: 0.5,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: resultFC.features.length
+      };
 
       console.log('✅ Zona de amortecimento calculada com sucesso!');
-      console.log('📊 Nova camada:', bufferLayer.name, '- Features:', bufferLayer.featureCount);
+      console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
+      console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
 
-      setLayers(prev => [...prev, bufferLayer]);
+      setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer]);
 
       setTimeout(() => {
-        setZoomToLayerId(bufferLayer.id);
+        setZoomToLayerId(resultGeoLayer.id);
       }, 100);
 
-      alert(`✅ Zona de amortecimento calculada!\n\nNova camada: ${bufferLayer.name}\nFeatures: ${bufferLayer.featureCount}\n\nA camada foi adicionada e o mapa foi centralizado nela.`);
+      const metrics = calcularArea(resultFC);
+      setCurrentMetrics(metrics);
+      setCurrentMetricsLayerName(resultGeoLayer.name);
+      setShowAreaMetricsPanel(true);
+
+      console.log(`📐 Área total calculada: ${metrics.totalAreaHa.toFixed(2)} ha`);
     } catch (error) {
       console.error('❌ Erro ao calcular zona de amortecimento:', error);
       alert(`Erro ao calcular zona de amortecimento:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const handleCalcularMetricasCamada = (layerId: string) => {
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer) {
+      alert('Erro: Camada não encontrada');
+      return;
+    }
+
+    try {
+      console.log('📐 Calculando métricas da camada:', layer.name);
+      const featureCollection = geoLayerToFeatureCollection(layer);
+      const metrics = calcularArea(featureCollection);
+
+      setCurrentMetrics(metrics);
+      setCurrentMetricsLayerName(layer.name);
+      setShowAreaMetricsPanel(true);
+
+      console.log(`✅ Métricas calculadas: ${metrics.totalAreaHa.toFixed(2)} ha`);
+    } catch (error) {
+      console.error('❌ Erro ao calcular métricas:', error);
+      alert(`Erro ao calcular métricas:\n\n${(error as Error).message}`);
     }
   };
 
@@ -828,6 +907,13 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
                           title="Aproximar camada"
                         >
                           <Search className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleCalcularMetricasCamada(layer.id)}
+                          className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                          title="Calcular área e perímetro"
+                        >
+                          <Calculator className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleChangeLayerColor(layer.id)}
@@ -1177,6 +1263,13 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         onClose={() => setShowBufferZoneSelector(false)}
         layers={layers}
         onConfirm={handleBufferZoneConfirm}
+      />
+
+      <AreaMetricsPanel
+        isOpen={showAreaMetricsPanel}
+        onClose={() => setShowAreaMetricsPanel(false)}
+        metrics={currentMetrics}
+        layerName={currentMetricsLayerName}
       />
     </div>
   );
