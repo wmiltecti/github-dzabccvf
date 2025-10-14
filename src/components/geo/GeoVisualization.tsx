@@ -7,7 +7,6 @@ import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
-import { calcularBufferComSubtracao } from '../../lib/geo/bufferCalculations';
 import 'leaflet/dist/leaflet.css';
 import { calcularBufferComSubtracao } from '@/lib/geo/bufferCalculations'
 
