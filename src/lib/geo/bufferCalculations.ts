@@ -1,4 +1,7 @@
-import * as turf from '@turf/turf';
+import buffer from '@turf/buffer';
+import difference from '@turf/difference';
+import { featureCollection, feature, polygon, multiPolygon, point } from '@turf/helpers';
+import type { Feature, Geometry } from 'geojson';
 
 interface GeoFeature {
   id: string;
@@ -21,12 +24,29 @@ interface GeoLayer {
   featureCount: number;
 }
 
+function geoFeatureToTurfFeature(geoFeature: GeoFeature): Feature<Geometry> {
+  let geom: Geometry;
+
+  if (geoFeature.type === 'Point') {
+    const [lng, lat] = geoFeature.coordinates;
+    geom = point([lng, lat]).geometry;
+  } else if (geoFeature.type === 'Polygon') {
+    geom = polygon(geoFeature.coordinates).geometry;
+  } else if (geoFeature.type === 'MultiPolygon') {
+    geom = multiPolygon(geoFeature.coordinates).geometry;
+  } else {
+    throw new Error(`Tipo de geometria não suportado: ${geoFeature.type}`);
+  }
+
+  return feature(geom, geoFeature.properties || {});
+}
+
 export function calcularBuffer(layer: GeoLayer, distanciaMetros: number): GeoLayer {
   if (!layer || !layer.features || layer.features.length === 0) {
     throw new Error('Camada inválida ou sem features');
   }
 
-  if (distanciaMetros <= 0) {
+  if (!Number.isFinite(distanciaMetros) || distanciaMetros <= 0) {
     throw new Error('Distância deve ser maior que zero');
   }
 
@@ -37,26 +57,17 @@ export function calcularBuffer(layer: GeoLayer, distanciaMetros: number): GeoLay
   const bufferedFeatures: GeoFeature[] = [];
   const distanciaKm = distanciaMetros / 1000;
 
-  layer.features.forEach((feature, index) => {
+  layer.features.forEach((geoFeat, index) => {
     try {
-      let turfGeometry: any;
+      const turfFeat = geoFeatureToTurfFeature(geoFeat);
 
-      if (feature.type === 'Point') {
-        const [lng, lat] = feature.coordinates;
-        turfGeometry = turf.point([lng, lat]);
-      } else if (feature.type === 'Polygon') {
-        turfGeometry = turf.polygon(feature.coordinates);
-      } else if (feature.type === 'MultiPolygon') {
-        turfGeometry = turf.multiPolygon(feature.coordinates);
-      } else {
-        console.warn('⚠️ Tipo de geometria não suportado:', feature.type);
-        return;
-      }
+      const buffered = buffer(turfFeat, distanciaKm, {
+        units: 'kilometers',
+        steps: 16
+      });
 
-      const buffered = turf.buffer(turfGeometry, distanciaKm, { units: 'kilometers' });
-
-      if (!buffered) {
-        console.warn('⚠️ Não foi possível gerar buffer para feature:', feature.name);
+      if (!buffered || !buffered.geometry) {
+        console.warn('⚠️ Não foi possível gerar buffer para feature:', geoFeat.name);
         return;
       }
 
@@ -64,22 +75,22 @@ export function calcularBuffer(layer: GeoLayer, distanciaMetros: number): GeoLay
       const bufferedType = buffered.geometry.type as 'Polygon' | 'MultiPolygon';
 
       bufferedFeatures.push({
-        id: `${feature.id}-buffer`,
-        name: `${feature.name} (Buffer ${distanciaMetros}m)`,
+        id: `${geoFeat.id}-buffer`,
+        name: `${geoFeat.name} (Buffer ${distanciaMetros}m)`,
         type: bufferedType,
         coordinates: bufferedCoordinates,
         properties: {
-          ...feature.properties,
+          ...geoFeat.properties,
           bufferDistance: distanciaMetros,
-          originalFeatureId: feature.id,
-          originalFeatureName: feature.name
+          originalFeatureId: geoFeat.id,
+          originalFeatureName: geoFeat.name
         },
         layerId: `${layer.id}-buffer`
       });
 
-      console.log(`✅ Buffer calculado para feature ${index + 1}/${layer.features.length}: ${feature.name}`);
+      console.log(`✅ Buffer calculado para feature ${index + 1}/${layer.features.length}: ${geoFeat.name}`);
     } catch (error) {
-      console.error(`❌ Erro ao calcular buffer para feature ${feature.name}:`, error);
+      console.error(`❌ Erro ao calcular buffer para feature ${geoFeat.name}:`, error);
     }
   });
 
@@ -122,51 +133,38 @@ export function subtrairGeometrias(baseLayer: GeoLayer, referenceLayer: GeoLayer
 
   baseLayer.features.forEach((baseFeature, index) => {
     try {
-      let baseTurfGeom: any;
-
-      if (baseFeature.type === 'Polygon') {
-        baseTurfGeom = turf.polygon(baseFeature.coordinates);
-      } else if (baseFeature.type === 'MultiPolygon') {
-        baseTurfGeom = turf.multiPolygon(baseFeature.coordinates);
-      } else {
-        console.warn('⚠️ Tipo de geometria não suportado para subtração:', baseFeature.type);
+      if (baseFeature.type === 'Point') {
+        console.warn('⚠️ Tipo Point não suportado para subtração, mantendo original');
         resultFeatures.push(baseFeature);
         return;
       }
 
-      let currentGeometry = baseTurfGeom;
+      let currentFeature = geoFeatureToTurfFeature(baseFeature);
 
       referenceLayer.features.forEach((refFeature) => {
         try {
-          let refTurfGeom: any;
-
-          if (refFeature.type === 'Polygon') {
-            refTurfGeom = turf.polygon(refFeature.coordinates);
-          } else if (refFeature.type === 'MultiPolygon') {
-            refTurfGeom = turf.multiPolygon(refFeature.coordinates);
-          } else if (refFeature.type === 'Point') {
-            return;
-          } else {
-            console.warn('⚠️ Tipo de geometria de referência não suportado:', refFeature.type);
+          if (refFeature.type === 'Point') {
             return;
           }
 
-          const difference = turf.difference(turf.featureCollection([currentGeometry, refTurfGeom]));
+          const refTurfFeature = geoFeatureToTurfFeature(refFeature);
 
-          if (difference) {
-            currentGeometry = difference;
+          const diff = difference(featureCollection([currentFeature, refTurfFeature]));
+
+          if (diff && diff.geometry) {
+            currentFeature = diff;
           }
         } catch (error) {
           console.warn('⚠️ Erro ao subtrair feature de referência:', error);
         }
       });
 
-      if (currentGeometry && currentGeometry.geometry) {
+      if (currentFeature && currentFeature.geometry) {
         resultFeatures.push({
           id: `${baseFeature.id}-subtracted`,
           name: `${baseFeature.name} (Subtraído)`,
-          type: currentGeometry.geometry.type as 'Polygon' | 'MultiPolygon',
-          coordinates: currentGeometry.geometry.coordinates,
+          type: currentFeature.geometry.type as 'Polygon' | 'MultiPolygon',
+          coordinates: currentFeature.geometry.coordinates,
           properties: {
             ...baseFeature.properties,
             subtracted: true,
@@ -222,3 +220,5 @@ export function calcularBufferComSubtracao(
 
   return finalLayer;
 }
+
+export default calcularBuffer;

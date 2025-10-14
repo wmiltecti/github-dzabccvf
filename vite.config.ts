@@ -7,5 +7,6 @@ export default defineConfig({
   base: './',
   optimizeDeps: {
     exclude: ['lucide-react'],
+    include: ['@turf/buffer', '@turf/helpers', '@turf/difference'],
   },
 });
