@@ -10,6 +10,7 @@ import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
+import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -237,6 +238,7 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   const [showAreaMetricsPanel, setShowAreaMetricsPanel] = useState(false);
   const [currentMetrics, setCurrentMetrics] = useState<LayerMetrics | null>(null);
   const [currentMetricsLayerName, setCurrentMetricsLayerName] = useState<string>('');
+  const [currentFeatureCollection, setCurrentFeatureCollection] = useState<any>(null);
 
   // Predefined colors for layers (similar to QGIS)
   const layerColors = [
@@ -665,6 +667,7 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       const metrics = calcularArea(resultFC);
       setCurrentMetrics(metrics);
       setCurrentMetricsLayerName(resultGeoLayer.name);
+      setCurrentFeatureCollection(resultFC);
       setShowAreaMetricsPanel(true);
 
       console.log(`📐 Área total calculada: ${metrics.totalAreaHa.toFixed(2)} ha`);
@@ -688,6 +691,7 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
 
       setCurrentMetrics(metrics);
       setCurrentMetricsLayerName(layer.name);
+      setCurrentFeatureCollection(featureCollection);
       setShowAreaMetricsPanel(true);
 
       console.log(`✅ Métricas calculadas: ${metrics.totalAreaHa.toFixed(2)} ha`);
@@ -695,6 +699,107 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       console.error('❌ Erro ao calcular métricas:', error);
       alert(`Erro ao calcular métricas:\n\n${(error as Error).message}`);
     }
+  };
+
+  const handleExportarGeoJSON = () => {
+    if (!currentFeatureCollection || !currentMetricsLayerName) return;
+    try {
+      exportarFeatureCollection(currentFeatureCollection, currentMetricsLayerName);
+      console.log('✅ GeoJSON exportado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao exportar GeoJSON:', error);
+      alert(`Erro ao exportar GeoJSON:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const handleExportarKML = () => {
+    if (!currentFeatureCollection || !currentMetricsLayerName) return;
+    try {
+      const kml = generateKMLFromFeatureCollection(currentFeatureCollection, currentMetricsLayerName);
+      const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${sanitizeFilename(currentMetricsLayerName)}.kml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      console.log('✅ KML exportado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao exportar KML:', error);
+      alert(`Erro ao exportar KML:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const sanitizeFilename = (name: string): string => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  };
+
+  const escapeXML = (str: string): string => {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  };
+
+  const generateKMLFromFeatureCollection = (fc: any, name: string): string => {
+    const placemarks = fc.features.map((feat: any) => {
+      const coords = formatCoordinatesForKML(feat.geometry.type, feat.geometry.coordinates);
+      const geometryTag = getKMLGeometryTag(feat.geometry.type, coords);
+      const featName = feat.properties?.name || 'Feature';
+
+      return `
+    <Placemark>
+      <name>${escapeXML(featName)}</name>
+      <description>${escapeXML(JSON.stringify(feat.properties || {}))}</description>
+      <Style>
+        <LineStyle>
+          <color>ff0000ff</color>
+          <width>2</width>
+        </LineStyle>
+        <PolyStyle>
+          <color>4d0000ff</color>
+          <fill>1</fill>
+          <outline>1</outline>
+        </PolyStyle>
+      </Style>
+      ${geometryTag}
+    </Placemark>`;
+    }).join('');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>${escapeXML(name)}</name>
+    <description>Exportado do Sistema de Licenciamento Ambiental</description>
+    ${placemarks}
+  </Document>
+</kml>`;
+  };
+
+  const formatCoordinatesForKML = (type: string, coordinates: any): string => {
+    if (type === 'Point') {
+      const [lng, lat] = coordinates;
+      return `${lng},${lat},0`;
+    } else if (type === 'Polygon') {
+      return coordinates[0].map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
+    } else if (type === 'MultiPolygon') {
+      return coordinates[0][0].map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
+    }
+    return '';
+  };
+
+  const getKMLGeometryTag = (type: string, coords: string): string => {
+    if (type === 'Point') {
+      return `<Point><coordinates>${coords}</coordinates></Point>`;
+    } else if (type === 'Polygon' || type === 'MultiPolygon') {
+      return `<Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>${coords}</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>`;
+    }
+    return '';
   };
 
   React.useEffect(() => {
@@ -1270,6 +1375,9 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         onClose={() => setShowAreaMetricsPanel(false)}
         metrics={currentMetrics}
         layerName={currentMetricsLayerName}
+        featureCollection={currentFeatureCollection}
+        onExportGeoJSON={handleExportarGeoJSON}
+        onExportKML={handleExportarKML}
       />
     </div>
   );

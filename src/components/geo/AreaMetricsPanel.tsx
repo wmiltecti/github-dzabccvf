@@ -1,18 +1,25 @@
-import { X, BarChart3, Ruler, Calculator } from 'lucide-react';
+import { X, BarChart3, Ruler, Calculator, Download, FileJson, Map as MapIcon } from 'lucide-react';
 import type { LayerMetrics } from '../../lib/geo/bufferCalculations';
+import type { FeatureCollection, Geometry } from 'geojson';
 
 interface AreaMetricsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   metrics: LayerMetrics | null;
   layerName?: string;
+  featureCollection?: FeatureCollection<Geometry>;
+  onExportGeoJSON?: () => void;
+  onExportKML?: () => void;
 }
 
 export default function AreaMetricsPanel({
   isOpen,
   onClose,
   metrics,
-  layerName = 'Camada'
+  layerName = 'Camada',
+  featureCollection,
+  onExportGeoJSON,
+  onExportKML
 }: AreaMetricsPanelProps) {
   if (!isOpen || !metrics) return null;
 
@@ -191,7 +198,29 @@ export default function AreaMetricsPanel({
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center space-x-3">
+            {onExportGeoJSON && (
+              <button
+                onClick={onExportGeoJSON}
+                className="px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
+                title="Exportar como GeoJSON"
+              >
+                <FileJson className="w-4 h-4" />
+                GeoJSON
+              </button>
+            )}
+            {onExportKML && (
+              <button
+                onClick={onExportKML}
+                className="px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center gap-2"
+                title="Exportar como KML (Google Earth)"
+              >
+                <MapIcon className="w-4 h-4" />
+                KML
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
