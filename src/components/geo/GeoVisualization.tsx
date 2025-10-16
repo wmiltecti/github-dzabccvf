@@ -10,7 +10,7 @@ import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import CalculationProgress from './CalculationProgress';
 import UserPanel from './UserPanel';
-import { calcularBuffer, calcularDiferenca, calcularIntersecao, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
+import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
 import 'leaflet/dist/leaflet.css';
@@ -730,27 +730,27 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         featureCount: resultFC.features.length
       };
 
-      setCalculationStep('Calculando interseção (área sobreposta)...');
-      setCalculationProgress(80);
+      setCalculationStep('Calculando área subtraída do buffer...');
+      setCalculationProgress(85);
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      console.log('📊 Passo 3: Calculando interseção (buffer ∩ referência)...');
-      const intersecaoFC = calcularIntersecao(bufferFC, referenceFC);
-      console.log(`📊 Interseção calculada: ${intersecaoFC.features.length} features encontradas`);
+      console.log('📊 Passo 3: Calculando área subtraída (buffer - resultado)...');
+      const areaSubtraidaFC = calcularDiferenca(bufferFC, resultFC);
+      console.log(`📊 Área subtraída calculada: ${areaSubtraidaFC.features.length} features encontradas`);
 
-      let intersecaoGeoLayer: GeoLayer | null = null;
+      let areaSubtraidaGeoLayer: GeoLayer | null = null;
 
-      if (intersecaoFC.features.length > 0) {
-        const intersecaoMetrics = calcularArea(intersecaoFC);
+      if (areaSubtraidaFC.features.length > 0) {
+        const areaSubtraidaMetrics = calcularArea(areaSubtraidaFC);
 
-        intersecaoGeoLayer = {
-          id: `${baseLayer.id}-intersecao-${Date.now()}`,
-          name: `Área Sobreposta (Interseção) - ${baseLayer.name}`,
-          features: intersecaoFC.features.map((feat, idx) => {
-            const featMetrics = intersecaoMetrics.features[idx];
+        areaSubtraidaGeoLayer = {
+          id: `${baseLayer.id}-subtraida-${Date.now()}`,
+          name: `Área Subtraída do Buffer - ${baseLayer.name}`,
+          features: areaSubtraidaFC.features.map((feat, idx) => {
+            const featMetrics = areaSubtraidaMetrics.features[idx];
             return {
-              id: `intersecao-feat-${idx}`,
-              name: feat.properties?.name || featMetrics?.name || `Interseção Feature ${idx + 1}`,
+              id: `subtraida-feat-${idx}`,
+              name: feat.properties?.name || featMetrics?.name || `Área Subtraída ${idx + 1}`,
               type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
               coordinates: feat.geometry.coordinates,
               properties: {
@@ -761,56 +761,9 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
                 area_ha: featMetrics?.areaHa,
                 area_m2: featMetrics?.areaM2,
                 perimeter_km: featMetrics?.perimetroKm,
-                layer_type: 'intersection'
+                layer_type: 'subtracted_area'
               },
-              layerId: `${baseLayer.id}-intersecao-${Date.now()}`
-            };
-          }),
-          visible: true,
-          color: '#10B981',
-          opacity: 0.4,
-          source: 'imported',
-          uploadedAt: new Date().toISOString(),
-          featureCount: intersecaoFC.features.length
-        };
-      } else {
-        console.warn('⚠️ Nenhuma interseção encontrada entre buffer e referência');
-      }
-
-      setCalculationStep('Calculando área removida (diferença)...');
-      setCalculationProgress(90);
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      console.log('📊 Passo 4: Calculando diferença (área removida)...');
-      const diferencaFC = calcularDiferenca(referenceFC, resultFC);
-      console.log(`📊 Diferença calculada: ${diferencaFC.features.length} features encontradas`);
-
-      let diferencaGeoLayer: GeoLayer | null = null;
-
-      if (diferencaFC.features.length > 0) {
-        const diferencaMetrics = calcularArea(diferencaFC);
-
-        diferencaGeoLayer = {
-          id: `${baseLayer.id}-diferenca-${Date.now()}`,
-          name: `Área Removida (Diferença) - ${baseLayer.name}`,
-          features: diferencaFC.features.map((feat, idx) => {
-            const featMetrics = diferencaMetrics.features[idx];
-            return {
-              id: `diferenca-feat-${idx}`,
-              name: feat.properties?.name || featMetrics?.name || `Diferença Feature ${idx + 1}`,
-              type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
-              coordinates: feat.geometry.coordinates,
-              properties: {
-                ...feat.properties,
-                buffer_distance: distanciaMetros,
-                base_layer: baseLayer.name,
-                reference_layer: referenceLayer.name,
-                area_ha: featMetrics?.areaHa,
-                area_m2: featMetrics?.areaM2,
-                perimeter_km: featMetrics?.perimetroKm,
-                layer_type: 'removed_area'
-              },
-              layerId: `${baseLayer.id}-diferenca-${Date.now()}`
+              layerId: `${baseLayer.id}-subtraida-${Date.now()}`
             };
           }),
           visible: true,
@@ -818,25 +771,23 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
           opacity: 0.4,
           source: 'imported',
           uploadedAt: new Date().toISOString(),
-          featureCount: diferencaFC.features.length
+          featureCount: areaSubtraidaFC.features.length
         };
       } else {
-        console.warn('⚠️ Nenhuma área removida (diferença não encontrada)');
+        console.warn('⚠️ Nenhuma área foi subtraída do buffer');
       }
 
       console.log('✅ Zona de amortecimento calculada com sucesso!');
       console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
       console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
-      console.log('📊 Área sobreposta:', intersecaoGeoLayer?.featureCount || 0, 'features');
-      console.log('📊 Área removida:', diferencaGeoLayer?.featureCount || 0, 'features');
+      console.log('📊 Área subtraída:', areaSubtraidaGeoLayer?.featureCount || 0, 'features');
 
       setCalculationStep('Finalizando e exibindo resultado...');
       setCalculationProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
 
       const newLayers = [bufferGeoLayer, resultGeoLayer];
-      if (intersecaoGeoLayer) newLayers.push(intersecaoGeoLayer);
-      if (diferencaGeoLayer) newLayers.push(diferencaGeoLayer);
+      if (areaSubtraidaGeoLayer) newLayers.push(areaSubtraidaGeoLayer);
 
       setLayers(prev => [...prev, ...newLayers]);
 
