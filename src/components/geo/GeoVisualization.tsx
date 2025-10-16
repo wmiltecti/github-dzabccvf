@@ -154,12 +154,15 @@ function PolygonLayer({
   const convertCoordinates = (coords: any): L.LatLngExpression[][] => {
     if (feature.type === 'MultiPolygon') {
       // MultiPolygon: [[[lng, lat], [lng, lat], ...]]
-      return coords[0].map((ring: any) => 
+      // First polygon of the MultiPolygon, with all its rings (outer + holes)
+      return coords[0].map((ring: any) =>
         ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
       );
     } else if (feature.type === 'Polygon') {
-      // Polygon: [[lng, lat], [lng, lat], ...]
-      return coords.map((ring: any) => 
+      // Polygon with holes: [outer_ring, hole1, hole2, ...]
+      // coords[0] = outer ring (clockwise)
+      // coords[1..n] = holes (counter-clockwise)
+      return coords.map((ring: any) =>
         ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
       );
     }
@@ -167,6 +170,15 @@ function PolygonLayer({
   };
 
   const positions = convertCoordinates(feature.coordinates);
+
+  // Debug log for polygons with holes
+  if (feature.type === 'Polygon' && feature.coordinates.length > 1) {
+    console.log(`🍩 Polígono com buraco detectado: ${feature.name}`, {
+      rings: feature.coordinates.length,
+      outerRingPoints: feature.coordinates[0].length,
+      holes: feature.coordinates.length - 1
+    });
+  }
 
   return (
     <Polygon
