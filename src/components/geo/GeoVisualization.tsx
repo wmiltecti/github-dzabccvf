@@ -695,7 +695,7 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       const resultFC = calcularDiferenca(bufferFC, referenceFC);
 
       setCalculationStep('Calculando área e perímetro...');
-      setCalculationProgress(80);
+      setCalculationProgress(70);
       await new Promise(resolve => setTimeout(resolve, 200));
 
       const metrics = calcularArea(resultFC);
@@ -730,15 +730,55 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         featureCount: resultFC.features.length
       };
 
+      setCalculationStep('Calculando área removida (diferença)...');
+      setCalculationProgress(85);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📊 Passo 3: Calculando diferença (área removida)...');
+      const diferencaFC = calcularDiferenca(referenceFC, resultFC);
+      const diferencaMetrics = calcularArea(diferencaFC);
+
+      const diferencaGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-diferenca-${Date.now()}`,
+        name: `Área Removida (Diferença) - ${baseLayer.name}`,
+        features: diferencaFC.features.map((feat, idx) => {
+          const featMetrics = diferencaMetrics.features[idx];
+          return {
+            id: `diferenca-feat-${idx}`,
+            name: feat.properties?.name || featMetrics?.name || `Diferença Feature ${idx + 1}`,
+            type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+            coordinates: feat.geometry.coordinates,
+            properties: {
+              ...feat.properties,
+              buffer_distance: distanciaMetros,
+              base_layer: baseLayer.name,
+              reference_layer: referenceLayer.name,
+              area_ha: featMetrics?.areaHa,
+              area_m2: featMetrics?.areaM2,
+              perimeter_km: featMetrics?.perimetroKm,
+              layer_type: 'removed_area'
+            },
+            layerId: `${baseLayer.id}-diferenca-${Date.now()}`
+          };
+        }),
+        visible: true,
+        color: '#F59E0B',
+        opacity: 0.4,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: diferencaFC.features.length
+      };
+
       console.log('✅ Zona de amortecimento calculada com sucesso!');
       console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
       console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
+      console.log('📊 Área removida:', diferencaGeoLayer.featureCount, 'features');
 
       setCalculationStep('Finalizando e exibindo resultado...');
       setCalculationProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer]);
+      setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer, diferencaGeoLayer]);
 
       setTimeout(() => {
         setZoomToLayerId(resultGeoLayer.id);
