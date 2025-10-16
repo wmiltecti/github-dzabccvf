@@ -10,7 +10,7 @@ import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import CalculationProgress from './CalculationProgress';
 import UserPanel from './UserPanel';
-import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
+import { calcularBuffer, calcularDiferenca, calcularIntersecao, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
 import 'leaflet/dist/leaflet.css';
@@ -730,19 +730,58 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         featureCount: resultFC.features.length
       };
 
-      setCalculationStep('Calculando área removida (diferença)...');
-      setCalculationProgress(85);
+      setCalculationStep('Calculando interseção (área sobreposta)...');
+      setCalculationProgress(80);
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      console.log('📊 Passo 3: Calculando diferença (área removida)...');
+      console.log('📊 Passo 3: Calculando interseção (buffer ∩ referência)...');
+      const intersecaoFC = calcularIntersecao(bufferFC, referenceFC);
+      const intersecaoMetrics = intersecaoFC.features.length > 0 ? calcularArea(intersecaoFC) : null;
+
+      const intersecaoGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-intersecao-${Date.now()}`,
+        name: `Área Sobreposta (Interseção) - ${baseLayer.name}`,
+        features: intersecaoFC.features.map((feat, idx) => {
+          const featMetrics = intersecaoMetrics?.features[idx];
+          return {
+            id: `intersecao-feat-${idx}`,
+            name: feat.properties?.name || featMetrics?.name || `Interseção Feature ${idx + 1}`,
+            type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+            coordinates: feat.geometry.coordinates,
+            properties: {
+              ...feat.properties,
+              buffer_distance: distanciaMetros,
+              base_layer: baseLayer.name,
+              reference_layer: referenceLayer.name,
+              area_ha: featMetrics?.areaHa,
+              area_m2: featMetrics?.areaM2,
+              perimeter_km: featMetrics?.perimetroKm,
+              layer_type: 'intersection'
+            },
+            layerId: `${baseLayer.id}-intersecao-${Date.now()}`
+          };
+        }),
+        visible: true,
+        color: '#10B981',
+        opacity: 0.4,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: intersecaoFC.features.length
+      };
+
+      setCalculationStep('Calculando área removida (diferença)...');
+      setCalculationProgress(90);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📊 Passo 4: Calculando diferença (área removida)...');
       const diferencaFC = calcularDiferenca(referenceFC, resultFC);
-      const diferencaMetrics = calcularArea(diferencaFC);
+      const diferencaMetrics = diferencaFC.features.length > 0 ? calcularArea(diferencaFC) : null;
 
       const diferencaGeoLayer: GeoLayer = {
         id: `${baseLayer.id}-diferenca-${Date.now()}`,
         name: `Área Removida (Diferença) - ${baseLayer.name}`,
         features: diferencaFC.features.map((feat, idx) => {
-          const featMetrics = diferencaMetrics.features[idx];
+          const featMetrics = diferencaMetrics?.features[idx];
           return {
             id: `diferenca-feat-${idx}`,
             name: feat.properties?.name || featMetrics?.name || `Diferença Feature ${idx + 1}`,
@@ -772,13 +811,14 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       console.log('✅ Zona de amortecimento calculada com sucesso!');
       console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
       console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
+      console.log('📊 Área sobreposta:', intersecaoGeoLayer.featureCount, 'features');
       console.log('📊 Área removida:', diferencaGeoLayer.featureCount, 'features');
 
       setCalculationStep('Finalizando e exibindo resultado...');
       setCalculationProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer, diferencaGeoLayer]);
+      setLayers(prev => [...prev, bufferGeoLayer, resultGeoLayer, intersecaoGeoLayer, diferencaGeoLayer]);
 
       setTimeout(() => {
         setZoomToLayerId(resultGeoLayer.id);

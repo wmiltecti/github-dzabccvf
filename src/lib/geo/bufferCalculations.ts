@@ -1,6 +1,7 @@
 // src/lib/geo/bufferCalculations.ts
 import buffer from '@turf/buffer'
 import difference from '@turf/difference'
+import intersect from '@turf/intersect'
 import area from '@turf/area'
 import length from '@turf/length'
 import { featureCollection } from '@turf/helpers'
@@ -76,6 +77,43 @@ export function calcularDiferenca(
 
     if (atual && atual.geometry) {
       result.push(atual)
+    }
+  }
+
+  return featureCollection(result)
+}
+
+/**
+ * Calcula a interseção entre todas as features de dois FeatureCollections.
+ * Útil para obter apenas a área de sobreposição entre buffer e referência.
+ */
+export function calcularIntersecao(
+  alvo: FeatureCollection<Geometry>,
+  referencia: FeatureCollection<Geometry>
+): FeatureCollection<Geometry> {
+  if (!alvo?.features?.length) return featureCollection([])
+  if (!referencia?.features?.length) return featureCollection([])
+
+  const result: AnyFeat[] = []
+
+  for (const f of alvo.features as AnyFeat[]) {
+    if (!f?.geometry) continue
+
+    for (const g of referencia.features as AnyFeat[]) {
+      if (!g?.geometry) continue
+      try {
+        const inter = intersect(f as AnyFeat, g as AnyFeat) as AnyFeat | null
+        if (inter && inter.geometry) {
+          inter.properties = {
+            ...(f.properties || {}),
+            ...(g.properties || {}),
+            _intersected: true
+          }
+          result.push(inter)
+        }
+      } catch (e) {
+        console.warn('Falha em intersect(); ignorando par.', e)
+      }
     }
   }
 
