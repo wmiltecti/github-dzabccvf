@@ -10,11 +10,13 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
   try {
     console.log(`💾 Salvando etapa ${step} na API...`, { step, data, processId });
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       throw new Error('Usuário não autenticado');
     }
+
+    const user = session.user;
 
     const payload = {
       user_id: user.id,
@@ -48,11 +50,13 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
 
 export const loadStepData = async (step: number, processId?: string) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       throw new Error('Usuário não autenticado');
     }
+
+    const user = session.user;
 
     let query = supabase
       .from('form_wizard_steps')
@@ -81,11 +85,13 @@ export const loadStepData = async (step: number, processId?: string) => {
 
 export const loadAllSteps = async (processId?: string) => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!user) {
+    if (!session?.user) {
       throw new Error('Usuário não autenticado');
     }
+
+    const user = session.user;
 
     let query = supabase
       .from('form_wizard_steps')
