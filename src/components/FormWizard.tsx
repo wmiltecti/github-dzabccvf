@@ -389,7 +389,7 @@ export default function FormWizard() {
 
               return (
                 <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
+                  <div className="flex flex-col items-center flex-1 group relative">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -411,18 +411,11 @@ export default function FormWizard() {
                         <Icon className="w-5 h-5" />
                       )}
                     </motion.div>
-                    <div className="mt-2 text-center hidden md:block">
-                      <p
-                        className={`text-xs font-medium ${
-                          isActive
-                            ? 'text-blue-600'
-                            : isCompleted
-                            ? 'text-green-600'
-                            : 'text-gray-500'
-                        }`}
-                      >
+                    <div className="absolute top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
+                      <div className="bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-lg">
                         {step.name}
-                      </p>
+                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                      </div>
                     </div>
                   </div>
                   {idx < steps.length - 1 && (
