@@ -21,6 +21,7 @@ import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
 import Step3UsoAgua from './Step3UsoAgua';
 import Step4Residuos from './Step4Residuos';
+import Step5OutrasInfo from './Step5OutrasInfo';
 
 interface Step {
   id: number;
@@ -62,9 +63,15 @@ const steps: Step[] = [
   },
   {
     id: 6,
-    name: 'Finalização',
-    description: 'Informações finais',
+    name: 'Outras Informações',
+    description: 'Informações complementares',
     icon: Info
+  },
+  {
+    id: 7,
+    name: 'Finalização',
+    description: 'Revisão e conclusão',
+    icon: CheckCircle
   }
 ];
 
@@ -259,6 +266,22 @@ export default function FormWizard() {
         };
       case 6:
         return {
+          respostas: {
+            usaRecursosNaturais: true,
+            geraEfluentesLiquidos: true,
+            geraEmissoesAtmosfericas: true,
+            geraResiduosSolidos: true,
+            geraRuidosVibracao: false,
+            localizadoAreaProtegida: false,
+            necessitaSupressaoVegetacao: false,
+            interfereCursoAgua: false,
+            armazenaSubstanciaPerigosa: true,
+            possuiPlanoEmergencia: true
+          },
+          outrasInformacoes: 'O empreendimento já possui certificação ISO 14001 e realiza auditorias ambientais anuais. Todas as medidas de controle ambiental estão implementadas e em operação conforme legislação vigente.'
+        };
+      case 7:
+        return {
           observacoes: 'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
         };
       default:
@@ -284,7 +307,8 @@ export default function FormWizard() {
           {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
-          {currentStep === 6 && <Step6Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
+          {currentStep === 7 && <Step6Content data={data} onChange={handleStepDataChange} />}
         </motion.div>
       </AnimatePresence>
     );
