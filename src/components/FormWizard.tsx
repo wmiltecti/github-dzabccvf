@@ -50,15 +50,15 @@ const steps: Step[] = [
   },
   {
     id: 4,
-    name: 'Resíduos',
-    description: 'Gestão de resíduos',
-    icon: Trash2
-  },
-  {
-    id: 5,
     name: 'Combustíveis',
     description: 'Controle de combustíveis',
     icon: Fuel
+  },
+  {
+    id: 5,
+    name: 'Resíduos',
+    description: 'Gestão de resíduos',
+    icon: Trash2
   },
   {
     id: 6,
@@ -188,6 +188,32 @@ export default function FormWizard() {
         };
       case 4:
         return {
+          combustiveis: [
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'ENERGIA_ELETRICA',
+              equipamento: 'Motor Principal 500 MW',
+              quantidade: 1200.50,
+              unidade: 'MWH'
+            },
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'GLP',
+              equipamento: 'Caldeira Auxiliar',
+              quantidade: 350.00,
+              unidade: 'KG'
+            },
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'OLEO',
+              equipamento: 'Gerador de Emergência',
+              quantidade: 500.75,
+              unidade: 'KG'
+            }
+          ]
+        };
+      case 5:
+        return {
           residuosGrupoA: [
             {
               id: '1',
@@ -231,32 +257,6 @@ export default function FormWizard() {
             }
           ]
         };
-      case 5:
-        return {
-          combustiveis: [
-            {
-              id: crypto.randomUUID(),
-              tipoFonte: 'ENERGIA_ELETRICA',
-              equipamento: 'Motor Principal 500 MW',
-              quantidade: 1200.50,
-              unidade: 'MWH'
-            },
-            {
-              id: crypto.randomUUID(),
-              tipoFonte: 'GLP',
-              equipamento: 'Caldeira Auxiliar',
-              quantidade: 350.00,
-              unidade: 'KG'
-            },
-            {
-              id: crypto.randomUUID(),
-              tipoFonte: 'OLEO',
-              equipamento: 'Gerador de Emergência',
-              quantidade: 500.75,
-              unidade: 'KG'
-            }
-          ]
-        };
       case 6:
         return {
           observacoes: 'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
@@ -282,8 +282,8 @@ export default function FormWizard() {
           {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
-          {currentStep === 4 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
-          {currentStep === 5 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
+          {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
+          {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step6Content data={data} onChange={handleStepDataChange} />}
         </motion.div>
       </AnimatePresence>
