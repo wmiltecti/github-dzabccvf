@@ -248,8 +248,10 @@ export default function StepRevisao({ formData, onNavigateToStep, onFinish }: St
       {/* Cabeçalho */}
       <div className="flex items-start justify-between mb-2">
         <div>
-          <div className="flex items-start gap-2">
-            <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900">Revisão Final</h2>
           </div>
           <p className="text-sm text-gray-600 mt-1">

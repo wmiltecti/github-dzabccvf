@@ -179,8 +179,10 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-start gap-2 mb-2">
-        <Droplet className="w-6 h-6 text-blue-600 mt-1" />
+      <div className="flex items-start gap-3 mb-2">
+        <div className="flex-shrink-0">
+          <Droplet className="w-6 h-6 text-blue-600 mt-1" />
+        </div>
         <h2 className="text-2xl font-bold text-gray-900">Uso de Água</h2>
       </div>
 
