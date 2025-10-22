@@ -213,7 +213,7 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'processes', name: 'Processos', icon: FileText },
-    { id: 'form-wizard', name: 'Formulário Wizard', icon: FileText },
+    { id: 'form-wizard', name: 'Formulário', icon: FileText },
     { id: 'companies', name: 'Empresas', icon: Building2 },
     { id: 'reports', name: 'Relatórios', icon: BarChart3 },
     { id: 'compliance', name: 'Conformidade', icon: Shield },
