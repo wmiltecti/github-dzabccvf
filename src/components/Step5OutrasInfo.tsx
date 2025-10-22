@@ -15,7 +15,7 @@ interface Pergunta {
 const perguntas: Pergunta[] = [
   {
     id: 'usaRecursosNaturais',
-    texto: 'O empreendimento utiliza recursos naturais (água, solo, vegetação)?',
+    texto: 'Há previsão de supressão de vegetação nativa na área do empreendimento?',
     categoria: 'Recursos Naturais'
   },
   {
