@@ -10,27 +10,25 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
   try {
     console.log(`💾 Salvando etapa ${step} na API...`, { step, data, processId });
 
-    const authUserStr = localStorage.getItem('auth_user');
-    if (!authUserStr) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      console.error('Erro de sessão:', sessionError);
       throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
     }
 
-    const authUser = JSON.parse(authUserStr);
-    const userId = authUser?.userId || authUser?.id;
-
-    if (!userId) {
-      throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
-    }
-
-    console.log('🔐 User ID from localStorage:', userId);
+    const userId = session.user.id;
+    console.log('🔐 User ID from Supabase session:', userId);
 
     const payload = {
       user_id: userId,
       step_number: step,
       step_data: data,
-      process_id: processId,
+      process_id: processId || null,
       updated_at: new Date().toISOString()
     };
+
+    console.log('📦 Payload para salvar:', payload);
 
     const { data: savedData, error } = await supabase
       .from('form_wizard_steps')
@@ -38,7 +36,7 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
         onConflict: 'user_id,step_number,process_id'
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Erro ao salvar etapa:', error);
@@ -56,17 +54,13 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
 
 export const loadStepData = async (step: number, processId?: string) => {
   try {
-    const authUserStr = localStorage.getItem('auth_user');
-    if (!authUserStr) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
       throw new Error('Usuário não autenticado');
     }
 
-    const authUser = JSON.parse(authUserStr);
-    const userId = authUser?.userId || authUser?.id;
-
-    if (!userId) {
-      throw new Error('ID de usuário não encontrado');
-    }
+    const userId = session.user.id;
 
     let query = supabase
       .from('form_wizard_steps')
@@ -95,17 +89,13 @@ export const loadStepData = async (step: number, processId?: string) => {
 
 export const loadAllSteps = async (processId?: string) => {
   try {
-    const authUserStr = localStorage.getItem('auth_user');
-    if (!authUserStr) {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
       throw new Error('Usuário não autenticado');
     }
 
-    const authUser = JSON.parse(authUserStr);
-    const userId = authUser?.userId || authUser?.id;
-
-    if (!userId) {
-      throw new Error('ID de usuário não encontrado');
-    }
+    const userId = session.user.id;
 
     let query = supabase
       .from('form_wizard_steps')
