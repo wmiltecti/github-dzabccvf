@@ -10,16 +10,22 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
   try {
     console.log(`💾 Salvando etapa ${step} na API...`, { step, data, processId });
 
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      throw new Error('Usuário não autenticado');
+    const authUserStr = localStorage.getItem('auth_user');
+    if (!authUserStr) {
+      throw new Error('Usuário não autenticado. Por favor, faça login novamente.');
     }
 
-    const user = session.user;
+    const authUser = JSON.parse(authUserStr);
+    const userId = authUser?.userId || authUser?.id;
+
+    if (!userId) {
+      throw new Error('ID de usuário não encontrado. Por favor, faça login novamente.');
+    }
+
+    console.log('🔐 User ID from localStorage:', userId);
 
     const payload = {
-      user_id: user.id,
+      user_id: userId,
       step_number: step,
       step_data: data,
       process_id: processId,
@@ -50,18 +56,22 @@ export const saveStep = async (step: number, data: any, processId?: string) => {
 
 export const loadStepData = async (step: number, processId?: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.user) {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (!authUserStr) {
       throw new Error('Usuário não autenticado');
     }
 
-    const user = session.user;
+    const authUser = JSON.parse(authUserStr);
+    const userId = authUser?.userId || authUser?.id;
+
+    if (!userId) {
+      throw new Error('ID de usuário não encontrado');
+    }
 
     let query = supabase
       .from('form_wizard_steps')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('step_number', step);
 
     if (processId) {
@@ -85,18 +95,22 @@ export const loadStepData = async (step: number, processId?: string) => {
 
 export const loadAllSteps = async (processId?: string) => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.user) {
+    const authUserStr = localStorage.getItem('auth_user');
+    if (!authUserStr) {
       throw new Error('Usuário não autenticado');
     }
 
-    const user = session.user;
+    const authUser = JSON.parse(authUserStr);
+    const userId = authUser?.userId || authUser?.id;
+
+    if (!userId) {
+      throw new Error('ID de usuário não encontrado');
+    }
 
     let query = supabase
       .from('form_wizard_steps')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('step_number', { ascending: true });
 
     if (processId) {
