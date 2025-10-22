@@ -40,7 +40,7 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'localizadoAreaProtegida',
-    texto: 'O empreendimento está localizado em área de proteção ambiental ou unidade de conservação?',
+    texto: 'No caso de piscicultura, haverá cultivo de espécies hibridas ou exóticas?',
     categoria: 'Localização'
   },
   {
