@@ -70,22 +70,7 @@ export default function FormWizard() {
 
   const progress = (currentStep / steps.length) * 100;
 
-  const handleNext = async () => {
-    setIsSaving(true);
-    const currentStepData = formData[`step${currentStep}` as keyof typeof formData];
-
-    const result = await saveStep(currentStep, currentStepData);
-
-    setIsSaving(false);
-
-    if (result.error) {
-      setSaveMessage('Erro ao salvar dados');
-      setTimeout(() => setSaveMessage(''), 3000);
-      return;
-    }
-
-    setSaveMessage('Dados salvos!');
-    setTimeout(() => setSaveMessage(''), 2000);
+  const handleNext = () => {
     nextStep();
   };
 
@@ -344,15 +329,10 @@ export default function FormWizard() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isSaving}
+            disabled={currentStep === steps.length}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Salvando...
-              </>
-            ) : currentStep === steps.length ? (
+            {currentStep === steps.length ? (
               'Concluído'
             ) : (
               <>
