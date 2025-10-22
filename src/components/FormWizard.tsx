@@ -17,6 +17,7 @@ import {
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
 import Step1Caracteristicas from './Step1Caracteristicas';
+import Step2RecursosEnergia from './Step2RecursosEnergia';
 
 interface Step {
   id: number;
@@ -34,8 +35,8 @@ const steps: Step[] = [
   },
   {
     id: 2,
-    name: 'Recursos',
-    description: 'Recursos e energia',
+    name: 'Uso de Recursos e Energia',
+    description: 'Combustíveis e fontes de energia',
     icon: Zap
   },
   {
@@ -127,8 +128,36 @@ export default function FormWizard() {
         };
       case 2:
         return {
-          tipoRecurso: 'solar',
-          consumo: '2500'
+          usaLenha: 'sim',
+          lenhaQuantidade: '250',
+          lenhaCeprof: 'CEPROF-12345',
+          possuiCaldeira: 'sim',
+          caldeiraAlturaChamine: '15',
+          possuiFornos: 'sim',
+          fornosSistemaCaptacao: 'Sistema de filtros ciclônicos com lavadores de gases',
+          combustiveis: [
+            {
+              id: '1',
+              tipoFonte: 'Lenha',
+              equipamento: 'Caldeira Principal',
+              quantidade: '250',
+              unidade: 'm³'
+            },
+            {
+              id: '2',
+              tipoFonte: 'Gás Natural',
+              equipamento: 'Forno Industrial 1',
+              quantidade: '500',
+              unidade: 'm³'
+            },
+            {
+              id: '3',
+              tipoFonte: 'Eletricidade',
+              equipamento: 'Linha de Produção',
+              quantidade: '2.5',
+              unidade: 'MW'
+            }
+          ]
         };
       case 3:
         return {
@@ -168,7 +197,7 @@ export default function FormWizard() {
           transition={{ duration: 0.3 }}
         >
           {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
-          {currentStep === 2 && <Step2Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 4 && <Step4Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step5Content data={data} onChange={handleStepDataChange} />}
