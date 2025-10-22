@@ -50,17 +50,17 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'interfereCursoAgua',
-    texto: 'Haverá inferência direta em corpos hídricos como: barramento, lançamento de efluentes, desvio?',
+    texto: 'Haverá sistema de tratamento das águas residuárias, após a despesca?',
     categoria: 'Recursos Hídricos'
   },
   {
     id: 'armazenaSubstanciaPerigosa',
-    texto: 'Haverá barragem de rejeitos?',
+    texto: 'Haverá inferência direta em corpos hídircos como: barramento, lancamento de efluentes, desvio?',
     categoria: 'Substâncias Perigosas'
   },
   {
     id: 'possuiPlanoEmergencia',
-    texto: 'O empreendimento possui plano de emergência ambiental?',
+    texto: 'Haverá barragem de rejeitos?',
     categoria: 'Gestão'
   }
 ];
