@@ -30,7 +30,7 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'geraResiduosSolidos',
-    texto: 'O empreendimento gera resíduos sólidos?',
+    texto: 'Haverá utilização de agrotóxicos ou defensivos agrícolas?',
     categoria: 'Resíduos'
   },
   {
