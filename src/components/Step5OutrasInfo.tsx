@@ -25,7 +25,7 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'geraEmissoesAtmosfericas',
-    texto: 'O empreendimento gera emissões atmosféricas?',
+    texto: 'Há previsão de impacto ambiental (direto ou indireto) à bens culturais acautelados, nos termos da legislação vigente?',
     categoria: 'Emissões'
   },
   {
