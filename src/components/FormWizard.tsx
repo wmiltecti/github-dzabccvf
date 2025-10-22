@@ -11,7 +11,8 @@ import {
   ArrowRight,
   Save,
   CheckCircle,
-  Loader2
+  Loader2,
+  Wand2
 } from 'lucide-react';
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
@@ -113,6 +114,49 @@ export default function FormWizard() {
     updateStepData(currentStep, data);
   };
 
+  const handleFillMockData = () => {
+    const mockData = getMockDataForStep(currentStep);
+    updateStepData(currentStep, mockData);
+    setSaveMessage('Dados de exemplo preenchidos!');
+    setTimeout(() => setSaveMessage(''), 2000);
+  };
+
+  const getMockDataForStep = (step: number) => {
+    switch (step) {
+      case 1:
+        return {
+          nome: 'João Silva Santos',
+          email: 'joao.silva@example.com'
+        };
+      case 2:
+        return {
+          tipoRecurso: 'solar',
+          consumo: '2500'
+        };
+      case 3:
+        return {
+          fonteAgua: 'rede',
+          consumoAgua: '150'
+        };
+      case 4:
+        return {
+          utilizaCombustivel: true,
+          tipoCombustivel: 'gasolina'
+        };
+      case 5:
+        return {
+          volumeResiduos: '500',
+          destinacao: 'Coleta seletiva realizada por empresa certificada. Os resíduos são separados e enviados para reciclagem conforme legislação ambiental.'
+        };
+      case 6:
+        return {
+          observacoes: 'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
+        };
+      default:
+        return {};
+    }
+  };
+
   const renderStepContent = () => {
     const stepKey = `step${currentStep}` as keyof typeof formData;
     const data = formData[stepKey];
@@ -149,18 +193,27 @@ export default function FormWizard() {
                 Etapa {currentStep} de {steps.length}
               </p>
             </div>
-            <button
-              onClick={handleSaveDraft}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-            >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              Salvar Rascunho
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleFillMockData}
+                className="flex items-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <Wand2 className="w-4 h-4" />
+                Preencher
+              </button>
+              <button
+                onClick={handleSaveDraft}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Salvar Rascunho
+              </button>
+            </div>
           </div>
 
           {/* Progress Bar */}
