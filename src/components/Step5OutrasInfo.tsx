@@ -45,17 +45,17 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'necessitaSupressaoVegetacao',
-    texto: 'O empreendimento necessita de supressão de vegetação?',
+    texto: 'Os tanquers serãoo instalado sno curso d´água?',
     categoria: 'Vegetação'
   },
   {
     id: 'interfereCursoAgua',
-    texto: 'O empreendimento interfere em cursos d\'água ou nascentes?',
+    texto: 'Haverá inferência direta em corpos hídricos como: barramento, lançamento de efluentes, desvio?',
     categoria: 'Recursos Hídricos'
   },
   {
     id: 'armazenaSubstanciaPerigosa',
-    texto: 'O empreendimento armazena substâncias perigosas ou produtos químicos?',
+    texto: 'Haverá barragem de rejeitos?',
     categoria: 'Substâncias Perigosas'
   },
   {
