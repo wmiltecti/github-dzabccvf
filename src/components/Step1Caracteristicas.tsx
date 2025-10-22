@@ -81,8 +81,8 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center gap-2 mb-2">
-        <FileText className="w-6 h-6 text-blue-600" />
+      <div className="flex items-start gap-2 mb-2">
+        <FileText className="w-6 h-6 text-blue-600 mt-1" />
         <h2 className="text-2xl font-bold text-gray-900">Características do Empreendimento</h2>
       </div>
 

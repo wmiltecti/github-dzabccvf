@@ -279,8 +279,8 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center gap-2 mb-2">
-        <Trash2 className="w-6 h-6 text-red-600" />
+      <div className="flex items-start gap-2 mb-2">
+        <Trash2 className="w-6 h-6 text-red-600 mt-1" />
         <h2 className="text-2xl font-bold text-gray-900">Resíduos</h2>
       </div>
 
