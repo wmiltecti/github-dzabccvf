@@ -18,6 +18,7 @@ import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
+import Step2Combustiveis from './Step2Combustiveis';
 import Step3UsoAgua from './Step3UsoAgua';
 import Step4Residuos from './Step4Residuos';
 
@@ -55,9 +56,9 @@ const steps: Step[] = [
   },
   {
     id: 5,
-    name: 'Resíduos',
-    description: 'Gestão de resíduos',
-    icon: Trash2
+    name: 'Combustíveis',
+    description: 'Controle de combustíveis',
+    icon: Fuel
   },
   {
     id: 6,
@@ -232,8 +233,29 @@ export default function FormWizard() {
         };
       case 5:
         return {
-          volumeResiduos: '500',
-          destinacao: 'Coleta seletiva realizada por empresa certificada. Os resíduos são separados e enviados para reciclagem conforme legislação ambiental.'
+          combustiveis: [
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'ENERGIA_ELETRICA',
+              equipamento: 'Motor Principal 500 MW',
+              quantidade: 1200.50,
+              unidade: 'MWH'
+            },
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'GLP',
+              equipamento: 'Caldeira Auxiliar',
+              quantidade: 350.00,
+              unidade: 'KG'
+            },
+            {
+              id: crypto.randomUUID(),
+              tipoFonte: 'OLEO',
+              equipamento: 'Gerador de Emergência',
+              quantidade: 500.75,
+              unidade: 'KG'
+            }
+          ]
         };
       case 6:
         return {
@@ -261,7 +283,7 @@ export default function FormWizard() {
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
           {currentStep === 4 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
-          {currentStep === 5 && <Step5Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 5 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step6Content data={data} onChange={handleStepDataChange} />}
         </motion.div>
       </AnimatePresence>
