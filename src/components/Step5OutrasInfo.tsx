@@ -20,7 +20,7 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'geraEfluentesLiquidos',
-    texto: 'O empreendimento gera efluentes líquidos?',
+    texto: 'Há previsão de impacto ambiental (direto ou indireto) à grupos quilombolas, nos temos da legislação vigente?',
     categoria: 'Efluentes'
   },
   {
