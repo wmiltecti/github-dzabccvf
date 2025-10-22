@@ -22,6 +22,7 @@ import Step2Combustiveis from './Step2Combustiveis';
 import Step3UsoAgua from './Step3UsoAgua';
 import Step4Residuos from './Step4Residuos';
 import Step5OutrasInfo from './Step5OutrasInfo';
+import StepRevisao from './StepRevisao';
 
 interface Step {
   id: number;
@@ -69,7 +70,7 @@ const steps: Step[] = [
   },
   {
     id: 7,
-    name: 'Finalização',
+    name: 'Revisão Final',
     description: 'Revisão e conclusão',
     icon: CheckCircle
   }
@@ -308,7 +309,7 @@ export default function FormWizard() {
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
-          {currentStep === 7 && <Step6Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 7 && <StepRevisao formData={formData} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
         </motion.div>
       </AnimatePresence>
     );
