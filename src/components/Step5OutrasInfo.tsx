@@ -35,7 +35,7 @@ const perguntas: Pergunta[] = [
   },
   {
     id: 'geraRuidosVibracao',
-    texto: 'O empreendimento gera ruídos ou vibrações?',
+    texto: 'Há previsão de implantação da atividade em áreas de APP?',
     categoria: 'Poluição Sonora'
   },
   {
