@@ -26,6 +26,7 @@ import {
   X
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
+import FormWizard from '../components/FormWizard';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -212,6 +213,7 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'processes', name: 'Processos', icon: FileText },
+    { id: 'form-wizard', name: 'Formulário Wizard', icon: FileText },
     { id: 'companies', name: 'Empresas', icon: Building2 },
     { id: 'reports', name: 'Relatórios', icon: BarChart3 },
     { id: 'compliance', name: 'Conformidade', icon: Shield },
@@ -461,6 +463,7 @@ export default function Dashboard() {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
+      case 'form-wizard': return <FormWizard />;
       case 'companies': return (
         <div className="text-center py-8 sm:py-12 px-4">
           <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
