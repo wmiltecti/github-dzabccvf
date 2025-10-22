@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
+import Step1Caracteristicas from './Step1Caracteristicas';
 
 interface Step {
   id: number;
@@ -27,8 +28,8 @@ interface Step {
 const steps: Step[] = [
   {
     id: 1,
-    name: 'Dados Iniciais',
-    description: 'Informações básicas do formulário',
+    name: 'Características do Empreendimento',
+    description: 'Informações sobre o empreendimento',
     icon: FileText
   },
   {
@@ -110,8 +111,19 @@ export default function FormWizard() {
     switch (step) {
       case 1:
         return {
-          nome: 'João Silva Santos',
-          email: 'joao.silva@example.com'
+          area: '5000',
+          porte: 'Médio Porte',
+          potencialPoluidor: 'Médio',
+          cnaeCodigo: '1011-2/01',
+          cnaeDescricao: 'Frigorífico - abate de bovinos',
+          possuiLicencaAnterior: 'sim',
+          licencaTipo: 'LO',
+          licencaNumero: '12345/2023',
+          licencaAno: '2023',
+          licencaValidade: '2025-12-31',
+          numeroEmpregados: '150',
+          horarioInicio: '07:00',
+          horarioFim: '17:00'
         };
       case 2:
         return {
@@ -155,7 +167,7 @@ export default function FormWizard() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {currentStep === 1 && <Step1Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
           {currentStep === 2 && <Step2Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 4 && <Step4Content data={data} onChange={handleStepDataChange} />}
