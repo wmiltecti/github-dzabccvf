@@ -18,6 +18,7 @@ import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
+import Step3UsoAgua from './Step3UsoAgua';
 
 interface Step {
   id: number;
@@ -41,8 +42,8 @@ const steps: Step[] = [
   },
   {
     id: 3,
-    name: 'Água',
-    description: 'Gestão de água',
+    name: 'Uso de Água',
+    description: 'Consumo, origem e efluentes',
     icon: Droplet
   },
   {
@@ -161,8 +162,27 @@ export default function FormWizard() {
         };
       case 3:
         return {
-          fonteAgua: 'rede',
-          consumoAgua: '150'
+          origens: ['Rede Pública', 'Poço Artesiano'],
+          consumoHumano: '50',
+          consumoOutros: '150',
+          volumeDespejo: '180',
+          destinoFinal: 'Corpo Receptor',
+          outorgas: [
+            {
+              id: '1',
+              tipo: 'Captação Subterrânea',
+              numero: 'OUT-987654/2023',
+              validade: '2026-12-31',
+              vazao: '100'
+            },
+            {
+              id: '2',
+              tipo: 'Lançamento de Efluentes',
+              numero: 'OUT-123456/2023',
+              validade: '2027-06-30',
+              vazao: '180'
+            }
+          ]
         };
       case 4:
         return {
@@ -198,7 +218,7 @@ export default function FormWizard() {
         >
           {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
-          {currentStep === 3 && <Step3Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
           {currentStep === 4 && <Step4Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step5Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step6Content data={data} onChange={handleStepDataChange} />}
