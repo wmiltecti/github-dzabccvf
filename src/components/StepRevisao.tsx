@@ -246,12 +246,12 @@ export default function StepRevisao({ formData, onNavigateToStep, onFinish }: St
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <CheckCircle className="w-6 h-6 text-green-600" />
-            Revisão Final
-          </h2>
+            <h2 className="text-2xl font-bold text-gray-900">Revisão Final</h2>
+          </div>
           <p className="text-sm text-gray-600 mt-1">
             Revise todas as informações antes de finalizar
           </p>

@@ -278,6 +278,12 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-2 mb-2">
+        <Trash2 className="w-6 h-6 text-red-600" />
+        <h2 className="text-2xl font-bold text-gray-900">Resíduos</h2>
+      </div>
+
       {/* Grupo A - Resíduos Infectantes */}
       <div className="border border-red-300 rounded-lg p-4 bg-red-50">
         <div className="flex items-center justify-between mb-4">

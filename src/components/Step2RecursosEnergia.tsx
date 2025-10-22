@@ -102,6 +102,12 @@ export default function Step2RecursosEnergia({ data, onChange }: Step2RecursosEn
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-2 mb-2">
+        <Zap className="w-6 h-6 text-yellow-600" />
+        <h2 className="text-2xl font-bold text-gray-900">Uso de Recursos e Energia</h2>
+      </div>
+
       {/* Uso de Lenha */}
       <div className="border border-gray-200 rounded-lg p-4 bg-white">
         <div className="flex items-center gap-2 mb-4">

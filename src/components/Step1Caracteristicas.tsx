@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Clock, Users, Building2, AlertCircle } from 'lucide-react';
+import { Search, Clock, Users, Building2, AlertCircle, FileText } from 'lucide-react';
 
 interface Step1CaracteristicasProps {
   data: any;
@@ -80,6 +80,12 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-2 mb-2">
+        <FileText className="w-6 h-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-gray-900">Características do Empreendimento</h2>
+      </div>
+
       {/* Unidade de Medida e Área */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

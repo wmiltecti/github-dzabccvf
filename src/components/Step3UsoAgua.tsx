@@ -178,6 +178,12 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
 
   return (
     <div className="space-y-6">
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-2 mb-2">
+        <Droplet className="w-6 h-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-gray-900">Uso de Água</h2>
+      </div>
+
       {/* Validação de erros */}
       {validationErrors.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">

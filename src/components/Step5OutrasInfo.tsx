@@ -102,7 +102,7 @@ export default function Step5OutrasInfo({ data, onChange }: Step5OutrasInfoProps
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Info className="w-6 h-6 text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">Outras Informações</h2>

@@ -182,7 +182,7 @@ export default function Step2Combustiveis({ data, onChange }: Step2CombustiveisP
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-2">
         <Fuel className="w-6 h-6 text-orange-600" />
         <h2 className="text-2xl font-bold text-gray-900">Combustíveis</h2>
       </div>
