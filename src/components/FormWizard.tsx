@@ -19,6 +19,7 @@ import { saveStep, saveDraft } from '../services/formWizardService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step3UsoAgua from './Step3UsoAgua';
+import Step4Residuos from './Step4Residuos';
 
 interface Step {
   id: number;
@@ -48,9 +49,9 @@ const steps: Step[] = [
   },
   {
     id: 4,
-    name: 'Combustíveis',
-    description: 'Controle de combustíveis',
-    icon: Fuel
+    name: 'Resíduos',
+    description: 'Gestão de resíduos',
+    icon: Trash2
   },
   {
     id: 5,
@@ -186,8 +187,48 @@ export default function FormWizard() {
         };
       case 4:
         return {
-          utilizaCombustivel: true,
-          tipoCombustivel: 'gasolina'
+          residuosGrupoA: [
+            {
+              id: '1',
+              tipo: 'Resíduos Infectantes',
+              quantidade: '150',
+              destino: 'Autoclave'
+            },
+            {
+              id: '2',
+              tipo: 'Materiais Perfurocortantes',
+              quantidade: '50',
+              destino: 'Incineração'
+            }
+          ],
+          residuosGrupoB: [
+            {
+              id: '1',
+              tipo: 'Medicamentos Vencidos',
+              quantidade: '80',
+              destino: 'Empresa Especializada'
+            }
+          ],
+          residuosGerais: [
+            {
+              id: '1',
+              categoria: 'Sólidos',
+              tipo: 'Papel e Papelão',
+              origem: 'Área administrativa',
+              tratamento: 'Não possui tratamento',
+              destino: 'Reciclagem',
+              quantidade: '300'
+            },
+            {
+              id: '2',
+              categoria: 'Líquidos',
+              tipo: 'Efluente Industrial',
+              origem: 'Setor de produção',
+              tratamento: 'ETE',
+              destino: 'Corpo Receptor',
+              quantidade: '500'
+            }
+          ]
         };
       case 5:
         return {
@@ -219,7 +260,7 @@ export default function FormWizard() {
           {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
-          {currentStep === 4 && <Step4Content data={data} onChange={handleStepDataChange} />}
+          {currentStep === 4 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step5Content data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step6Content data={data} onChange={handleStepDataChange} />}
         </motion.div>
