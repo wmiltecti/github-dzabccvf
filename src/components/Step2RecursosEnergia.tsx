@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Trash2, Edit2, Plus, Info, AlertCircle } from 'lucide-react';
+import { Flame, Trash2, Edit2, Plus, Info, AlertCircle, Zap } from 'lucide-react';
 
 interface Step2RecursosEnergiaProps {
   data: any;
