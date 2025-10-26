@@ -1,6 +1,7 @@
 import { supabase } from '../supabase';
 import { friendlyError, err, ServiceError } from './errors';
 import { ID, PersonPF, PersonPJ } from './types';
+import http from './http';
 
 // helpers
 const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
@@ -17,15 +18,46 @@ async function requireProfileId(): Promise<string> {
   return data.id as string;
 }
 
+export async function getByCpf(cpf: string) {
+  try {
+    const cpfDigits = onlyDigits(cpf);
+
+    if (!isCPF(cpfDigits)) {
+      return { data: null, error: err('CPF inválido. Deve conter 11 dígitos') };
+    }
+
+    const { data } = await http.get(`/pessoas/cpf/${cpfDigits}`);
+    return { data, error: null as ServiceError | null };
+  } catch (error: any) {
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message || error?.message;
+
+    if (status === 404) {
+      return { data: null, error: err('CPF não encontrado', 'NOT_FOUND') };
+    } else if (status === 400) {
+      return { data: null, error: err('CPF inválido', 'VALIDATION') };
+    }
+
+    return { data: null, error: err(message || 'Erro ao buscar pessoa por CPF') };
+  }
+}
+
 export async function getByCpfCnpj(cpfOrCnpj: string) {
   const key = onlyDigits(cpfOrCnpj);
-  const { data, error } = await supabase
-    .from('people')
-    .select('*')
-    .eq('cpf_cnpj', key)
-    .maybeSingle();
-  if (error) return { data: null, error: friendlyError(error) };
-  return { data, error: null as ServiceError | null };
+
+  if (isCPF(key)) {
+    return getByCpf(key);
+  } else if (isCNPJ(key)) {
+    const { data, error } = await supabase
+      .from('people')
+      .select('*')
+      .eq('cpf_cnpj', key)
+      .maybeSingle();
+    if (error) return { data: null, error: friendlyError(error) };
+    return { data, error: null as ServiceError | null };
+  }
+
+  return { data: null, error: err('Identificação inválida. Deve ser CPF (11 dígitos) ou CNPJ (14 dígitos)') };
 }
 
 export async function createPF(payload: PersonPF) {
