@@ -1,6 +1,7 @@
 // src/lib/api/auth.ts
 import http from './http';
 import { PessoaTipo, LoginResponse } from '../../types/auth';
+import { getByCpf } from './people';
 
 type TipoDeIdentificacao = "CPF" | "CNPJ" | "PASSAPORTE" | "ID_ESTRANGEIRA";
 
@@ -12,7 +13,12 @@ interface LoginCredentials {
 
 const normalizeId = (v: string) => (v ?? '').replace(/[^0-9A-Za-z]/g, '');
 const mapTdi = (tdi?: TipoDeIdentificacao) =>
-  tdi === 'ID_ESTRANGEIRA' ? 'ESTRANGEIRO' : tdi; // FastAPI espera 'ESTRANGEIRO'
+  tdi === 'ID_ESTRANGEIRA' ? 'ESTRANGEIRO' : tdi;
+
+const isCPF = (v: string) => {
+  const digits = v.replace(/\D/g, '');
+  return digits.length === 11;
+};
 
 export async function login(
   pessoaTipo: PessoaTipo,
@@ -30,18 +36,30 @@ export async function login(
   }
 
   try {
-    // 🔁 rota do FastAPI
     const { data } = await http.post<LoginResponse>("/auth/login", body);
 
     if (data?.token) {
-      // mantém as chaves que você já usa no front
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("auth_user", JSON.stringify(data));
+
+      if (pessoaTipo === 'PF' && isCPF(credenciais.numeroIdentificacao)) {
+        try {
+          const { data: personData, error } = await getByCpf(credenciais.numeroIdentificacao);
+
+          if (!error && personData) {
+            localStorage.setItem("auth_person", JSON.stringify(personData));
+            console.log('Dados da pessoa carregados:', personData);
+          } else if (error) {
+            console.warn('Não foi possível carregar dados da pessoa:', error.message);
+          }
+        } catch (err) {
+          console.warn('Erro ao buscar dados da pessoa:', err);
+        }
+      }
     }
 
     return data;
   } catch (err: any) {
-    // extrai mensagem do FastAPI (message | detail.message) ou do Axios
     const msg =
       err?.response?.data?.message ||
       err?.response?.data?.detail?.message ||
