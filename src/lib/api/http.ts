@@ -30,10 +30,16 @@ http.interceptors.response.use(
       localStorage.removeItem('auth_token');
     }
 
-    const errorMessage =
-      (error.response?.data as { message?: string })?.message ||
-      error.message ||
-      `Error: ${error.response?.status || 'Unknown'}`;
+    let errorMessage: string;
+
+    if (error.response?.status === 401) {
+      errorMessage = 'Usuário ou senha incorretos';
+    } else {
+      errorMessage =
+        (error.response?.data as { message?: string })?.message ||
+        error.message ||
+        `Error: ${error.response?.status || 'Unknown'}`;
+    }
 
     return Promise.reject(new Error(errorMessage));
   }
