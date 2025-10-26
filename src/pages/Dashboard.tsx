@@ -586,14 +586,11 @@ export default function Dashboard() {
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
-            <div className="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-green-400"></div>
-              <span className="text-sm font-medium text-white" title={externalUserName || 'Usuário'}>
+            <div className="flex items-center gap-3 bg-gray-700 px-4 py-2.5 rounded-lg border border-gray-600">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></div>
+              <span className="text-base font-bold text-white" title={externalUserName || 'Usuário'}>
                 {externalUserName?.split(' ')[0] || 'Usuário'}
               </span>
-            </div>
-            <div className="bg-yellow-500 text-black px-2 py-1 text-xs rounded">
-              DEBUG: "{externalUserName}" | null:{String(externalUserName === null)} | undefined:{String(externalUserName === undefined)}
             </div>
           </div>
         </div>
