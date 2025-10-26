@@ -49,8 +49,11 @@ export default function Login() {
         ...(pessoaTipo === 'ESTRANGEIRO' && { tipoDeIdentificacao }),
       };
 
-      await login(pessoaTipo, credenciais);
-      console.log('Login OK');
+      const result = await login(pessoaTipo, credenciais);
+      console.log('✅ Login OK - Resultado:', result);
+      console.log('📦 Verificando localStorage após login:');
+      console.log('  - auth_token:', localStorage.getItem('auth_token'));
+      console.log('  - auth_user:', localStorage.getItem('auth_user'));
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
