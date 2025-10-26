@@ -296,3 +296,51 @@ body::before {
 .data-table td:last-child {
   text-align: right;
 }
+
+.table-container {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+}
+
+.table-header-wrapper {
+  overflow: hidden;
+  border-bottom: 2px solid #ddd;
+}
+
+.table-body-wrapper {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.table-header-wrapper .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f3f4f6;
+}
+
+.table-body-wrapper .data-table {
+  border-collapse: collapse;
+}
+
+.table-header-wrapper .data-table,
+.table-body-wrapper .data-table {
+  table-layout: fixed;
+}
+
+.table-header-wrapper .data-table th:first-child,
+.table-body-wrapper .data-table td:first-child {
+  width: 40%;
+}
+
+.table-header-wrapper .data-table th:nth-child(2),
+.table-body-wrapper .data-table td:nth-child(2) {
+  width: 30%;
+}
+
+.table-header-wrapper .data-table th:last-child,
+.table-body-wrapper .data-table td:last-child {
+  width: 30%;
+}

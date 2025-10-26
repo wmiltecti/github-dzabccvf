@@ -88,39 +88,45 @@ export default function PessoasFisicas() {
             <p className="text-gray-600">Carregando...</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase">
-                    Nome
-                  </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 uppercase">
-                    CPF/Passaporte
-                  </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 uppercase">
-                    Município (UF)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pessoas.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
-                      Nenhum registro encontrado
-                    </td>
+          <div className="table-container">
+            <div className="table-header-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase">
+                      Nome
+                    </th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 uppercase">
+                      CPF/Passaporte
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 uppercase">
+                      Município (UF)
+                    </th>
                   </tr>
-                ) : (
-                  pessoas.map((pessoa) => (
-                    <tr key={pessoa.pkpessoa}>
-                      <td>{pessoa.nome}</td>
-                      <td>{formatCpfPassaporte(pessoa)}</td>
-                      <td>{formatMunicipio(pessoa)}</td>
+                </thead>
+              </table>
+            </div>
+            <div className="table-body-wrapper">
+              <table className="data-table">
+                <tbody>
+                  {pessoas.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                        Nenhum registro encontrado
+                      </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    pessoas.map((pessoa) => (
+                      <tr key={pessoa.pkpessoa}>
+                        <td>{pessoa.nome}</td>
+                        <td>{formatCpfPassaporte(pessoa)}</td>
+                        <td>{formatMunicipio(pessoa)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
