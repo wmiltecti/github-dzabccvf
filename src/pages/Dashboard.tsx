@@ -592,6 +592,9 @@ export default function Dashboard() {
                 {externalUserName?.split(' ')[0] || 'Usuário'}
               </span>
             </div>
+            <div className="bg-yellow-500 text-black px-2 py-1 text-xs rounded">
+              DEBUG: "{externalUserName}" | null:{String(externalUserName === null)} | undefined:{String(externalUserName === undefined)}
+            </div>
           </div>
         </div>
       </header>
