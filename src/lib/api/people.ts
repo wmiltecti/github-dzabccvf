@@ -23,22 +23,33 @@ export async function getByCpf(cpf: string) {
     const cpfDigits = onlyDigits(cpf);
 
     if (!isCPF(cpfDigits)) {
-      return { data: null, error: err('CPF inválido. Deve conter 11 dígitos') };
+      return { data: null, error: err('CPF inválido. Deve conter 11 dígitos', 'VALIDATION') };
     }
 
     const { data } = await http.get(`/pessoas/cpf/${cpfDigits}`);
     return { data, error: null as ServiceError | null };
   } catch (error: any) {
     const status = error?.response?.status;
+    const detail = error?.response?.data?.detail;
     const message = error?.response?.data?.message || error?.message;
 
-    if (status === 404) {
-      return { data: null, error: err('CPF não encontrado', 'NOT_FOUND') };
-    } else if (status === 400) {
-      return { data: null, error: err('CPF inválido', 'VALIDATION') };
+    if (status === 400) {
+      const errorMessage = detail || 'CPF inválido. Verifique o formato e tente novamente.';
+      return { data: null, error: err(errorMessage, 'VALIDATION') };
+    } else if (status === 404) {
+      const errorMessage = detail || 'Pessoa não encontrada com o CPF informado.';
+      return { data: null, error: err(errorMessage, 'NOT_FOUND') };
+    } else if (status === 500) {
+      const errorMessage = detail || 'Erro interno no servidor ao consultar pessoa. Tente novamente mais tarde.';
+      return { data: null, error: err(errorMessage, 'SERVER_ERROR') };
+    } else if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
+      return { data: null, error: err('Tempo de resposta excedido. Verifique sua conexão e tente novamente.', 'TIMEOUT') };
+    } else if (!error?.response) {
+      return { data: null, error: err('Não foi possível conectar ao servidor. Verifique sua conexão com a internet.', 'NETWORK_ERROR') };
     }
 
-    return { data: null, error: err(message || 'Erro ao buscar pessoa por CPF') };
+    const fallbackMessage = detail || message || 'Erro ao buscar pessoa por CPF. Tente novamente.';
+    return { data: null, error: err(fallbackMessage, 'UNKNOWN') };
   }
 }
 
