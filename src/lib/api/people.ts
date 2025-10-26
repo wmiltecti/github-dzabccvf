@@ -2,6 +2,7 @@ import { supabase } from '../supabase';
 import { friendlyError, err, ServiceError } from './errors';
 import { ID, PersonPF, PersonPJ } from './types';
 import http from './http';
+import { formatCPF, formatCNPJ, formatPhone, formatDate, formatBoolean, formatCEP } from '../formatters';
 
 // helpers
 const onlyDigits = (s?: string | null) => (s || '').replace(/\D+/g, '');
@@ -18,6 +19,54 @@ async function requireProfileId(): Promise<string> {
   return data.id as string;
 }
 
+function formatPersonData(rawData: any): any {
+  if (!rawData) return null;
+
+  const formatted: any = { ...rawData };
+
+  if (formatted.cpf) {
+    formatted.cpf_display = formatCPF(formatted.cpf);
+  }
+
+  if (formatted.cnpj) {
+    formatted.cnpj_display = formatCNPJ(formatted.cnpj);
+  }
+
+  if (formatted.telefone) {
+    formatted.telefone_display = formatPhone(formatted.telefone);
+  }
+
+  if (formatted.celular) {
+    formatted.celular_display = formatPhone(formatted.celular);
+  }
+
+  if (formatted.cep) {
+    formatted.cep_display = formatCEP(formatted.cep);
+  }
+
+  if (formatted.data_nascimento) {
+    formatted.data_nascimento_display = formatDate(formatted.data_nascimento);
+  }
+
+  if (formatted.created_at) {
+    formatted.created_at_display = formatDate(formatted.created_at);
+  }
+
+  if (formatted.updated_at) {
+    formatted.updated_at_display = formatDate(formatted.updated_at);
+  }
+
+  if (typeof formatted.ativo === 'boolean') {
+    formatted.ativo_display = formatBoolean(formatted.ativo);
+  }
+
+  if (typeof formatted.aceita_comunicacao === 'boolean') {
+    formatted.aceita_comunicacao_display = formatBoolean(formatted.aceita_comunicacao);
+  }
+
+  return formatted;
+}
+
 export async function getByCpf(cpf: string) {
   try {
     const cpfDigits = onlyDigits(cpf);
@@ -27,7 +76,8 @@ export async function getByCpf(cpf: string) {
     }
 
     const { data } = await http.get(`/pessoas/cpf/${cpfDigits}`);
-    return { data, error: null as ServiceError | null };
+    const formattedData = formatPersonData(data);
+    return { data: formattedData, error: null as ServiceError | null };
   } catch (error: any) {
     const status = error?.response?.status;
     const detail = error?.response?.data?.detail;
