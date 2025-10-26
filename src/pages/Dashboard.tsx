@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [processes, setProcesses] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [externalUserName, setExternalUserName] = useState<string | null>(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -51,6 +52,24 @@ export default function Dashboard() {
     approved: 0,
     rejected: 0
   });
+
+  React.useEffect(() => {
+    const loadExternalUserData = () => {
+      try {
+        const authUserData = localStorage.getItem('auth_user');
+        if (authUserData) {
+          const userData = JSON.parse(authUserData);
+          if (userData.nome) {
+            setExternalUserName(userData.nome);
+          }
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar dados do usuário do localStorage:', error);
+      }
+    };
+
+    loadExternalUserData();
+  }, []);
 
   React.useEffect(() => {
     if (user && isConfigured && isSupabaseReady) {
@@ -546,7 +565,7 @@ export default function Dashboard() {
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
             <span className="text-xs sm:text-sm font-medium text-white">
-              {userMetadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}
+              {externalUserName?.split(' ')[0] || userMetadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}
             </span>
           </div>
         </div>
