@@ -56,18 +56,27 @@ export default function Dashboard() {
   React.useEffect(() => {
     const loadExternalUserData = () => {
       try {
+        console.log('🔄 INICIANDO CARREGAMENTO DE DADOS DO USUÁRIO');
         const authUserData = localStorage.getItem('auth_user');
-        console.log('🔍 Carregando dados do localStorage auth_user:', authUserData);
+        console.log('🔍 Raw data do localStorage:', authUserData);
+        console.log('🔍 Tipo:', typeof authUserData);
 
         if (authUserData) {
           const userData = JSON.parse(authUserData);
           console.log('📦 Dados parseados:', userData);
+          console.log('📦 Tipo do objeto:', typeof userData);
+          console.log('📦 Keys do objeto:', Object.keys(userData));
+          console.log('📦 userData.nome:', userData.nome);
+          console.log('📦 userData["nome"]:', userData["nome"]);
 
           if (userData.nome) {
             console.log('✅ Nome encontrado:', userData.nome);
+            console.log('✅ Chamando setExternalUserName com:', userData.nome);
             setExternalUserName(userData.nome);
+            console.log('✅ setExternalUserName chamado!');
           } else {
             console.warn('⚠️ Campo nome não encontrado no objeto userData');
+            console.warn('⚠️ Estrutura completa:', JSON.stringify(userData, null, 2));
           }
         } else {
           console.warn('⚠️ Nenhum dado encontrado em auth_user no localStorage');
@@ -79,6 +88,10 @@ export default function Dashboard() {
 
     loadExternalUserData();
   }, []);
+
+  React.useEffect(() => {
+    console.log('🎨 RENDERIZANDO DASHBOARD - externalUserName atual:', externalUserName);
+  }, [externalUserName]);
 
   React.useEffect(() => {
     if (user && isConfigured && isSupabaseReady) {
