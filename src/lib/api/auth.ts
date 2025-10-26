@@ -38,9 +38,17 @@ export async function login(
   try {
     const { data } = await http.post<LoginResponse>("/auth/login", body);
 
+    console.log('🔐 Resposta do login recebida:', data);
+
     if (data?.token) {
+      console.log('✅ Token recebido, salvando dados no localStorage');
+      console.log('📝 Dados a serem salvos:', { token: data.token, nome: data.nome, userId: data.userId });
+
       localStorage.setItem("auth_token", data.token);
       localStorage.setItem("auth_user", JSON.stringify(data));
+
+      console.log('✅ Dados salvos no localStorage');
+      console.log('🔍 Verificando auth_user salvo:', localStorage.getItem('auth_user'));
 
       if (pessoaTipo === 'PF' && isCPF(credenciais.numeroIdentificacao)) {
         try {

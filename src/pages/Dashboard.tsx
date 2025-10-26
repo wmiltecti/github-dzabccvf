@@ -57,14 +57,23 @@ export default function Dashboard() {
     const loadExternalUserData = () => {
       try {
         const authUserData = localStorage.getItem('auth_user');
+        console.log('🔍 Carregando dados do localStorage auth_user:', authUserData);
+
         if (authUserData) {
           const userData = JSON.parse(authUserData);
+          console.log('📦 Dados parseados:', userData);
+
           if (userData.nome) {
+            console.log('✅ Nome encontrado:', userData.nome);
             setExternalUserName(userData.nome);
+          } else {
+            console.warn('⚠️ Campo nome não encontrado no objeto userData');
           }
+        } else {
+          console.warn('⚠️ Nenhum dado encontrado em auth_user no localStorage');
         }
       } catch (error) {
-        console.warn('Erro ao carregar dados do usuário do localStorage:', error);
+        console.error('❌ Erro ao carregar dados do usuário do localStorage:', error);
       }
     };
 
@@ -564,8 +573,8 @@ export default function Dashboard() {
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
-            <span className="text-xs sm:text-sm font-medium text-white">
-              {externalUserName?.split(' ')[0] || userMetadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuário'}
+            <span className="text-xs sm:text-sm font-medium text-white" title={externalUserName || 'Usuário'}>
+              {externalUserName?.split(' ')[0] || 'Usuário'}
             </span>
           </div>
         </div>
