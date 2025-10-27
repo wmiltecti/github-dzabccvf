@@ -9,7 +9,6 @@ export class PessoasFisicasService {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
         },
       });
       return response.data;
@@ -37,7 +36,6 @@ export class PessoasFisicasService {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
         },
       });
       return response.data;
