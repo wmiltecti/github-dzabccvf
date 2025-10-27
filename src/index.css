@@ -306,6 +306,9 @@ body::before {
 .table-header-wrapper {
   overflow: hidden;
   border-bottom: 2px solid #ddd;
+  position: relative;
+  z-index: 20;
+  background: #f3f4f6;
 }
 
 .table-body-wrapper {
@@ -317,8 +320,9 @@ body::before {
 .table-header-wrapper .data-table thead th {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 15;
   background: #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .table-body-wrapper .data-table {
