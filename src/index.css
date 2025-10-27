@@ -304,11 +304,12 @@ body::before {
 }
 
 .table-header-wrapper {
-  overflow: hidden;
+  overflow: visible;
   border-bottom: 2px solid #ddd;
   position: relative;
   z-index: 20;
   background: #f3f4f6;
+  min-height: 50px;
 }
 
 .table-body-wrapper {
@@ -323,6 +324,10 @@ body::before {
   z-index: 15;
   background: #f3f4f6;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  line-height: 1.5;
+  vertical-align: middle;
+  height: auto;
 }
 
 .table-body-wrapper .data-table {
