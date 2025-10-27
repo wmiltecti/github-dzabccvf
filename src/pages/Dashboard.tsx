@@ -28,6 +28,7 @@ import {
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
 import PessoasFisicas from './PessoasFisicas';
+import PessoasJuridicas from './PessoasJuridicas';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -258,7 +259,8 @@ export default function Dashboard() {
   ];
 
   const geralSubSections = [
-    { id: 'pessoas-fisicas', name: 'Pessoas Físicas' }
+    { id: 'pessoas-fisicas', name: 'Pessoas Físicas' },
+    { id: 'pessoas-juridicas', name: 'Pessoas Jurídicas' }
   ];
 
   const otherNavigation = [
@@ -542,6 +544,7 @@ export default function Dashboard() {
         />
       );
       case 'geral-pessoas-fisicas': return <PessoasFisicas />;
+      case 'geral-pessoas-juridicas': return <PessoasJuridicas />;
       default:
         if (activeTab.startsWith('admin-')) {
           const adminSection = activeTab.replace('admin-', '');
