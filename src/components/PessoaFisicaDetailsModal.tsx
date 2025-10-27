@@ -61,27 +61,44 @@ export default function PessoaFisicaDetailsModal({
   const [activeTab, setActiveTab] = useState('dados-pessoais');
   const [pessoa, setPessoa] = useState<PessoaFisica | null>(pessoaInicial);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showingInitialData, setShowingInitialData] = useState(false);
 
   useEffect(() => {
-    if (isOpen && pessoaInicial?.cpf) {
-      loadPessoaDetails();
+    if (isOpen) {
+      setPessoa(pessoaInicial);
+      setErrorMessage(null);
+      setShowingInitialData(false);
+
+      if (pessoaInicial?.cpf) {
+        loadPessoaDetails();
+      } else {
+        setShowingInitialData(true);
+        setErrorMessage('CPF não disponível. Exibindo dados básicos.');
+      }
     }
-  }, [isOpen, pessoaInicial]);
+  }, [isOpen, pessoaInicial?.pkpessoa]);
 
   const loadPessoaDetails = async () => {
     if (!pessoaInicial?.cpf) {
-      toast.error('CPF não encontrado para buscar detalhes');
+      setShowingInitialData(true);
+      setErrorMessage('CPF não disponível. Exibindo dados básicos.');
       return;
     }
 
     try {
       setLoading(true);
+      setErrorMessage(null);
       const data = await PessoasFisicasService.getPessoaByCpf(pessoaInicial.cpf);
       setPessoa(data);
-    } catch (error) {
-      console.error('Erro ao carregar detalhes da pessoa:', error);
-      toast.error('Erro ao carregar dados da pessoa física');
+      setShowingInitialData(false);
+    } catch (error: any) {
+      console.error('Erro ao carregar detalhes da pessoa física:', error);
+      const errorMsg = error?.message || 'Erro ao carregar dados detalhados';
+      setErrorMessage(errorMsg);
       setPessoa(pessoaInicial);
+      setShowingInitialData(true);
+      toast.warning(`${errorMsg}. Exibindo dados básicos disponíveis.`);
     } finally {
       setLoading(false);
     }
@@ -445,14 +462,46 @@ export default function PessoaFisicaDetailsModal({
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {errorMessage && (
+            <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm text-yellow-800">{errorMessage}</p>
+                  {showingInitialData && (
+                    <button
+                      onClick={loadPessoaDetails}
+                      className="mt-2 text-sm text-yellow-700 underline hover:text-yellow-900"
+                    >
+                      Tentar novamente
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="ml-4 text-gray-600">Carregando dados...</p>
+              <p className="ml-4 text-gray-600">Carregando dados detalhados...</p>
             </div>
           ) : !pessoa ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">Erro ao carregar dados da pessoa física</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                <p className="text-red-800 font-semibold mb-2">Erro ao carregar dados</p>
+                <p className="text-red-600 text-sm mb-4">Não foi possível carregar os dados da pessoa física</p>
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                >
+                  Fechar
+                </button>
+              </div>
             </div>
           ) : (
             <>
