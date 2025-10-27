@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PessoasJuridicasService } from '../services/pessoasJuridicasService';
 import { toast } from 'react-toastify';
+import PessoaJuridicaDetailsModal from '../components/PessoaJuridicaDetailsModal';
 
 interface PessoaJuridica {
   pkpessoa: number;
@@ -80,6 +81,7 @@ export default function PessoasJuridicas() {
   const [pessoas, setPessoas] = useState<PessoaJuridica[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPessoa, setSelectedPessoa] = useState<PessoaJuridica | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -159,6 +161,11 @@ export default function PessoasJuridicas() {
             selectedPessoa ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-400 cursor-not-allowed'
           }`}
           disabled={!selectedPessoa}
+          onClick={() => {
+            if (selectedPessoa) {
+              setShowDetailsModal(true);
+            }
+          }}
         >
           Detalhes
         </button>
@@ -241,6 +248,16 @@ export default function PessoasJuridicas() {
           </div>
         )}
       </div>
+
+      {showDetailsModal && selectedPessoa && (
+        <PessoaJuridicaDetailsModal
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+          }}
+          pessoa={selectedPessoa}
+        />
+      )}
     </div>
   );
 }
