@@ -6,15 +6,15 @@ import PessoaFisicaDetailsModal from '../components/PessoaFisicaDetailsModal';
 interface PessoaFisica {
   pkpessoa: number;
   fkuser: number | null;
-  tipo: string | null;
+  tipo: string | number | null;
   status: string | null;
   cpf: string | null;
   nome: string;
   datanascimento: string | null;
   naturalidade: string | null;
   nacionalidade: string | null;
-  estadocivil: string | null;
-  sexo: string | null;
+  estadocivil: string | number | null;
+  sexo: string | number | null;
   rg: string | null;
   orgaoemissor: string | null;
   fkestadoemissor: number | null;

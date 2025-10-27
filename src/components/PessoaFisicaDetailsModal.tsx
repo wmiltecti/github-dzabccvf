@@ -6,15 +6,15 @@ import { X, User, Phone, MapPin, FileText } from 'lucide-react';
 interface PessoaFisica {
   pkpessoa: number;
   fkuser: number | null;
-  tipo: string | null;
+  tipo: string | number | null;
   status: string | null;
   cpf: string | null;
   nome: string;
   datanascimento: string | null;
   naturalidade: string | null;
   nacionalidade: string | null;
-  estadocivil: string | null;
-  sexo: string | null;
+  estadocivil: string | number | null;
+  sexo: string | number | null;
   rg: string | null;
   orgaoemissor: string | null;
   fkestadoemissor: number | null;
@@ -118,8 +118,10 @@ export default function PessoaFisicaDetailsModal({
     }
   };
 
-  const getEstadoCivilText = (estadoCivil: string | null) => {
-    if (!estadoCivil) return 'N/A';
+  const getEstadoCivilText = (estadoCivil: string | number | null) => {
+    if (estadoCivil === null || estadoCivil === undefined) return 'N/A';
+
+    const estadoCivilStr = String(estadoCivil);
     const estados: { [key: string]: string } = {
       'solteiro': 'Solteiro(a)',
       'casado': 'Casado(a)',
@@ -127,18 +129,22 @@ export default function PessoaFisicaDetailsModal({
       'viuvo': 'Viúvo(a)',
       'separado': 'Separado(a)',
     };
-    return estados[estadoCivil.toLowerCase()] || estadoCivil;
+    return estados[estadoCivilStr.toLowerCase()] || estadoCivilStr;
   };
 
-  const getSexoText = (sexo: string | null) => {
-    if (!sexo) return 'N/A';
+  const getSexoText = (sexo: string | number | null) => {
+    if (sexo === null || sexo === undefined) return 'N/A';
+
+    const sexoStr = String(sexo);
     const sexos: { [key: string]: string } = {
+      '0': 'Masculino',
+      '1': 'Feminino',
       'M': 'Masculino',
       'F': 'Feminino',
       'masculino': 'Masculino',
       'feminino': 'Feminino',
     };
-    return sexos[sexo] || sexo;
+    return sexos[sexoStr] || sexoStr;
   };
 
   if (!isOpen) return null;
