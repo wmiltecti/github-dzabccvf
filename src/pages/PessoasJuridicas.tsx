@@ -106,7 +106,7 @@ export default function PessoasJuridicas() {
   };
 
   const formatCNPJ = (cnpj: string | null) => {
-    if (!cnpj) return 'N/A';
+    if (!cnpj) return '';
     const cleaned = cnpj.replace(/\D/g, '');
     if (cleaned.length !== 14) return cnpj;
     return cleaned.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
@@ -126,18 +126,18 @@ export default function PessoasJuridicas() {
   };
 
   const formatMunicipioUF = (pessoa: PessoaJuridica) => {
-    const cidade = pessoa.cidade || 'N/A';
+    const cidade = pessoa.cidade || '';
     const uf = getEstadoUF(pessoa.fkestado);
 
-    if (cidade === 'N/A' && !uf) {
-      return 'N/A';
+    if (!cidade && !uf) {
+      return '';
     }
 
-    if (uf) {
+    if (uf && cidade) {
       return `${cidade} (${uf})`;
     }
 
-    return cidade;
+    return cidade || uf;
   };
 
   return (
@@ -236,7 +236,7 @@ export default function PessoasJuridicas() {
                           selectedPessoa?.pkpessoa === pessoa.pkpessoa ? 'bg-green-50' : ''
                         }`}
                       >
-                        <td>{pessoa.razaosocial || pessoa.nome || 'N/A'}</td>
+                        <td>{pessoa.razaosocial || pessoa.nome || ''}</td>
                         <td>{formatCNPJ(pessoa.cnpj)}</td>
                         <td>{formatMunicipioUF(pessoa)}</td>
                       </tr>

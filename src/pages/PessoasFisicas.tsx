@@ -82,14 +82,14 @@ export default function PessoasFisicas() {
     if (pessoa.passaporte) {
       return pessoa.passaporte;
     }
-    return 'N/A';
+    return '';
   };
 
   const formatMunicipio = (pessoa: PessoaFisica) => {
     if (pessoa.cidade) {
       return pessoa.cidade;
     }
-    return 'N/A';
+    return '';
   };
 
   return (
