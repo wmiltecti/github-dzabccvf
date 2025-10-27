@@ -50,7 +50,7 @@ interface PessoaFisica {
 export default function PessoasFisicas() {
   const [pessoas, setPessoas] = useState<PessoaFisica[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPessoa, setSelectedPessoa] = useState<number | null>(null);
+  const [selectedPessoa, setSelectedPessoa] = useState<PessoaFisica | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -183,9 +183,9 @@ export default function PessoasFisicas() {
                     pessoas.map((pessoa) => (
                       <tr
                         key={pessoa.pkpessoa}
-                        onClick={() => setSelectedPessoa(pessoa.pkpessoa)}
+                        onClick={() => setSelectedPessoa(pessoa)}
                         className={`cursor-pointer hover:bg-gray-50 ${
-                          selectedPessoa === pessoa.pkpessoa ? 'bg-green-50' : ''
+                          selectedPessoa?.pkpessoa === pessoa.pkpessoa ? 'bg-green-50' : ''
                         }`}
                       >
                         <td>{pessoa.nome}</td>
@@ -207,7 +207,7 @@ export default function PessoasFisicas() {
           onClose={() => {
             setShowDetailsModal(false);
           }}
-          pessoaId={selectedPessoa}
+          pessoa={selectedPessoa}
         />
       )}
     </div>

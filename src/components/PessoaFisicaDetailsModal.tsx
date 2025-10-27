@@ -50,33 +50,38 @@ interface PessoaFisica {
 interface PessoaFisicaDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pessoaId: number;
+  pessoa: PessoaFisica;
 }
 
 export default function PessoaFisicaDetailsModal({
   isOpen,
   onClose,
-  pessoaId
+  pessoa: pessoaInicial
 }: PessoaFisicaDetailsModalProps) {
   const [activeTab, setActiveTab] = useState('dados-pessoais');
-  const [pessoa, setPessoa] = useState<PessoaFisica | null>(null);
+  const [pessoa, setPessoa] = useState<PessoaFisica | null>(pessoaInicial);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isOpen && pessoaId) {
+    if (isOpen && pessoaInicial?.cpf) {
       loadPessoaDetails();
     }
-  }, [isOpen, pessoaId]);
+  }, [isOpen, pessoaInicial]);
 
   const loadPessoaDetails = async () => {
+    if (!pessoaInicial?.cpf) {
+      toast.error('CPF não encontrado para buscar detalhes');
+      return;
+    }
+
     try {
       setLoading(true);
-      const data = await PessoasFisicasService.getPessoaById(pessoaId);
+      const data = await PessoasFisicasService.getPessoaByCpf(pessoaInicial.cpf);
       setPessoa(data);
     } catch (error) {
       console.error('Erro ao carregar detalhes da pessoa:', error);
       toast.error('Erro ao carregar dados da pessoa física');
-      setPessoa(null);
+      setPessoa(pessoaInicial);
     } finally {
       setLoading(false);
     }

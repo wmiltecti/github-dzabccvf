@@ -30,9 +30,9 @@ export class PessoasFisicasService {
     }
   }
 
-  static async getPessoaById(id: number) {
+  static async getPessoaByCpf(cpf: string) {
     try {
-      const response = await axios.get(`${API_BASE_URL}/pessoas/${id}`, {
+      const response = await axios.get(`${API_BASE_URL}/pessoas/cpf/${cpf}`, {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
@@ -40,7 +40,7 @@ export class PessoasFisicasService {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching pessoa by ID:', error);
+      console.error('Error fetching pessoa by CPF:', error);
       if (error.response) {
         console.error('API Response Error:', {
           status: error.response.status,
