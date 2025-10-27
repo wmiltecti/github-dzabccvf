@@ -52,6 +52,7 @@ export default function PessoasFisicas() {
   const [loading, setLoading] = useState(true);
   const [selectedPessoa, setSelectedPessoa] = useState<number | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadPessoas();
@@ -60,11 +61,14 @@ export default function PessoasFisicas() {
   const loadPessoas = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await PessoasFisicasService.getPessoas();
       setPessoas(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao carregar pessoas físicas:', error);
-      toast.error('Erro ao carregar dados das pessoas físicas');
+      const errorMessage = error?.message || 'Erro ao carregar dados das pessoas físicas';
+      setError(errorMessage);
+      toast.error(errorMessage);
       setPessoas([]);
     } finally {
       setLoading(false);
@@ -133,6 +137,19 @@ export default function PessoasFisicas() {
           <div className="p-8 text-center">
             <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Carregando...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+              <p className="text-red-800 font-semibold mb-2">Erro ao carregar dados</p>
+              <p className="text-red-600 text-sm mb-4">{error}</p>
+              <button
+                onClick={loadPessoas}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+              >
+                Tentar Novamente
+              </button>
+            </div>
           </div>
         ) : (
           <div className="table-container">
