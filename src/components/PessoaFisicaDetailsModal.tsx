@@ -88,17 +88,17 @@ export default function PessoaFisicaDetailsModal({
   };
 
   const formatCPF = (cpf: string | null) => {
-    if (!cpf) return 'N/A';
+    if (!cpf) return '';
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const formatCEP = (cep: string | null) => {
-    if (!cep) return 'N/A';
+    if (!cep) return '';
     return cep.replace(/(\d{5})(\d{3})/, '$1-$2');
   };
 
   const formatPhone = (phone: string | null) => {
-    if (!phone) return 'N/A';
+    if (!phone) return '';
     if (phone.length === 11) {
       return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     }
@@ -109,7 +109,7 @@ export default function PessoaFisicaDetailsModal({
   };
 
   const formatDate = (date: string | null) => {
-    if (!date) return 'N/A';
+    if (!date) return '';
     try {
       const d = new Date(date);
       return d.toLocaleDateString('pt-BR');
@@ -119,7 +119,7 @@ export default function PessoaFisicaDetailsModal({
   };
 
   const getEstadoCivilText = (estadoCivil: string | number | null) => {
-    if (estadoCivil === null || estadoCivil === undefined) return 'N/A';
+    if (estadoCivil === null || estadoCivil === undefined) return '';
 
     const estadoCivilStr = String(estadoCivil);
     const estados: { [key: string]: string } = {
@@ -133,7 +133,7 @@ export default function PessoaFisicaDetailsModal({
   };
 
   const getSexoText = (sexo: string | number | null) => {
-    if (sexo === null || sexo === undefined) return 'N/A';
+    if (sexo === null || sexo === undefined) return '';
 
     const sexoStr = String(sexo);
     const sexos: { [key: string]: string } = {
