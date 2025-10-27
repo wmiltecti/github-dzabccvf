@@ -164,7 +164,7 @@ export default function PessoaFisicaDetailsModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-            <p className="text-lg font-semibold text-gray-900">{pessoa.nome || 'N/A'}</p>
+            <p className="text-lg font-semibold text-gray-900">{pessoa.nome || ''}</p>
           </div>
 
           <div>
@@ -174,32 +174,32 @@ export default function PessoaFisicaDetailsModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">RG</label>
-            <p className="text-gray-900">{pessoa.rg || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.rg || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Órgão Emissor</label>
-            <p className="text-gray-900">{pessoa.orgaoemissor || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.orgaoemissor || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado Emissor</label>
-            <p className="text-gray-900">{pessoa.fkestadoemissor || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.fkestadoemissor || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Profissão</label>
-            <p className="text-gray-900">{pessoa.profissao || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.profissao || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Número Conselho Profissional</label>
-            <p className="text-gray-900">{pessoa.numeroconselhoprofissional || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.numeroconselhoprofissional || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Conselho Profissional</label>
-            <p className="text-gray-900">{pessoa.fkconselhoprofissional || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.fkconselhoprofissional || ''}</p>
           </div>
 
           <div>
@@ -219,22 +219,22 @@ export default function PessoaFisicaDetailsModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Naturalidade</label>
-            <p className="text-gray-900">{pessoa.naturalidade || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.naturalidade || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nacionalidade</label>
-            <p className="text-gray-900">{pessoa.nacionalidade || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.nacionalidade || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Filiação Mãe</label>
-            <p className="text-gray-900">{pessoa.filiacaomae || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.filiacaomae || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Filiação Pai</label>
-            <p className="text-gray-900">{pessoa.filiacaopai || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.filiacaopai || ''}</p>
           </div>
 
           {pessoa.conjuge_id && (
@@ -280,12 +280,12 @@ export default function PessoaFisicaDetailsModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Principal</label>
-            <p className="text-gray-900">{pessoa.email || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.email || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email Alternativo</label>
-            <p className="text-gray-900">{pessoa.emailalternativo || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.emailalternativo || ''}</p>
           </div>
 
           <div>
@@ -310,12 +310,12 @@ export default function PessoaFisicaDetailsModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-            <p className="text-gray-900">{pessoa.endereco || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.endereco || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
-            <p className="text-gray-900">{pessoa.complemento || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.complemento || ''}</p>
           </div>
 
           <div>
@@ -325,17 +325,17 @@ export default function PessoaFisicaDetailsModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cidade/Município</label>
-            <p className="text-gray-900">{pessoa.cidade || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.cidade || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Estado/UF</label>
-            <p className="text-gray-900">{pessoa.fkestado || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.fkestado || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">País</label>
-            <p className="text-gray-900">{pessoa.fkpais || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.fkpais || ''}</p>
           </div>
 
           {pessoa.provincia && (
@@ -365,7 +365,7 @@ export default function PessoaFisicaDetailsModal({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Passaporte</label>
-            <p className="text-gray-900">{pessoa.passaporte || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.passaporte || ''}</p>
           </div>
 
           <div>
@@ -375,23 +375,23 @@ export default function PessoaFisicaDetailsModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula</label>
-            <p className="text-gray-900">{pessoa.matricula || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.matricula || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
-            <p className="text-gray-900">{pessoa.cargo || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.cargo || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-            <p className="text-gray-900">{pessoa.tipo || 'N/A'}</p>
+            <p className="text-gray-900">{pessoa.tipo || ''}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(pessoa.status)}`}>
-              {pessoa.status || 'N/A'}
+              {pessoa.status || ''}
             </span>
           </div>
 
