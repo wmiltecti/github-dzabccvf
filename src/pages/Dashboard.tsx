@@ -23,7 +23,8 @@ import {
   LogOut,
   MapPin,
   Menu,
-  X
+  X,
+  FilePlus
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
@@ -255,7 +256,8 @@ export default function Dashboard() {
   });
 
   const navigation = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home }
+    { id: 'dashboard', name: 'Dashboard', icon: Home },
+    { id: 'inscricao', name: 'Nova Inscrição', icon: FilePlus, isRoute: true }
   ];
 
   const geralSubSections = [
@@ -292,11 +294,11 @@ export default function Dashboard() {
         <div className="flex space-x-2 sm:space-x-3">
           <button
             className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-            onClick={() => setShowNewProcessModal(true)}
+            onClick={() => navigate('/inscricao/participantes')}
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Novo Processo</span>
-            <span className="xs:hidden">Novo</span>
+            <span className="hidden xs:inline">Nova Inscrição</span>
+            <span className="xs:hidden">Nova</span>
           </button>
         </div>
       </div>
@@ -403,11 +405,11 @@ export default function Dashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Processos de Licenciamento</h1>
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-          onClick={() => setShowNewProcessModal(true)}
+          onClick={() => navigate('/inscricao/participantes')}
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden xs:inline">Novo Processo</span>
-          <span className="xs:hidden">Novo</span>
+          <span className="hidden xs:inline">Nova Inscrição</span>
+          <span className="xs:hidden">Nova</span>
         </button>
       </div>
 
@@ -639,7 +641,11 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      setActiveTab(item.id);
+                      if (item.isRoute) {
+                        navigate('/inscricao/participantes');
+                      } else {
+                        setActiveTab(item.id);
+                      }
                       setSidebarOpen(false);
                     }}
                     className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
