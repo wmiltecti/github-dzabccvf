@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -816,6 +816,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Inscription Flow Routes */}
           <Route
             path="/inscricao"
             element={
@@ -824,15 +825,15 @@ function App() {
               </ProtectedRoute>
             }
           >
-          {/* Inscription Flow Routes */}
-          <Route path="/inscricao" element={<Navigate to="/inscricao/participantes" replace />} />
-          <Route path="/inscricao/*" element={<InscricaoLayout />}>
+            <Route index element={<Navigate to="/inscricao/participantes" replace />} />
             <Route path="participantes" element={<ParticipantesPage />} />
             <Route path="imovel" element={<ImovelPage />} />
             <Route path="empreendimento" element={<EmpreendimentoPage />} />
             <Route path="revisao" element={<RevisaoPage />} />
           </Route>
-                      <Route path="*" element={<Navigate to="/" replace />} />
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
         <ToastContainer
