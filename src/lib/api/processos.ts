@@ -6,19 +6,8 @@ export interface DadosGeraisPayload {
   cnpj?: string;
   razao_social?: string;
   nome_fantasia?: string;
-  area?: number;
   porte?: string;
   potencial_poluidor?: string;
-  cnae_codigo?: string;
-  cnae_descricao?: string;
-  possui_licenca_anterior?: boolean;
-  licenca_tipo?: string;
-  licenca_numero?: string;
-  licenca_ano?: number;
-  licenca_validade?: string;
-  numero_empregados?: number;
-  horario_inicio?: string;
-  horario_fim?: string;
   descricao_resumo?: string;
   contato_email?: string;
   contato_telefone?: string;
@@ -38,40 +27,8 @@ export interface ProcessoResponse {
   id: string;
   user_id: string;
   status: string;
-  protocolo_interno?: string;
-  numero_processo_externo?: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface DadosGeraisResponse {
-  id: string;
-  processo_id: string;
-  protocolo_interno: string;
-  numero_processo_externo?: string | null;
-  tipo_pessoa?: 'PF' | 'PJ';
-  cpf?: string;
-  cnpj?: string;
-  razao_social?: string;
-  nome_fantasia?: string;
-  area?: number;
-  porte?: string;
-  potencial_poluidor?: string;
-  cnae_codigo?: string;
-  cnae_descricao?: string;
-  possui_licenca_anterior?: boolean;
-  licenca_tipo?: string;
-  licenca_numero?: string;
-  licenca_ano?: number;
-  licenca_validade?: string;
-  numero_empregados?: number;
-  horario_inicio?: string;
-  horario_fim?: string;
-  descricao_resumo?: string;
-  contato_email?: string;
-  contato_telefone?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface WizardStatusResponse {
@@ -105,13 +62,12 @@ export async function criarProcesso(userId: string): Promise<ProcessoResponse> {
 export async function upsertDadosGerais(
   processoId: string,
   payload: DadosGeraisPayload
-): Promise<DadosGeraisResponse> {
+): Promise<void> {
   try {
-    const response = await http.put<DadosGeraisResponse>(`/processos/${processoId}/dados-gerais`, {
+    await http.put(`/processos/${processoId}/dados-gerais`, {
       processo_id: processoId,
       ...payload
     });
-    return response.data;
   } catch (error: any) {
     const message = error?.response?.data?.detail || error?.message || 'Erro ao salvar dados gerais';
     throw new Error(message);
