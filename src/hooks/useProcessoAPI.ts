@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   criarProcesso as apiCriarProcesso,
   upsertDadosGerais as apiUpsertDadosGerais,
@@ -24,9 +24,9 @@ export function useProcessoAPI(): UseProcessoAPIReturn {
   const [processoData, setProcessoData] = useState<ProcessoResponse | DadosGeraisResponse | null>(null);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
 
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
-  const createProcesso = async (userId: string): Promise<ProcessoResponse | null> => {
+  const createProcesso = useCallback(async (userId: string): Promise<ProcessoResponse | null> => {
     setLoading(true);
     setError(null);
     setIsOfflineMode(false);
@@ -73,9 +73,9 @@ export function useProcessoAPI(): UseProcessoAPIReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const upsertDadosGerais = async (
+  const upsertDadosGerais = useCallback(async (
     processoId: string,
     data: DadosGeraisPayload
   ): Promise<DadosGeraisResponse | null> => {
@@ -125,7 +125,7 @@ export function useProcessoAPI(): UseProcessoAPIReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     loading,

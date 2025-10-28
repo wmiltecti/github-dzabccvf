@@ -1,3 +1,4 @@
+import React from 'react';
 import { FileText } from 'lucide-react';
 
 interface ProcessoHeaderProps {
@@ -5,7 +6,7 @@ interface ProcessoHeaderProps {
   numeroProcessoExterno?: string | null;
 }
 
-export default function ProcessoHeader({ protocoloInterno, numeroProcessoExterno }: ProcessoHeaderProps) {
+const ProcessoHeader = React.memo(({ protocoloInterno, numeroProcessoExterno }: ProcessoHeaderProps) => {
   if (!protocoloInterno) return null;
 
   return (
@@ -30,4 +31,8 @@ export default function ProcessoHeader({ protocoloInterno, numeroProcessoExterno
       </div>
     </div>
   );
-}
+});
+
+ProcessoHeader.displayName = 'ProcessoHeader';
+
+export default ProcessoHeader;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Search, Clock, Users, Building2, AlertCircle, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useProcessoAPI } from '../hooks/useProcessoAPI';
@@ -44,12 +44,7 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     numeroProcessoExterno,
     setProtocoloInterno,
     setNumeroProcessoExterno,
-    setOfflineMode,
   } = useFormWizardStore();
-
-  useEffect(() => {
-    setOfflineMode(isOfflineMode);
-  }, [isOfflineMode, setOfflineMode]);
 
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
@@ -124,7 +119,7 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     return payload;
   };
 
-  const saveStepToAPI = async () => {
+  const saveStepToAPI = useCallback(async () => {
     if (!processoId) {
       toast.error('Processo não inicializado');
       return;
@@ -152,9 +147,9 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [processoId, data, upsertDadosGerais, isOfflineMode, setProtocoloInterno, setNumeroProcessoExterno]);
 
-  const handleSaveAndContinue = () => {
+  const handleSaveAndContinue = useCallback(() => {
     const requiredFields = ['area', 'cnaeCodigo', 'numeroEmpregados', 'horarioInicio', 'horarioFim'];
     const newErrors: Record<string, string> = {};
 
@@ -171,7 +166,7 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     }
 
     saveStepToAPI();
-  };
+  }, [data, saveStepToAPI]);
 
   return (
     <>
