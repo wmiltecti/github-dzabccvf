@@ -6,6 +6,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+
+// ✅ ADICIONAR ESTES IMPORTS
 import InscricaoLayout from './components/InscricaoLayout';
 import ParticipantesPage from './pages/inscricao/ParticipantesPage';
 import ImovelPage from './pages/inscricao/ImovelPage';
@@ -27,7 +29,7 @@ function App() {
             }
           />
           
-          {/* ROTAS DE INSCRIÇÃO - ADICIONAR AQUI */}
+          {/* ✅ ADICIONAR AS ROTAS DE INSCRIÇÃO */}
           <Route 
             path="/inscricao/*" 
             element={
