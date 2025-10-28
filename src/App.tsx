@@ -805,7 +805,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <Router>
         <Routes>
           {/* Main App Routes */}
           <Route
@@ -848,7 +848,7 @@ function App() {
           pauseOnHover
           theme="light"
         />
-      </BrowserRouter>
+      </Router>
     </AuthProvider>
   );
 }
