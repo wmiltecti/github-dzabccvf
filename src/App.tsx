@@ -7,6 +7,13 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// ✅ ADICIONAR ESTES IMPORTS
+import InscricaoLayout from './components/InscricaoLayout';
+import ParticipantesPage from './pages/inscricao/ParticipantesPage';
+import ImovelPage from './pages/inscricao/ImovelPage';
+import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
+import RevisaoPage from './pages/inscricao/RevisaoPage';
+
 function App() {
   return (
     <AuthProvider>
@@ -21,6 +28,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          {/* ✅ ADICIONAR AS ROTAS DE INSCRIÇÃO */}
+          <Route 
+            path="/inscricao/*" 
+            element={
+              <ProtectedRoute>
+                <InscricaoLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="participantes" element={<ParticipantesPage />} />
+            <Route path="imovel" element={<ImovelPage />} />
+            <Route path="empreendimento" element={<EmpreendimentoPage />} />
+            <Route path="revisao" element={<RevisaoPage />} />
+          </Route>
+          
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ToastContainer
