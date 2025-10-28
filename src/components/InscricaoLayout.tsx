@@ -39,18 +39,18 @@ export default function InscricaoLayout() {
   useEffect(() => {
     const initializeProcess = async () => {
       if (!user) return;
-      
+
       if (!processId) {
         try {
           console.log('🆕 Creating new draft process...');
           const { data, error } = await createRascunho();
-          
+
           if (error) {
             console.error('Error creating draft process:', error);
             alert('Erro ao inicializar processo: ' + error.message);
             return;
           }
-          
+
           if (data) {
             console.log('✅ Draft process created:', data.id);
             setProcessId(data.id);
@@ -67,17 +67,10 @@ export default function InscricaoLayout() {
     }
   }, [user, loading, processId, setProcessId]);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/');
-    }
-  }, [user, loading, navigate]);
-
   // Redirect to first step if on base route
   useEffect(() => {
-    if (location.pathname === '/inscricao') {
-      navigate('/inscricao/participantes');
+    if (location.pathname === '/inscricao' || location.pathname === '/inscricao/') {
+      navigate('/inscricao/participantes', { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -113,10 +106,6 @@ export default function InscricaoLayout() {
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect to login
   }
 
   return (
