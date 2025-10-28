@@ -26,7 +26,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   // Test data for each step
   const testData = {
@@ -88,7 +88,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
       return;
     }
 
-    // Só salva quando estiver na última etapa (step 4)
+    // Só salva quando estiver na última etapa (step 4 - Documentação)
 
     try {
       // Mostrar feedback visual de que está processando
