@@ -14,8 +14,11 @@ import {
   Loader2,
   Wand2
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
+import { getUserId } from '../utils/authToken';
+import { criarProcesso, upsertDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -77,23 +80,95 @@ const steps: Step[] = [
 ];
 
 export default function FormWizard() {
-  const { currentStep, formData, setCurrentStep, updateStepData, nextStep, previousStep } = useFormWizardStore();
+  const { currentStep, formData, setCurrentStep, updateStepData, nextStep, previousStep, processoId, setProcessoId } = useFormWizardStore();
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveMessage, setSaveMessage] = React.useState('');
+  const [isInitializing, setIsInitializing] = React.useState(false);
+  const [isSavingToAPI, setIsSavingToAPI] = React.useState(false);
 
   const progress = (currentStep / steps.length) * 100;
 
-  const handleNext = () => {
-    nextStep();
+  useEffect(() => {
+    const initializeProcesso = async () => {
+      if (!processoId) {
+        setIsInitializing(true);
+        try {
+          const userId = getUserId();
+          if (!userId) {
+            toast.error('Usuário não autenticado');
+            return;
+          }
+
+          const newProcessoId = await criarProcesso(userId);
+          setProcessoId(newProcessoId);
+          console.log('✅ Processo criado:', newProcessoId);
+        } catch (error: any) {
+          console.error('Erro ao criar processo:', error);
+          toast.error(error.message || 'Erro ao inicializar processo');
+        } finally {
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    initializeProcesso();
+  }, [processoId, setProcessoId]);
+
+  const handleNext = async () => {
+    if (currentStep === 1 && processoId) {
+      try {
+        await saveStepToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 1:', error);
+      }
+    } else {
+      nextStep();
+    }
   };
 
   const handleBack = () => {
     previousStep();
   };
 
+  const saveStepToAPI = async () => {
+    if (currentStep !== 1 || !processoId) {
+      return;
+    }
+
+    setIsSavingToAPI(true);
+    try {
+      const step1Data = formData.step1 || {};
+      const payload = {
+        porte: step1Data.porte,
+        potencial_poluidor: step1Data.potencialPoluidor
+      };
+
+      await upsertDadosGerais(processoId, payload);
+      toast.success('Dados gerais salvos com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao salvar dados gerais:', error);
+      toast.error(error.message || 'Erro ao salvar dados gerais');
+      throw error;
+    } finally {
+      setIsSavingToAPI(false);
+    }
+  };
+
   const handleSaveDraft = async () => {
     setIsSaving(true);
     setSaveMessage('Salvando rascunho...');
+
+    if (currentStep === 1 && processoId) {
+      try {
+        await saveStepToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
+    }
 
     const result = await saveDraft(currentStep, formData);
 
@@ -337,15 +412,15 @@ export default function FormWizard() {
               </button>
               <button
                 onClick={handleSaveDraft}
-                disabled={isSaving}
+                disabled={isSaving || isInitializing || isSavingToAPI}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                {isSaving ? (
+                {isSaving || isSavingToAPI ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                Salvar Rascunho
+                {isSaving || isSavingToAPI ? 'Salvando...' : 'Salvar Rascunho'}
               </button>
             </div>
           </div>
@@ -471,10 +546,15 @@ export default function FormWizard() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {currentStep === steps.length ? (
+            {isSavingToAPI ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Salvando...
+              </>
+            ) : currentStep === steps.length ? (
               'Concluído'
             ) : (
               <>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle,
   Edit2,
@@ -11,9 +11,13 @@ import {
   Save,
   AlertCircle,
   ExternalLink,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
+import { useFormWizardStore } from '../store/formWizardStore';
+import { getWizardStatus, submitProcesso, type WizardStatusResponse } from '../services/processosService';
 
 interface StepRevisaoProps {
   formData: any;
@@ -22,14 +26,59 @@ interface StepRevisaoProps {
 }
 
 export default function StepRevisao({ formData, onNavigateToStep, onFinish }: StepRevisaoProps) {
+  const { processoId } = useFormWizardStore();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [wizardStatus, setWizardStatus] = useState<WizardStatusResponse | null>(null);
+  const [protocolo, setProtocolo] = useState<string>('');
+
+  useEffect(() => {
+    const loadWizardStatus = async () => {
+      if (!processoId) {
+        console.warn('Nenhum processoId encontrado');
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const status = await getWizardStatus(processoId);
+        setWizardStatus(status);
+        console.log('✅ Status do wizard carregado:', status);
+      } catch (error: any) {
+        console.error('Erro ao carregar status do wizard:', error);
+        toast.warning('Não foi possível carregar o status de validação');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadWizardStatus();
+  }, [processoId]);
 
   const handleFinish = async () => {
+    if (!processoId) {
+      toast.error('Processo não inicializado');
+      return;
+    }
+
+    if (wizardStatus && (!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1)) {
+      toast.error('Complete as validações pendentes antes de finalizar');
+      return;
+    }
+
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    setShowSuccessModal(true);
+    try {
+      const response = await submitProcesso(processoId);
+      setProtocolo(response.protocolo);
+      setShowSuccessModal(true);
+      toast.success('Processo submetido com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao submeter processo:', error);
+      toast.error(error.message || 'Erro ao submeter processo');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -311,25 +360,91 @@ export default function StepRevisao({ formData, onNavigateToStep, onFinish }: St
         })}
       </div>
 
-      {/* Informações Finais */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium text-gray-900">Antes de finalizar</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Revise todas as informações com atenção. Após finalizar, o formulário será enviado para análise.
-              Você poderá editar qualquer etapa clicando no botão "Editar" correspondente.
-            </p>
+      {/* Status de Validação */}
+      {isLoading ? (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-500 mr-2" />
+          <span className="text-gray-600">Carregando status de validação...</span>
+        </div>
+      ) : wizardStatus ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3 mb-4">
+            <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-gray-900">Status de Validação</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Verifique se todos os requisitos foram atendidos antes de finalizar.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-3 rounded-lg border ${
+              wizardStatus.v_dados_gerais
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                {wizardStatus.v_dados_gerais ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${
+                  wizardStatus.v_dados_gerais ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  Dados Gerais
+                </span>
+              </div>
+            </div>
+
+            <div className={`p-3 rounded-lg border ${
+              wizardStatus.n_localizacoes > 0
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center gap-2">
+                {wizardStatus.n_localizacoes > 0 ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                )}
+                <span className={`text-sm font-medium ${
+                  wizardStatus.n_localizacoes > 0 ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  Localizações: {wizardStatus.n_localizacoes}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {(!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1) && (
+            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+              <AlertCircle className="w-4 h-4 inline mr-1" />
+              Complete os requisitos pendentes antes de finalizar
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-gray-900">Antes de finalizar</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Revise todas as informações com atenção. Após finalizar, o formulário será enviado para análise.
+                Você poderá editar qualquer etapa clicando no botão "Editar" correspondente.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Botão de Finalização */}
       <div className="flex justify-end pt-4">
         <button
           onClick={handleFinish}
-          disabled={isSaving}
+          disabled={isSaving || isLoading || (wizardStatus && (!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1))}
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
         >
           {isSaving ? (
@@ -401,7 +516,7 @@ export default function StepRevisao({ formData, onNavigateToStep, onFinish }: St
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Protocolo:</span>
                   <span className="font-mono font-semibold text-gray-900">
-                    {Math.random().toString(36).substring(2, 10).toUpperCase()}
+                    {protocolo || Math.random().toString(36).substring(2, 10).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

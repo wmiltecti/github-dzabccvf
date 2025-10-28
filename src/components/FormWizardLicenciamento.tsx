@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Zap,
@@ -9,9 +9,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Save,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import StepCaracteristicasEmpreendimento from './licenciamento/StepCaracteristicasEmpreendimento';
+import { useFormWizardStore } from '../store/formWizardStore';
+import { getUserId } from '../utils/authToken';
+import { criarProcesso, upsertDadosGerais } from '../services/processosService';
 
 interface Step {
   id: number;
@@ -65,15 +70,51 @@ const saveStep = (stepNumber: number, data: any) => {
 };
 
 export default function FormWizardLicenciamento() {
+  const { processoId, setProcessoId } = useFormWizardStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [stepData, setStepData] = useState<Record<number, any>>({});
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const progress = (currentStep / steps.length) * 100;
 
-  const handleNext = () => {
+  useEffect(() => {
+    const initializeProcesso = async () => {
+      if (!processoId) {
+        setIsInitializing(true);
+        try {
+          const userId = getUserId();
+          if (!userId) {
+            toast.error('Usuário não autenticado');
+            return;
+          }
+
+          const newProcessoId = await criarProcesso(userId);
+          setProcessoId(newProcessoId);
+          console.log('✅ Processo criado:', newProcessoId);
+        } catch (error: any) {
+          console.error('Erro ao criar processo:', error);
+          toast.error(error.message || 'Erro ao inicializar processo');
+        } finally {
+          setIsInitializing(false);
+        }
+      }
+    };
+
+    initializeProcesso();
+  }, [processoId, setProcessoId]);
+
+  const handleNext = async () => {
     if (currentStep < steps.length) {
-      saveStep(currentStep, stepData[currentStep] || {});
-      setCurrentStep(currentStep + 1);
+      if (currentStep === 1) {
+        await saveStepToAPI(currentStep, stepData[currentStep] || {});
+      } else {
+        saveStep(currentStep, stepData[currentStep] || {});
+      }
+
+      if (!isSaving) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -83,10 +124,43 @@ export default function FormWizardLicenciamento() {
     }
   };
 
-  const handleSaveDraft = () => {
-    saveStep(currentStep, stepData[currentStep] || {});
-    console.log('💾 Salvando rascunho de todas as etapas:', stepData);
-    alert('Rascunho salvo com sucesso!');
+  const saveStepToAPI = async (stepNumber: number, data: any) => {
+    if (stepNumber !== 1 || !processoId) {
+      saveStep(stepNumber, data);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const payload = {
+        porte: data.porte,
+        potencial_poluidor: data.potencialPoluidor
+      };
+
+      await upsertDadosGerais(processoId, payload);
+      saveStep(stepNumber, data);
+      toast.success('Dados salvos com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao salvar dados gerais:', error);
+      toast.error(error.message || 'Erro ao salvar dados');
+      throw error;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (currentStep === 1) {
+      try {
+        await saveStepToAPI(currentStep, stepData[currentStep] || {});
+      } catch (error) {
+        return;
+      }
+    } else {
+      saveStep(currentStep, stepData[currentStep] || {});
+      console.log('💾 Salvando rascunho de todas as etapas:', stepData);
+      toast.success('Rascunho salvo com sucesso!');
+    }
   };
 
   const updateStepData = (data: any) => {
@@ -131,10 +205,15 @@ export default function FormWizardLicenciamento() {
             </div>
             <button
               onClick={handleSaveDraft}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={isSaving || isInitializing}
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-4 h-4" />
-              Salvar Rascunho
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {isSaving ? 'Salvando...' : 'Salvar Rascunho'}
             </button>
           </div>
 
@@ -234,11 +313,22 @@ export default function FormWizardLicenciamento() {
 
           <button
             onClick={handleNext}
-            disabled={currentStep === steps.length}
+            disabled={currentStep === steps.length || isSaving || isInitializing}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {currentStep === steps.length ? 'Concluído' : 'Avançar'}
-            <ArrowRight className="w-4 h-4" />
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Salvando...
+              </>
+            ) : currentStep === steps.length ? (
+              'Concluído'
+            ) : (
+              <>
+                Avançar
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -13,11 +13,14 @@ interface FormData {
 interface FormWizardStore {
   currentStep: number;
   formData: FormData;
+  processoId: string | null;
   setCurrentStep: (step: number) => void;
   updateStepData: (step: number, data: any) => void;
   clearFormData: () => void;
   nextStep: () => void;
   previousStep: () => void;
+  setProcessoId: (id: string) => void;
+  resetProcesso: () => void;
 }
 
 export const useFormWizardStore = create<FormWizardStore>()(
@@ -25,6 +28,7 @@ export const useFormWizardStore = create<FormWizardStore>()(
     (set, get) => ({
       currentStep: 1,
       formData: {},
+      processoId: null,
 
       setCurrentStep: (step: number) => set({ currentStep: step }),
 
@@ -44,7 +48,11 @@ export const useFormWizardStore = create<FormWizardStore>()(
 
       previousStep: () => set((state) => ({
         currentStep: Math.max(state.currentStep - 1, 1)
-      }))
+      })),
+
+      setProcessoId: (id: string) => set({ processoId: id }),
+
+      resetProcesso: () => set({ processoId: null, formData: {}, currentStep: 1 })
     }),
     {
       name: 'form-wizard-storage',
