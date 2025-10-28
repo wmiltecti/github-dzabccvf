@@ -98,14 +98,7 @@ export default function Dashboard() {
     console.log('🎨 RENDERIZANDO DASHBOARD - externalUserName atual:', externalUserName);
   }, [externalUserName]);
 
-  React.useEffect(() => {
-    if (user && isConfigured && isSupabaseReady) {
-      loadProcesses();
-      loadStats();
-    }
-  }, [user, searchTerm, filterStatus, isConfigured, isSupabaseReady]);
-
-  const loadProcesses = async () => {
+  const loadProcesses = React.useCallback(async () => {
     try {
       const data = await ProcessService.getProcesses({
         status: filterStatus,
@@ -116,9 +109,9 @@ export default function Dashboard() {
       console.error('Error loading processes:', error);
       setProcesses([]);
     }
-  };
+  }, [filterStatus, searchTerm]);
 
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     try {
       const statsData = await ProcessService.getProcessStats();
       setStats(statsData);
@@ -132,7 +125,14 @@ export default function Dashboard() {
         rejected: 0
       });
     }
-  };
+  }, []);
+
+  React.useEffect(() => {
+    if (user && isConfigured && isSupabaseReady) {
+      loadProcesses();
+      loadStats();
+    }
+  }, [user, isConfigured, isSupabaseReady, loadProcesses, loadStats]);
 
   const handleNewProcess = async (processData: any) => {
     try {
