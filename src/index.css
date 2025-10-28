@@ -237,3 +237,119 @@ body::before {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.page-header {
+  background: #000;
+  color: white;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.button-toolbar {
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead tr {
+  background: #f3f4f6;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.data-table tbody tr:hover {
+  background: #e8f5e9;
+  cursor: pointer;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  color: #333;
+}
+
+.data-table th {
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+}
+
+.data-table td:first-child {
+  text-align: left;
+}
+
+.data-table td:nth-child(2) {
+  text-align: center;
+}
+
+.data-table td:last-child {
+  text-align: right;
+}
+
+.table-container {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+}
+
+.table-header-wrapper {
+  overflow: visible;
+  border-bottom: 2px solid #ddd;
+  position: relative;
+  z-index: 20;
+  background: #f3f4f6;
+  min-height: 50px;
+}
+
+.table-body-wrapper {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.table-header-wrapper .data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  background: #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  line-height: 1.5;
+  vertical-align: middle;
+  height: auto;
+}
+
+.table-body-wrapper .data-table {
+  border-collapse: collapse;
+}
+
+.table-header-wrapper .data-table,
+.table-body-wrapper .data-table {
+  table-layout: fixed;
+}
+
+.table-header-wrapper .data-table th:first-child,
+.table-body-wrapper .data-table td:first-child {
+  width: 40%;
+}
+
+.table-header-wrapper .data-table th:nth-child(2),
+.table-body-wrapper .data-table td:nth-child(2) {
+  width: 30%;
+}
+
+.table-header-wrapper .data-table th:last-child,
+.table-body-wrapper .data-table td:last-child {
+  width: 30%;
+}

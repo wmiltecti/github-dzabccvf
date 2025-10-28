@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal } from 'lucide-react';
+import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal, Circle, Calculator } from 'lucide-react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import GeoUpload from './GeoUpload';
 import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
 import GeoColorPicker from './GeoColorPicker';
+import BufferZoneSelector from './BufferZoneSelector';
+import AreaMetricsPanel from './AreaMetricsPanel';
+import CalculationProgress from './CalculationProgress';
+import UserPanel from './UserPanel';
+import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
+import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
+import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -147,12 +154,15 @@ function PolygonLayer({
   const convertCoordinates = (coords: any): L.LatLngExpression[][] => {
     if (feature.type === 'MultiPolygon') {
       // MultiPolygon: [[[lng, lat], [lng, lat], ...]]
-      return coords[0].map((ring: any) => 
+      // First polygon of the MultiPolygon, with all its rings (outer + holes)
+      return coords[0].map((ring: any) =>
         ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
       );
     } else if (feature.type === 'Polygon') {
-      // Polygon: [[lng, lat], [lng, lat], ...]
-      return coords.map((ring: any) => 
+      // Polygon with holes: [outer_ring, hole1, hole2, ...]
+      // coords[0] = outer ring (clockwise)
+      // coords[1..n] = holes (counter-clockwise)
+      return coords.map((ring: any) =>
         ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
       );
     }
@@ -160,6 +170,15 @@ function PolygonLayer({
   };
 
   const positions = convertCoordinates(feature.coordinates);
+
+  // Debug log for polygons with holes
+  if (feature.type === 'Polygon' && feature.coordinates.length > 1) {
+    console.log(`🍩 Polígono com buraco detectado: ${feature.name}`, {
+      rings: feature.coordinates.length,
+      outerRingPoints: feature.coordinates[0].length,
+      holes: feature.coordinates.length - 1
+    });
+  }
 
   return (
     <Polygon
@@ -178,17 +197,51 @@ function PolygonLayer({
         }
       }}
     >
-      <Popup>
+      <Popup maxWidth={300}>
         <div className="text-sm">
-          <h4 className="font-medium text-gray-900 mb-1">{feature.name}</h4>
-          <p className="text-gray-600">Tipo: {feature.type}</p>
+          <h4 className="font-semibold text-gray-900 mb-2 text-base">{feature.name}</h4>
+          <div className="space-y-1 mb-2">
+            <p className="text-gray-600 flex items-center justify-between">
+              <span className="font-medium">Tipo:</span>
+              <span className="text-gray-800">{feature.type}</span>
+            </p>
+            {feature.properties?.area_ha && (
+              <p className="text-green-600 flex items-center justify-between">
+                <span className="font-medium">Área:</span>
+                <span className="font-semibold">{Number(feature.properties.area_ha).toFixed(2)} ha</span>
+              </p>
+            )}
+            {feature.properties?.area_m2 && (
+              <p className="text-gray-500 flex items-center justify-between text-xs">
+                <span>Área (m²):</span>
+                <span>{Number(feature.properties.area_m2).toLocaleString('pt-BR')} m²</span>
+              </p>
+            )}
+            {feature.properties?.perimeter_km && (
+              <p className="text-blue-600 flex items-center justify-between">
+                <span className="font-medium">Perímetro:</span>
+                <span className="font-semibold">{Number(feature.properties.perimeter_km).toFixed(2)} km</span>
+              </p>
+            )}
+            {feature.properties?.buffer_distance && (
+              <p className="text-cyan-600 flex items-center justify-between">
+                <span className="font-medium">Buffer:</span>
+                <span className="font-semibold">{feature.properties.buffer_distance} m</span>
+              </p>
+            )}
+          </div>
           {feature.properties && Object.keys(feature.properties).length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
-              {Object.entries(feature.properties).slice(0, 3).map(([key, value]) => (
-                <div key={key} className="text-xs text-gray-500">
-                  <strong>{key}:</strong> {String(value)}
-                </div>
-              ))}
+              <p className="text-xs text-gray-400 mb-1">Propriedades adicionais:</p>
+              {Object.entries(feature.properties)
+                .filter(([key]) => !['area_ha', 'area_m2', 'perimeter_km', 'buffer_distance', 'base_layer', 'reference_layer'].includes(key))
+                .slice(0, 3)
+                .map(([key, value]) => (
+                  <div key={key} className="text-xs text-gray-500 flex justify-between">
+                    <strong className="text-gray-600">{key}:</strong>
+                    <span className="ml-2 text-right">{String(value).substring(0, 50)}</span>
+                  </div>
+                ))}
             </div>
           )}
         </div>
@@ -227,6 +280,18 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
+  const [showBufferZoneSelector, setShowBufferZoneSelector] = useState(false);
+  const [selectedBaseLayer, setSelectedBaseLayer] = useState<string | null>(null);
+  const [selectedReferenceLayer, setSelectedReferenceLayer] = useState<string | null>(null);
+  const [showAreaMetricsPanel, setShowAreaMetricsPanel] = useState(false);
+  const [currentMetrics, setCurrentMetrics] = useState<LayerMetrics | null>(null);
+  const [currentMetricsLayerName, setCurrentMetricsLayerName] = useState<string>('');
+  const [currentFeatureCollection, setCurrentFeatureCollection] = useState<any>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [calculationStep, setCalculationStep] = useState('');
+  const [calculationProgress, setCalculationProgress] = useState(0);
+  const [calculationError, setCalculationError] = useState<string>('');
+  const [calculationSuccess, setCalculationSuccess] = useState(false);
 
   // Predefined colors for layers (similar to QGIS)
   const layerColors = [
@@ -573,6 +638,334 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
     }
   }, [contextMenu]);
 
+  const handleBufferZoneConfirm = (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
+    setSelectedBaseLayer(baseLayerId);
+    setSelectedReferenceLayer(referenceLayerId);
+    setShowBufferZoneSelector(false);
+    iniciarCalculoZonaAmortecimento(baseLayerId, referenceLayerId, distanciaMetros);
+  };
+
+  const iniciarCalculoZonaAmortecimento = async (baseLayerId: string, referenceLayerId: string, distanciaMetros: number) => {
+    const baseLayer = layers.find(l => l.id === baseLayerId);
+    const referenceLayer = layers.find(l => l.id === referenceLayerId);
+
+    if (!baseLayer || !referenceLayer) {
+      setCalculationError('Camadas não encontradas');
+      setTimeout(() => setCalculationError(''), 3000);
+      return;
+    }
+
+    setIsCalculating(true);
+    setCalculationError('');
+    setCalculationSuccess(false);
+    setCalculationProgress(0);
+
+    try {
+      setCalculationStep('Preparando camadas...');
+      setCalculationProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      console.log('🎯 Iniciando cálculo de zona de amortecimento');
+      console.log('📍 Camada Base:', baseLayer.name, '- Features:', baseLayer.featureCount);
+      console.log('📍 Camada Referência:', referenceLayer.name, '- Features:', referenceLayer.featureCount);
+      console.log('📏 Distância:', distanciaMetros, 'metros');
+
+      const baseFC = geoLayerToFeatureCollection(baseLayer);
+      const referenceFC = geoLayerToFeatureCollection(referenceLayer);
+
+      setCalculationStep('Calculando zona de amortecimento (buffer)...');
+      setCalculationProgress(30);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📊 Passo 1: Calculando buffer...');
+      const bufferFC = calcularBuffer(baseFC, distanciaMetros);
+
+      const bufferGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-buffer-${Date.now()}`,
+        name: `Buffer ${distanciaMetros}m - ${baseLayer.name}`,
+        features: bufferFC.features.map((feat, idx) => ({
+          id: `buffer-feat-${idx}`,
+          name: feat.properties?.name || `Buffer Feature ${idx + 1}`,
+          type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+          coordinates: feat.geometry.coordinates,
+          properties: feat.properties || {},
+          layerId: `${baseLayer.id}-buffer-${Date.now()}`
+        })),
+        visible: true,
+        color: '#3B82F6',
+        opacity: 0.3,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: bufferFC.features.length
+      };
+
+      setCalculationStep('Subtraindo áreas de referência...');
+      setCalculationProgress(60);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📊 Passo 2: Calculando diferença (subtraindo referência)...');
+      const resultFC = calcularDiferenca(bufferFC, referenceFC);
+
+      setCalculationStep('Calculando área e perímetro...');
+      setCalculationProgress(70);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const metrics = calcularArea(resultFC);
+
+      const resultGeoLayer: GeoLayer = {
+        id: `${baseLayer.id}-result-${Date.now()}`,
+        name: `Zona de Amortecimento Final - ${baseLayer.name}`,
+        features: resultFC.features.map((feat, idx) => {
+          const featMetrics = metrics.features[idx];
+          return {
+            id: `result-feat-${idx}`,
+            name: feat.properties?.name || featMetrics?.name || `Resultado Feature ${idx + 1}`,
+            type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+            coordinates: feat.geometry.coordinates,
+            properties: {
+              ...feat.properties,
+              buffer_distance: distanciaMetros,
+              base_layer: baseLayer.name,
+              reference_layer: referenceLayer.name,
+              area_ha: featMetrics?.areaHa,
+              area_m2: featMetrics?.areaM2,
+              perimeter_km: featMetrics?.perimetroKm
+            },
+            layerId: `${baseLayer.id}-result-${Date.now()}`
+          };
+        }),
+        visible: true,
+        color: '#EF4444',
+        opacity: 0.5,
+        source: 'imported',
+        uploadedAt: new Date().toISOString(),
+        featureCount: resultFC.features.length
+      };
+
+      setCalculationStep('Calculando área subtraída do buffer...');
+      setCalculationProgress(85);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      console.log('📊 Passo 3: Calculando área subtraída (buffer - resultado)...');
+      const areaSubtraidaFC = calcularDiferenca(bufferFC, resultFC);
+      console.log(`📊 Área subtraída calculada: ${areaSubtraidaFC.features.length} features encontradas`);
+
+      let areaSubtraidaGeoLayer: GeoLayer | null = null;
+
+      if (areaSubtraidaFC.features.length > 0) {
+        const areaSubtraidaMetrics = calcularArea(areaSubtraidaFC);
+
+        areaSubtraidaGeoLayer = {
+          id: `${baseLayer.id}-subtraida-${Date.now()}`,
+          name: `Área Subtraída do Buffer - ${baseLayer.name}`,
+          features: areaSubtraidaFC.features.map((feat, idx) => {
+            const featMetrics = areaSubtraidaMetrics.features[idx];
+            return {
+              id: `subtraida-feat-${idx}`,
+              name: feat.properties?.name || featMetrics?.name || `Área Subtraída ${idx + 1}`,
+              type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+              coordinates: feat.geometry.coordinates,
+              properties: {
+                ...feat.properties,
+                buffer_distance: distanciaMetros,
+                base_layer: baseLayer.name,
+                reference_layer: referenceLayer.name,
+                area_ha: featMetrics?.areaHa,
+                area_m2: featMetrics?.areaM2,
+                perimeter_km: featMetrics?.perimetroKm,
+                layer_type: 'subtracted_area'
+              },
+              layerId: `${baseLayer.id}-subtraida-${Date.now()}`
+            };
+          }),
+          visible: true,
+          color: '#F59E0B',
+          opacity: 0.4,
+          source: 'imported',
+          uploadedAt: new Date().toISOString(),
+          featureCount: areaSubtraidaFC.features.length
+        };
+      } else {
+        console.warn('⚠️ Nenhuma área foi subtraída do buffer');
+      }
+
+      console.log('✅ Zona de amortecimento calculada com sucesso!');
+      console.log('📊 Buffer gerado:', bufferGeoLayer.featureCount, 'features');
+      console.log('📊 Resultado final:', resultGeoLayer.featureCount, 'features');
+      console.log('📊 Área subtraída:', areaSubtraidaGeoLayer?.featureCount || 0, 'features');
+
+      setCalculationStep('Finalizando e exibindo resultado...');
+      setCalculationProgress(100);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const newLayers = [bufferGeoLayer, resultGeoLayer];
+      if (areaSubtraidaGeoLayer) newLayers.push(areaSubtraidaGeoLayer);
+
+      setLayers(prev => [...prev, ...newLayers]);
+
+      setTimeout(() => {
+        setZoomToLayerId(resultGeoLayer.id);
+      }, 100);
+
+      setCurrentMetrics(metrics);
+      setCurrentMetricsLayerName(resultGeoLayer.name);
+      setCurrentFeatureCollection(resultFC);
+
+      console.log(`📐 Área total calculada: ${metrics.totalAreaHa.toFixed(2)} ha`);
+
+      setCalculationSuccess(true);
+      setIsCalculating(false);
+
+      setTimeout(() => {
+        setCalculationSuccess(false);
+        setShowAreaMetricsPanel(true);
+      }, 2000);
+
+    } catch (error) {
+      console.error('❌ Erro ao calcular zona de amortecimento:', error);
+      setCalculationError((error as Error).message || 'Erro desconhecido ao calcular zona de amortecimento');
+      setIsCalculating(false);
+      setTimeout(() => setCalculationError(''), 5000);
+    }
+  };
+
+  const handleCalcularMetricasCamada = (layerId: string) => {
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer) {
+      alert('Erro: Camada não encontrada');
+      return;
+    }
+
+    try {
+      console.log('📐 Calculando métricas da camada:', layer.name);
+      const featureCollection = geoLayerToFeatureCollection(layer);
+      const metrics = calcularArea(featureCollection);
+
+      setCurrentMetrics(metrics);
+      setCurrentMetricsLayerName(layer.name);
+      setCurrentFeatureCollection(featureCollection);
+      setShowAreaMetricsPanel(true);
+
+      console.log(`✅ Métricas calculadas: ${metrics.totalAreaHa.toFixed(2)} ha`);
+    } catch (error) {
+      console.error('❌ Erro ao calcular métricas:', error);
+      alert(`Erro ao calcular métricas:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const handleExportarGeoJSON = () => {
+    if (!currentFeatureCollection || !currentMetricsLayerName) return;
+    try {
+      exportarFeatureCollection(currentFeatureCollection, currentMetricsLayerName);
+      console.log('✅ GeoJSON exportado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao exportar GeoJSON:', error);
+      alert(`Erro ao exportar GeoJSON:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const handleExportarKML = () => {
+    if (!currentFeatureCollection || !currentMetricsLayerName) return;
+    try {
+      const kml = generateKMLFromFeatureCollection(currentFeatureCollection, currentMetricsLayerName);
+      const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${sanitizeFilename(currentMetricsLayerName)}.kml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      console.log('✅ KML exportado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao exportar KML:', error);
+      alert(`Erro ao exportar KML:\n\n${(error as Error).message}`);
+    }
+  };
+
+  const sanitizeFilename = (name: string): string => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  };
+
+  const escapeXML = (str: string): string => {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  };
+
+  const generateKMLFromFeatureCollection = (fc: any, name: string): string => {
+    const placemarks = fc.features.map((feat: any) => {
+      const coords = formatCoordinatesForKML(feat.geometry.type, feat.geometry.coordinates);
+      const geometryTag = getKMLGeometryTag(feat.geometry.type, coords);
+      const featName = feat.properties?.name || 'Feature';
+
+      return `
+    <Placemark>
+      <name>${escapeXML(featName)}</name>
+      <description>${escapeXML(JSON.stringify(feat.properties || {}))}</description>
+      <Style>
+        <LineStyle>
+          <color>ff0000ff</color>
+          <width>2</width>
+        </LineStyle>
+        <PolyStyle>
+          <color>4d0000ff</color>
+          <fill>1</fill>
+          <outline>1</outline>
+        </PolyStyle>
+      </Style>
+      ${geometryTag}
+    </Placemark>`;
+    }).join('');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>${escapeXML(name)}</name>
+    <description>Exportado do Sistema de Licenciamento Ambiental</description>
+    ${placemarks}
+  </Document>
+</kml>`;
+  };
+
+  const formatCoordinatesForKML = (type: string, coordinates: any): string => {
+    if (type === 'Point') {
+      const [lng, lat] = coordinates;
+      return `${lng},${lat},0`;
+    } else if (type === 'Polygon') {
+      return coordinates[0].map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
+    } else if (type === 'MultiPolygon') {
+      return coordinates[0][0].map((coord: number[]) => `${coord[0]},${coord[1]},0`).join(' ');
+    }
+    return '';
+  };
+
+  const getKMLGeometryTag = (type: string, coords: string): string => {
+    if (type === 'Point') {
+      return `<Point><coordinates>${coords}</coordinates></Point>`;
+    } else if (type === 'Polygon' || type === 'MultiPolygon') {
+      return `<Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>${coords}</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>`;
+    }
+    return '';
+  };
+
+  React.useEffect(() => {
+    if (layers.length > 0) {
+      (window as any).__geojsonLayers = layers.map(layer => ({
+        id: layer.id,
+        layerName: layer.name,
+        featureCount: layer.featureCount,
+        visible: layer.visible,
+        features: layer.features
+      }));
+    }
+  }, [layers]);
+
   // Get all visible features from all layers
   // Reverse the order so first layer in list renders on top
   const visibleFeatures = [...layers].reverse()
@@ -624,21 +1017,29 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <button 
+          <button
+            onClick={() => setShowBufferZoneSelector(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            title="Calcular Zona de Amortecimento"
+          >
+            <Circle className="w-4 h-4" />
+            <span className="hidden sm:inline">Zona de Amortecimento</span>
+          </button>
+          <button
             onClick={() => setShowUpload(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
           >
             <Upload className="w-4 h-4" />
-            Importar Dados
+            <span className="hidden sm:inline">Importar Dados</span>
           </button>
-          <button 
+          <button
             onClick={() => setShowExport(true)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             title="Exportar dados"
           >
             <Download className="w-5 h-5" />
           </button>
-          <button 
+          <button
             onClick={() => setShowSettings(true)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             title="Configurações"
@@ -763,6 +1164,13 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
                           title="Aproximar camada"
                         >
                           <Search className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleCalcularMetricasCamada(layer.id)}
+                          className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                          title="Calcular área e perímetro"
+                        >
+                          <Calculator className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleChangeLayerColor(layer.id)}
@@ -1106,6 +1514,33 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
         onColorChange={handleColorChange}
         layerName={editingLayerId ? layers.find(l => l.id === editingLayerId)?.name || '' : ''}
       />
+
+      <BufferZoneSelector
+        isOpen={showBufferZoneSelector}
+        onClose={() => setShowBufferZoneSelector(false)}
+        layers={layers}
+        onConfirm={handleBufferZoneConfirm}
+      />
+
+      <AreaMetricsPanel
+        isOpen={showAreaMetricsPanel}
+        onClose={() => setShowAreaMetricsPanel(false)}
+        metrics={currentMetrics}
+        layerName={currentMetricsLayerName}
+        featureCollection={currentFeatureCollection}
+        onExportGeoJSON={handleExportarGeoJSON}
+        onExportKML={handleExportarKML}
+      />
+
+      <CalculationProgress
+        isCalculating={isCalculating}
+        currentStep={calculationStep}
+        progress={calculationProgress}
+        error={calculationError}
+        success={calculationSuccess}
+      />
+
+      <UserPanel />
     </div>
   );
 }
