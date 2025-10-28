@@ -34,6 +34,8 @@ http.interceptors.response.use(
 
     if (error.response?.status === 401) {
       errorMessage = 'Usuário ou senha incorretos';
+    } else if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+      errorMessage = 'Erro de conexão com o servidor';
     } else {
       errorMessage =
         (error.response?.data as { message?: string })?.message ||
@@ -41,7 +43,10 @@ http.interceptors.response.use(
         `Error: ${error.response?.status || 'Unknown'}`;
     }
 
-    return Promise.reject(new Error(errorMessage));
+    const enhancedError = new Error(errorMessage);
+    (enhancedError as any).isNetworkError = error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response;
+
+    return Promise.reject(enhancedError);
   }
 );
 
