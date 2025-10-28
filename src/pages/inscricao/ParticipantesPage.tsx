@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { createPF, createPJ, getByCpfCnpj } from '../../lib/api/people';
 import { uploadProcuracao } from '../../lib/api/docs';
-import { Users, Plus, CreditCard as Edit, Trash2, User, Building, FileText, ArrowRight, AlertTriangle, Zap, X, Search, CheckCircle2, Loader2 } from 'lucide-react';
+import { Users, Plus, CreditCard as Edit, Trash2, User, Building, FileText, ArrowRight, AlertTriangle, Zap, X } from 'lucide-react';
 import type { Participant } from '../../types/inscription';
 import { upsertParticipant, getParticipants, removeParticipant as removeParticipantDb } from '../../lib/api/process';
 
@@ -27,9 +27,6 @@ export default function ParticipantesPage() {
     role: 'REQUERENTE',
   });
   const [loading, setLoading] = useState(false);
-  const [searchingCpf, setSearchingCpf] = useState(false);
-  const [cpfSearchResult, setCpfSearchResult] = useState<'idle' | 'found' | 'not-found' | 'error'>('idle');
-  const [cpfSearchMessage, setCpfSearchMessage] = useState('');
   const [procuracaoFile, setProcuracaoFile] = useState<File | null>(null);
 
   // ---- helpers ----
@@ -116,76 +113,13 @@ export default function ParticipantesPage() {
   const handleAddParticipant = () => {
     setEditingIndex(null);
     setFormData({ type: 'PF', role: 'REQUERENTE' } as Participant);
-    setCpfSearchResult('idle');
-    setCpfSearchMessage('');
     setShowForm(true);
   };
 
   const handleEditParticipant = (index: number) => {
     setEditingIndex(index);
     setFormData(participants[index] as Participant);
-    setCpfSearchResult('idle');
-    setCpfSearchMessage('');
     setShowForm(true);
-  };
-
-  const handleSearchCpf = async () => {
-    const cpfValue = formData.type === 'PF' ? formData.cpf : formData.cnpj;
-
-    if (!cpfValue) {
-      setCpfSearchResult('error');
-      setCpfSearchMessage(formData.type === 'PF' ? 'Digite um CPF para buscar' : 'Digite um CNPJ para buscar');
-      return;
-    }
-
-    setSearchingCpf(true);
-    setCpfSearchResult('idle');
-    setCpfSearchMessage('');
-
-    try {
-      const { data, error } = await getByCpfCnpj(cpfValue);
-
-      if (error) {
-        if (error.code === 'NOT_FOUND') {
-          setCpfSearchResult('not-found');
-          setCpfSearchMessage('Pessoa não encontrada. Preencha os dados para cadastrar.');
-        } else {
-          setCpfSearchResult('error');
-          setCpfSearchMessage(error.message);
-        }
-      } else if (data) {
-        setCpfSearchResult('found');
-        setCpfSearchMessage('Dados encontrados! Os campos foram preenchidos automaticamente.');
-
-        if (formData.type === 'PF') {
-          setFormData(prev => ({
-            ...prev,
-            nome: data.nome_razao || data.nome || prev.nome,
-            cpf: data.cpf_cnpj || data.cpf || prev.cpf,
-            sexo: data.sexo || prev.sexo,
-            nacionalidade: data.nacionalidade || prev.nacionalidade,
-            estado_civil: data.estado_civil || prev.estado_civil,
-            profissao: data.profissao || prev.profissao,
-            celular: data.celular || prev.celular,
-            email: data.email || prev.email,
-          }));
-        } else {
-          setFormData(prev => ({
-            ...prev,
-            razao_social: data.nome_razao || data.razao_social || prev.razao_social,
-            cnpj: data.cpf_cnpj || data.cnpj || prev.cnpj,
-            inscricao_estadual: data.inscricao_estadual || prev.inscricao_estadual,
-            celular: data.celular || prev.celular,
-            email: data.email || prev.email,
-          }));
-        }
-      }
-    } catch (e: any) {
-      setCpfSearchResult('error');
-      setCpfSearchMessage('Erro ao buscar dados: ' + e.message);
-    } finally {
-      setSearchingCpf(false);
-    }
   };
 
   const handleRemoveParticipant = async (index: number) => {
@@ -195,6 +129,7 @@ export default function ParticipantesPage() {
     try {
       const p = participants[index] as any;
       if (!p?.id || !p.role) {
+        // Sem dados mínimos → remove só local
         removeParticipant(index);
         return;
       }
@@ -469,47 +404,14 @@ export default function ParticipantesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">CPF *</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={formData.cpf || ''}
-                          onChange={(e) => {
-                            setFormData((prev) => ({ ...prev, cpf: e.target.value }));
-                            setCpfSearchResult('idle');
-                          }}
-                          className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                          placeholder="000.000.000-00"
-                          required
-                          disabled={searchingCpf}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleSearchCpf}
-                          disabled={searchingCpf || !formData.cpf}
-                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                          title="Buscar dados por CPF"
-                        >
-                          {searchingCpf ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <Search className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      {cpfSearchResult !== 'idle' && (
-                        <div className={`mt-2 p-3 rounded-lg flex items-start gap-2 text-sm ${
-                          cpfSearchResult === 'found'
-                            ? 'bg-green-50 border border-green-200 text-green-800'
-                            : cpfSearchResult === 'not-found'
-                            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
-                            : 'bg-red-50 border border-red-200 text-red-800'
-                        }`}>
-                          {cpfSearchResult === 'found' && <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          {cpfSearchResult === 'not-found' && <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          {cpfSearchResult === 'error' && <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          <p>{cpfSearchMessage}</p>
-                        </div>
-                      )}
+                      <input
+                        type="text"
+                        value={formData.cpf || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, cpf: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="000.000.000-00"
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
@@ -520,7 +422,6 @@ export default function ParticipantesPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Nome completo"
                         required
-                        disabled={searchingCpf}
                       />
                     </div>
                   </div>
@@ -532,7 +433,6 @@ export default function ParticipantesPage() {
                         value={formData.sexo || ''}
                         onChange={(e) => setFormData((prev) => ({ ...prev, sexo: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        disabled={searchingCpf}
                       >
                         <option value="">Selecione...</option>
                         <option value="M">Masculino</option>
@@ -545,7 +445,6 @@ export default function ParticipantesPage() {
                         value={formData.estado_civil || ''}
                         onChange={(e) => setFormData((prev) => ({ ...prev, estado_civil: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        disabled={searchingCpf}
                       >
                         <option value="">Selecione...</option>
                         <option value="Solteiro">Solteiro(a)</option>
@@ -565,7 +464,6 @@ export default function ParticipantesPage() {
                         onChange={(e) => setFormData((prev) => ({ ...prev, nacionalidade: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Ex: Brasileira"
-                        disabled={searchingCpf}
                       />
                     </div>
                     <div>
@@ -576,7 +474,6 @@ export default function ParticipantesPage() {
                         onChange={(e) => setFormData((prev) => ({ ...prev, profissao: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Ex: Engenheiro"
-                        disabled={searchingCpf}
                       />
                     </div>
                   </div>
@@ -586,47 +483,14 @@ export default function ParticipantesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">CNPJ *</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={formData.cnpj || ''}
-                          onChange={(e) => {
-                            setFormData((prev) => ({ ...prev, cnpj: e.target.value }));
-                            setCpfSearchResult('idle');
-                          }}
-                          className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                          placeholder="00.000.000/0000-00"
-                          required
-                          disabled={searchingCpf}
-                        />
-                        <button
-                          type="button"
-                          onClick={handleSearchCpf}
-                          disabled={searchingCpf || !formData.cnpj}
-                          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                          title="Buscar dados por CNPJ"
-                        >
-                          {searchingCpf ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          ) : (
-                            <Search className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      {cpfSearchResult !== 'idle' && (
-                        <div className={`mt-2 p-3 rounded-lg flex items-start gap-2 text-sm ${
-                          cpfSearchResult === 'found'
-                            ? 'bg-green-50 border border-green-200 text-green-800'
-                            : cpfSearchResult === 'not-found'
-                            ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
-                            : 'bg-red-50 border border-red-200 text-red-800'
-                        }`}>
-                          {cpfSearchResult === 'found' && <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          {cpfSearchResult === 'not-found' && <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          {cpfSearchResult === 'error' && <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />}
-                          <p>{cpfSearchMessage}</p>
-                        </div>
-                      )}
+                      <input
+                        type="text"
+                        value={formData.cnpj || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, cnpj: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="00.000.000/0000-00"
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Razão Social *</label>
@@ -637,7 +501,6 @@ export default function ParticipantesPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Razão social da empresa"
                         required
-                        disabled={searchingCpf}
                       />
                     </div>
                   </div>
@@ -650,7 +513,6 @@ export default function ParticipantesPage() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, inscricao_estadual: e.target.value }))}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       placeholder="Inscrição estadual"
-                      disabled={searchingCpf}
                     />
                   </div>
                 </div>
@@ -666,7 +528,6 @@ export default function ParticipantesPage() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, celular: e.target.value }))}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="(00) 00000-0000"
-                    disabled={searchingCpf}
                   />
                 </div>
                 <div>
@@ -677,7 +538,6 @@ export default function ParticipantesPage() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     placeholder="email@exemplo.com"
-                    disabled={searchingCpf}
                   />
                 </div>
               </div>
@@ -703,18 +563,17 @@ export default function ParticipantesPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  disabled={loading || searchingCpf}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || searchingCpf}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                  disabled={loading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
                 >
                   {loading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
