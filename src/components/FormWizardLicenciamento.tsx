@@ -17,6 +17,7 @@ import StepCaracteristicasEmpreendimento from './licenciamento/StepCaracteristic
 import { useFormWizardStore } from '../store/formWizardStore';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais } from '../services/processosService';
+import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 
 interface Step {
   id: number;
@@ -121,6 +122,34 @@ export default function FormWizardLicenciamento() {
       if (!isSaving) {
         setCurrentStep(currentStep + 1);
       }
+    } else if (currentStep === steps.length) {
+      await handleSaveAndFinish();
+    }
+  };
+
+  const handleSaveAndFinish = async () => {
+    setIsSaving(true);
+    try {
+      saveStep(currentStep, stepData[currentStep] || {});
+      console.log('💾 Salvando todos os dados do formulário:', stepData);
+
+      const allFormData = { ...stepData, processoId };
+      const jsonString = JSON.stringify(allFormData);
+
+      const blockchainResult = await sendToBlockchain(jsonString);
+
+      if (blockchainResult.success) {
+        toast.success('Dados salvos e registrados no blockchain com sucesso!');
+        console.log('✅ Blockchain transaction:', blockchainResult.transactionId);
+      } else {
+        toast.warning('Dados salvos, mas houve erro ao registrar no blockchain: ' + blockchainResult.error);
+        console.error('❌ Blockchain error:', blockchainResult.error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao finalizar processo:', error);
+      toast.error('Erro ao salvar dados: ' + error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -319,7 +348,7 @@ export default function FormWizardLicenciamento() {
 
           <button
             onClick={handleNext}
-            disabled={currentStep === steps.length || isSaving || isInitializing}
+            disabled={isSaving || isInitializing}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? (
@@ -328,7 +357,10 @@ export default function FormWizardLicenciamento() {
                 Salvando...
               </>
             ) : currentStep === steps.length ? (
-              'Concluído'
+              <>
+                <Save className="w-4 h-4" />
+                Salvar
+              </>
             ) : (
               <>
                 Avançar
