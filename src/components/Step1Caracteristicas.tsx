@@ -1,11 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Search, Clock, Users, Building2, AlertCircle, FileText } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { useProcessoAPI } from '../hooks/useProcessoAPI';
-import { useFormWizardStore } from '../store/formWizardStore';
-import { DadosGeraisPayload } from '../lib/api/processos';
-import ProcessoHeader from './ProcessoHeader';
-import OfflineWarningFooter from './OfflineWarningFooter';
 
 interface Step1CaracteristicasProps {
   data: any;
@@ -35,16 +29,6 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
   const [cnaeSearch, setCnaeSearch] = useState(data?.cnaeDescricao || '');
   const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSaving, setIsSaving] = useState(false);
-
-  const { upsertDadosGerais, isOfflineMode, loading } = useProcessoAPI();
-  const {
-    processoId,
-    protocoloInterno,
-    numeroProcessoExterno,
-    setProtocoloInterno,
-    setNumeroProcessoExterno,
-  } = useFormWizardStore();
 
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
@@ -94,87 +78,8 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     setErrors(newErrors);
   };
 
-  const mapFormDataToPayload = (): DadosGeraisPayload => {
-    const payload: DadosGeraisPayload = {
-      area: data?.area ? parseFloat(data.area) : undefined,
-      porte: data?.porte || undefined,
-      potencial_poluidor: data?.potencialPoluidor || undefined,
-      cnae_codigo: data?.cnaeCodigo || undefined,
-      cnae_descricao: data?.cnaeDescricao || undefined,
-      numero_empregados: data?.numeroEmpregados ? parseInt(data.numeroEmpregados) : undefined,
-      horario_inicio: data?.horarioInicio || undefined,
-      horario_fim: data?.horarioFim || undefined,
-    };
-
-    if (data?.possuiLicencaAnterior === 'sim') {
-      payload.possui_licenca_anterior = true;
-      payload.licenca_tipo = data?.licencaTipo || undefined;
-      payload.licenca_numero = data?.licencaNumero || undefined;
-      payload.licenca_ano = data?.licencaAno ? parseInt(data.licencaAno) : undefined;
-      payload.licenca_validade = data?.licencaValidade || undefined;
-    } else if (data?.possuiLicencaAnterior === 'nao') {
-      payload.possui_licenca_anterior = false;
-    }
-
-    return payload;
-  };
-
-  const saveStepToAPI = useCallback(async () => {
-    if (!processoId) {
-      toast.error('Processo não inicializado');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const payload = mapFormDataToPayload();
-      const response = await upsertDadosGerais(processoId, payload);
-
-      if (response) {
-        setProtocoloInterno(response.protocolo_interno);
-        if (response.numero_processo_externo) {
-          setNumeroProcessoExterno(response.numero_processo_externo);
-        }
-
-        if (isOfflineMode) {
-          toast.warning('Dados salvos offline - Protocolo: OFFLINE');
-        } else {
-          toast.success(`Dados salvos com sucesso! Protocolo: ${response.protocolo_interno}`);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao salvar dados');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [processoId, data, upsertDadosGerais, isOfflineMode, setProtocoloInterno, setNumeroProcessoExterno]);
-
-  const handleSaveAndContinue = useCallback(() => {
-    const requiredFields = ['area', 'cnaeCodigo', 'numeroEmpregados', 'horarioInicio', 'horarioFim'];
-    const newErrors: Record<string, string> = {};
-
-    requiredFields.forEach(field => {
-      if (!data?.[field]) {
-        newErrors[field] = 'Campo obrigatório';
-      }
-    });
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
-
-    saveStepToAPI();
-  }, [data, saveStepToAPI]);
-
   return (
-    <>
-      <ProcessoHeader
-        protocoloInterno={protocoloInterno}
-        numeroProcessoExterno={numeroProcessoExterno}
-      />
-      <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex items-start gap-3 mb-2">
         <div className="flex-shrink-0">
@@ -487,19 +392,6 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
           </div>
         </div>
       </div>
-
-      {/* Botão de Salvar */}
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSaveAndContinue}
-          disabled={isSaving || loading}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {isSaving || loading ? 'Salvando...' : 'Salvar e Continuar'}
-        </button>
-      </div>
     </div>
-    <OfflineWarningFooter isOffline={isOfflineMode} onRetry={saveStepToAPI} />
-    </>
   );
 }
