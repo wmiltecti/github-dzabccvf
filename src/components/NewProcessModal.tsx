@@ -82,13 +82,8 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Apenas avança para próxima etapa, não salva ainda
-    if (currentStep < totalSteps) {
-      nextStep();
-      return;
-    }
-
-    // Só salva quando estiver na última etapa (step 4 - Documentação)
+    // Este método só é chamado quando o usuário clica em "Salvar" no último step
+    // Os botões "Próximo" não disparam o submit pois têm type="button"
 
     try {
       // Mostrar feedback visual de que está processando
