@@ -79,11 +79,8 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Este método só é chamado quando o usuário clica em "Salvar" no último step
-    // Os botões "Próximo" não disparam o submit pois têm type="button"
+  const handleSaveProcess = async () => {
+    // Este método só é chamado quando o usuário clica explicitamente em "Salvar"
 
     try {
       // Mostrar feedback visual de que está processando
@@ -580,7 +577,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()}>
           {/* Content */}
           <div className="p-6 max-h-[60vh] overflow-y-auto">
             {currentStep === 1 && renderStep1()}
@@ -614,8 +611,9 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
                   data-submit-button
+                  onClick={handleSaveProcess}
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
                   Salvar
