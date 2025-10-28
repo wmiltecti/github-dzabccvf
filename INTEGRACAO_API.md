@@ -1,5 +1,13 @@
 # Integração com API FastAPI - Wizard de Licenciamento
 
+## ⚠️ Modo Híbrido - Funciona com ou sem API
+
+O sistema implementa **fallback automático** para modo offline:
+- ✅ Se a API estiver disponível: usa os endpoints FastAPI
+- 🔸 Se a API estiver indisponível (404/Network Error): salva tudo no localStorage
+
+**Consulte `MODO_OFFLINE.md` para detalhes completos.**
+
 ## Arquivos Criados
 
 ### 1. `/src/utils/authToken.ts`

@@ -101,7 +101,13 @@ export default function FormWizard() {
 
           const newProcessoId = await criarProcesso(userId);
           setProcessoId(newProcessoId);
-          console.log('✅ Processo criado:', newProcessoId);
+
+          if (newProcessoId.startsWith('local-')) {
+            console.log('🔸 Processo criado em modo local:', newProcessoId);
+            toast.info('Modo offline: dados serão salvos localmente');
+          } else {
+            console.log('✅ Processo criado na API:', newProcessoId);
+          }
         } catch (error: any) {
           console.error('Erro ao criar processo:', error);
           toast.error(error.message || 'Erro ao inicializar processo');
