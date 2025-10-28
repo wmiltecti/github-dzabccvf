@@ -16,6 +16,8 @@ import {
   Plus,
   Filter,
   Search,
+  Bell,
+  Settings,
   Home,
   Building2,
   BarChart3,
@@ -258,7 +260,6 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'inscricao', name: 'Nova Inscrição', icon: FilePlus, isRoute: true },
     { id: 'inscricoes', name: 'Inscrições', icon: FileCheck }
   ];
 
@@ -291,16 +292,29 @@ export default function Dashboard() {
 
   const renderDashboard = () => (
     <div className="space-y-6">
+      {/* ============================================ */}
+      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+      {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
         <div className="flex space-x-2 sm:space-x-3">
           <button
-            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-            onClick={() => navigate('/inscricao/participantes')}
+            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowNewProcessModal(true)}
+            title="Criar novo processo"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Novo Processo</span>
+            <span className="xs:hidden">Processo</span>
+          </button>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => navigate('/inscricao/participantes')}
+            title="Iniciar nova inscrição"
+          >
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden xs:inline">Nova Inscrição</span>
-            <span className="xs:hidden">Nova</span>
+            <span className="xs:hidden">Inscrição</span>
           </button>
         </div>
       </div>
@@ -403,16 +417,31 @@ export default function Dashboard() {
 
   const renderProcesses = () => (
     <div className="space-y-6">
+      {/* ============================================ */}
+      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+      {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Processos de Licenciamento</h1>
-        <button
-          className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
-          onClick={() => navigate('/inscricao/participantes')}
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden xs:inline">Nova Inscrição</span>
-          <span className="xs:hidden">Nova</span>
-        </button>
+        <div className="flex space-x-2 sm:space-x-3">
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowNewProcessModal(true)}
+            title="Criar novo processo"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Novo Processo</span>
+            <span className="xs:hidden">Processo</span>
+          </button>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => navigate('/inscricao/participantes')}
+            title="Iniciar nova inscrição"
+          >
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Nova Inscrição</span>
+            <span className="xs:hidden">Inscrição</span>
+          </button>
+        </div>
       </div>
 
       <div className="glass-effect p-3 sm:p-4 rounded-lg">
@@ -517,11 +546,15 @@ export default function Dashboard() {
 
   const renderInscricoes = () => (
     <div className="space-y-6">
+      {/* ============================================ */}
+      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+      {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Inscrições</h1>
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
           onClick={() => navigate('/inscricao/participantes')}
+          title="Criar nova inscrição"
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="hidden xs:inline">Nova Inscrição</span>
