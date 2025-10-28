@@ -24,7 +24,8 @@ import {
   MapPin,
   Menu,
   X,
-  FilePlus
+  FilePlus,
+  FileCheck
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
@@ -257,7 +258,8 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'inscricao', name: 'Nova Inscrição', icon: FilePlus, isRoute: true }
+    { id: 'inscricao', name: 'Nova Inscrição', icon: FilePlus, isRoute: true },
+    { id: 'inscricoes', name: 'Inscrições', icon: FileCheck }
   ];
 
   const geralSubSections = [
@@ -513,10 +515,134 @@ export default function Dashboard() {
     </div>
   );
 
+  const renderInscricoes = () => (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Inscrições</h1>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base"
+          onClick={() => navigate('/inscricao/participantes')}
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden xs:inline">Nova Inscrição</span>
+          <span className="xs:hidden">Nova</span>
+        </button>
+      </div>
+
+      <div className="glass-effect p-3 sm:p-4 rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por empresa ou atividade..."
+                className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <select
+              className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">Todos os Status</option>
+              <option value="submitted">Submetida</option>
+              <option value="em_analise">Em Análise</option>
+              <option value="documentacao_pendente">Documentação Pendente</option>
+              <option value="aprovado">Aprovada</option>
+              <option value="rejeitado">Rejeitada</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-effect rounded-lg">
+        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Inscrições</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protocolo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Submissão</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {processes.filter(license => license.created_via === 'inscription').map((license) => (
+                <tr
+                  key={license.id}
+                  className="hover:bg-blue-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
+                  onClick={() => handleProcessClick(license)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{license.protocol_number}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900">{license.companies?.name}</div>
+                    <div className="text-sm text-gray-500">{license.activity}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      {getLicenseTypeName(license.license_type)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(license.status)}`}>
+                      {getStatusText(license.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${license.progress || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-500">{license.progress || 0}%</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{license.submit_date ? new Date(license.submit_date).toLocaleDateString('pt-BR') : 'N/A'}</div>
+                  </td>
+                </tr>
+              ))}
+              {processes.filter(license => license.created_via === 'inscription').length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma inscrição encontrada</h3>
+                    <p className="text-gray-500 mb-4">Não há inscrições que correspondam aos filtros selecionados.</p>
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
+                      onClick={() => navigate('/inscricao/participantes')}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Criar Nova Inscrição
+                    </button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
+      case 'inscricoes': return renderInscricoes();
       case 'form-wizard': return <FormWizard />;
       case 'companies': return (
         <div className="text-center py-8 sm:py-12 px-4">
