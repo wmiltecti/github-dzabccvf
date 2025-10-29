@@ -6,8 +6,19 @@ export interface DadosGeraisPayload {
   cnpj?: string;
   razao_social?: string;
   nome_fantasia?: string;
+  area?: number;
   porte?: string;
   potencial_poluidor?: string;
+  cnae_codigo?: string;
+  cnae_descricao?: string;
+  possui_licenca_anterior?: boolean;
+  licenca_tipo?: string;
+  licenca_numero?: string;
+  licenca_ano?: number;
+  licenca_validade?: string;
+  numero_empregados?: number;
+  horario_inicio?: string;
+  horario_fim?: string;
   descricao_resumo?: string;
   contato_email?: string;
   contato_telefone?: string;
@@ -27,8 +38,40 @@ export interface ProcessoResponse {
   id: string;
   user_id: string;
   status: string;
+  protocolo_interno?: string;
+  numero_processo_externo?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface DadosGeraisResponse {
+  id: string;
+  processo_id: string;
+  protocolo_interno: string;
+  numero_processo_externo?: string | null;
+  tipo_pessoa?: 'PF' | 'PJ';
+  cpf?: string;
+  cnpj?: string;
+  razao_social?: string;
+  nome_fantasia?: string;
+  area?: number;
+  porte?: string;
+  potencial_poluidor?: string;
+  cnae_codigo?: string;
+  cnae_descricao?: string;
+  possui_licenca_anterior?: boolean;
+  licenca_tipo?: string;
+  licenca_numero?: string;
+  licenca_ano?: number;
+  licenca_validade?: string;
+  numero_empregados?: number;
+  horario_inicio?: string;
+  horario_fim?: string;
+  descricao_resumo?: string;
+  contato_email?: string;
+  contato_telefone?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface WizardStatusResponse {
@@ -48,12 +91,17 @@ export interface SubmitResponse {
 
 export async function criarProcesso(userId: string): Promise<ProcessoResponse> {
   try {
-    const response = await http.post<ProcessoResponse>('/processos', {
+    console.log('📡 criarProcesso - Iniciando chamada:', { userId });
+
+    const response = await http.post<ProcessoResponse>('/api/v1/processos/', {
       user_id: userId,
       status: 'draft'
     });
+
+    console.log('📡 criarProcesso - Response recebido:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('📡 criarProcesso - Erro:', error);
     const message = error?.response?.data?.detail || error?.message || 'Erro ao criar processo';
     throw new Error(message);
   }
@@ -62,13 +110,22 @@ export async function criarProcesso(userId: string): Promise<ProcessoResponse> {
 export async function upsertDadosGerais(
   processoId: string,
   payload: DadosGeraisPayload
-): Promise<void> {
+): Promise<DadosGeraisResponse> {
   try {
-    await http.put(`/processos/${processoId}/dados-gerais`, {
+    console.log('📡 upsertDadosGerais - Iniciando chamada:', {
+      processoId,
+      payload
+    });
+
+    const response = await http.put<DadosGeraisResponse>(`/api/v1/processos/${processoId}/dados-gerais`, {
       processo_id: processoId,
       ...payload
     });
+
+    console.log('📡 upsertDadosGerais - Response recebido:', response.data);
+    return response.data;
   } catch (error: any) {
+    console.error('📡 upsertDadosGerais - Erro:', error);
     const message = error?.response?.data?.detail || error?.message || 'Erro ao salvar dados gerais';
     throw new Error(message);
   }

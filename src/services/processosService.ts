@@ -1,174 +1,162 @@
-import * as processosAPI from '../lib/api/processos';
-import { getUserId } from '../utils/authToken';
+import axios from "axios";
 
-let apiAvailable = true;
+/**
+ * Instância HTTP com baseURL do .env
+ * Ex.: VITE_API_BASE_URL=http://localhost:8000/api/v1
+ */
+const http = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 15000,
+});
 
-function generateLocalProcessoId(): string {
-  return `local-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+http.interceptors.request.use((config) => {
+  try {
+    const raw = localStorage.getItem("userData") || localStorage.getItem("userdata");
+    const directToken = localStorage.getItem("token");
+    let token: string | undefined;
+
+    if (raw) {
+      try { token = JSON.parse(raw)?.token; } catch {}
+    }
+    if (!token && directToken) token = directToken;
+
+    if (token) {
+      config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` };
+    }
+  } catch {}
+  return config;
+});
+
+// helper para extrair o id de vários formatos de resposta
+function extractId(data: any): string | undefined {
+  const obj = Array.isArray(data) ? data[0] : data;
+  if (!obj) return undefined;
+  return (
+    obj.id ??
+    obj.processoId ??
+    obj.uuid ??
+    obj.key ??
+    obj.processo_id ??
+    obj.processoID
+  );
 }
 
-function isLocalProcesso(processoId: string): boolean {
-  return processoId.startsWith('local-');
-}
-
-export async function criarProcesso(userId?: string): Promise<string> {
-  const finalUserId = userId || getUserId();
-
-  if (!finalUserId) {
-    throw new Error('Usuário não autenticado');
+/**
+ * POST /processos/ → pode retornar {id: "..."} ou [{id: "..."}] (Supabase/PostgREST)
+ */
+export async function criarProcesso(userId: string): Promise<string> {
+  if (!import.meta.env.VITE_API_BASE_URL) {
+    throw new Error("API não configurada (VITE_API_BASE_URL).");
   }
 
-  if (!apiAvailable) {
-    console.warn('🔸 API indisponível, usando ID de processo local');
-    return generateLocalProcessoId();
+  const payload = { status: "draft", user_id: String(userId) };
+  const res = await http.post("/processos/", payload);
+
+  // log temporário para conferência
+  console.log("↩︎ criarProcesso resposta:", res.status, res.data);
+
+  const remoteId = extractId(res.data);
+  if (!remoteId) {
+    throw new Error("Resposta da API sem 'id' ou chave equivalente.");
+  }
+  return String(remoteId);
+}
+
+/**
+ * PUT /processos/{id}/dados-gerais/
+ * (note a barra final — muitos backends com FastAPI/Django/Supabase aceitam melhor)
+ */
+// ... (resto do arquivo igual)
+
+export async function upsertDadosGerais(processoId: string, payload: any) {
+  if (!processoId || processoId.startsWith("local-")) {
+    throw new Error("Processo inválido: esperado ID remoto da API.");
+  }
+
+  // Garante processo_id no body, igual ao path:
+  const body = { processo_id: processoId, ...payload };
+
+  try {
+    // Sem barra final para casar com seu curl
+    const res = await http.put(`/processos/${processoId}/dados-gerais`, body);
+    return res.data;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    const data = err?.response?.data;
+    console.error("❌ upsertDadosGerais error:", status, data);
+    const msg = Array.isArray(data?.detail)
+      ? data.detail.map((d: any) => d.msg || JSON.stringify(d)).join(" | ")
+      : (data?.detail || err.message || "Erro de validação.");
+    throw new Error(msg);
+  }
+}
+
+
+// --- Tipos auxiliares (ajuste conforme seu backend) ---
+export type WizardStatus = {
+  current_step?: number;           // etapa atual (1..7)
+  completed_steps?: number[];      // etapas concluídas
+  is_complete?: boolean;           // se finalizou o wizard
+  updated_at?: string;             // ISO string
+  // ...adicione campos que sua API realmente retorna
+};
+
+/**
+ * Recupera o status do wizard no backend.
+ * Tenta primeiro /wizard-status; se não existir, tenta /status.
+ * Ajuste o caminho caso seu backend use outro endpoint.
+ */
+export async function getWizardStatus(processoId: string): Promise<WizardStatus> {
+  if (!processoId || processoId.startsWith("local-")) {
+    throw new Error("Processo inválido para consultar status.");
   }
 
   try {
-    const response = await processosAPI.criarProcesso(finalUserId);
-    return response.id;
-  } catch (error: any) {
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('404') || errorMsg.includes('Network Error') || errorMsg.includes('Failed to fetch')) {
-      console.warn('🔸 API indisponível, alternando para modo local');
-      apiAvailable = false;
-      return generateLocalProcessoId();
+    // Ex.: GET /processos/{id}/wizard-status
+    const res = await http.get(`/processos/${processoId}/wizard-status`);
+    return res.data as WizardStatus;
+  } catch (err: any) {
+    // fallback: alguns backends expõem /status
+    if (err?.response?.status === 404) {
+      const res2 = await http.get(`/processos/${processoId}/status`);
+      return res2.data as WizardStatus;
     }
-    throw error;
+    throw err;
   }
 }
 
-export async function upsertDadosGerais(
-  processoId: string,
-  payload: processosAPI.DadosGeraisPayload
-): Promise<void> {
-  if (!processoId) {
-    throw new Error('ID do processo é obrigatório');
-  }
-
-  if (isLocalProcesso(processoId)) {
-    console.warn('🔸 Modo local: dados salvos apenas no navegador');
-    localStorage.setItem(`processo_${processoId}_dados_gerais`, JSON.stringify(payload));
-    return;
+/**
+ * Submete/finaliza o processo no backend.
+ * Tenta primeiro: POST /processos/{id}/submit
+ * Fallbacks comuns:
+ *   - PUT  /processos/{id}/status   { status: "submitted" }
+ *   - POST /processos/{id}/finalizar
+ * Ajuste os caminhos conforme seu backend.
+ */
+export async function submitProcesso(processoId: string): Promise<any> {
+  if (!processoId || processoId.startsWith("local-")) {
+    throw new Error("Processo inválido para submissão.");
   }
 
   try {
-    await processosAPI.upsertDadosGerais(processoId, payload);
-  } catch (error: any) {
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('404') || errorMsg.includes('Network Error')) {
-      console.warn('🔸 Salvando dados localmente devido a erro na API');
-      localStorage.setItem(`processo_${processoId}_dados_gerais`, JSON.stringify(payload));
-      return;
+    // caminho preferido
+    const res = await http.post(`/processos/${processoId}/submit`);
+    return res.data;
+  } catch (err: any) {
+    // fallback 1: atualizar status diretamente
+    if (err?.response?.status === 404) {
+      try {
+        const res2 = await http.put(`/processos/${processoId}/status`, { status: "submitted" });
+        return res2.data;
+      } catch (err2: any) {
+        // fallback 2: rota /finalizar
+        if (err2?.response?.status === 404) {
+          const res3 = await http.post(`/processos/${processoId}/finalizar`);
+          return res3.data;
+        }
+        throw err2;
+      }
     }
-    throw error;
+    throw err;
   }
 }
-
-export async function addLocalizacao(
-  processoId: string,
-  payload: processosAPI.LocalizacaoPayload
-): Promise<void> {
-  if (!processoId) {
-    throw new Error('ID do processo é obrigatório');
-  }
-
-  if (isLocalProcesso(processoId)) {
-    console.warn('🔸 Modo local: localização salva apenas no navegador');
-    const localizacoes = JSON.parse(localStorage.getItem(`processo_${processoId}_localizacoes`) || '[]');
-    localizacoes.push(payload);
-    localStorage.setItem(`processo_${processoId}_localizacoes`, JSON.stringify(localizacoes));
-    return;
-  }
-
-  try {
-    await processosAPI.addLocalizacao(processoId, payload);
-  } catch (error: any) {
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('404') || errorMsg.includes('Network Error')) {
-      console.warn('🔸 Salvando localização localmente devido a erro na API');
-      const localizacoes = JSON.parse(localStorage.getItem(`processo_${processoId}_localizacoes`) || '[]');
-      localizacoes.push(payload);
-      localStorage.setItem(`processo_${processoId}_localizacoes`, JSON.stringify(localizacoes));
-      return;
-    }
-    throw error;
-  }
-}
-
-export async function getWizardStatus(processoId: string): Promise<processosAPI.WizardStatusResponse> {
-  if (!processoId) {
-    throw new Error('ID do processo é obrigatório');
-  }
-
-  if (isLocalProcesso(processoId)) {
-    console.warn('🔸 Modo local: retornando status do localStorage');
-    const dadosGerais = localStorage.getItem(`processo_${processoId}_dados_gerais`);
-    const localizacoes = JSON.parse(localStorage.getItem(`processo_${processoId}_localizacoes`) || '[]');
-
-    return {
-      processo_id: processoId,
-      v_dados_gerais: !!dadosGerais,
-      n_localizacoes: localizacoes.length,
-      n_atividades: 0,
-      v_resp_tecnico: false
-    };
-  }
-
-  try {
-    return await processosAPI.getWizardStatus(processoId);
-  } catch (error: any) {
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('404') || errorMsg.includes('Network Error')) {
-      console.warn('🔸 Retornando status local devido a erro na API');
-      const dadosGerais = localStorage.getItem(`processo_${processoId}_dados_gerais`);
-      const localizacoes = JSON.parse(localStorage.getItem(`processo_${processoId}_localizacoes`) || '[]');
-
-      return {
-        processo_id: processoId,
-        v_dados_gerais: !!dadosGerais,
-        n_localizacoes: localizacoes.length,
-        n_atividades: 0,
-        v_resp_tecnico: false
-      };
-    }
-    throw error;
-  }
-}
-
-export async function submitProcesso(processoId: string): Promise<processosAPI.SubmitResponse> {
-  if (!processoId) {
-    throw new Error('ID do processo é obrigatório');
-  }
-
-  if (isLocalProcesso(processoId)) {
-    console.warn('🔸 Modo local: gerando protocolo local');
-    const protocolo = `LOCAL-${Date.now().toString(36).toUpperCase()}`;
-
-    return {
-      processo_id: processoId,
-      protocolo: protocolo,
-      status: 'submitted',
-      data_submissao: new Date().toISOString()
-    };
-  }
-
-  try {
-    return await processosAPI.submitProcesso(processoId);
-  } catch (error: any) {
-    const errorMsg = error.message || '';
-    if (errorMsg.includes('404') || errorMsg.includes('Network Error')) {
-      console.warn('🔸 Gerando protocolo local devido a erro na API');
-      const protocolo = `LOCAL-${Date.now().toString(36).toUpperCase()}`;
-
-      return {
-        processo_id: processoId,
-        protocolo: protocolo,
-        status: 'submitted',
-        data_submissao: new Date().toISOString()
-      };
-    }
-    throw error;
-  }
-}
-
-export type { DadosGeraisPayload, LocalizacaoPayload, WizardStatusResponse, SubmitResponse } from '../lib/api/processos';
