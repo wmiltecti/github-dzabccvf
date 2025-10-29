@@ -86,12 +86,12 @@ export async function sendToBlockchain(
     const payload = formatPayload(formDataJsonString, processoId);
     console.log('📦 [sendToBlockchain] Payload formatado com sucesso');
 
-    console.log('🌐 [sendToBlockchain] Preparando requisição HTTP POST para /blockchain/register');
+    console.log('🌐 [sendToBlockchain] Preparando requisição HTTP POST para /api/v1/blockchain/register');
     console.log('🌐 [sendToBlockchain] Payload que será enviado:', JSON.stringify(payload, null, 2));
 
     console.log('⏳ [sendToBlockchain] Enviando requisição...');
     const response = await http.post<BlockchainResponse>(
-      '/blockchain/register',
+      '/api/v1/blockchain/register',
       payload
     );
 
