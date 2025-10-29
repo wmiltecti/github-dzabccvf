@@ -147,12 +147,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
           ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
           : '';
 
-        // Mensagem de sucesso do processo + blockchain
-        let successMessage = 'Registro criado com sucesso!';
-        if (formData.documents.length > 0) {
-          successMessage += ` ${formData.documents.length} documento(s) anexado(s).`;
-        }
-        toast.success(successMessage);
+        // Apenas mensagem do blockchain
         toast.success(blockchainMessage + details);
 
         console.log('✅ Blockchain transaction:', {
