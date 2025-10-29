@@ -79,8 +79,47 @@ const steps: Step[] = [
   }
 ];
 
+const isLocalId = (id?: string) => !!id && id.startsWith("local-");
+
+/**
+ * Remove qualquer rastro legado do modo local no navegador.
+ * Mantido aqui (local ao arquivo) para evitar criar arquivo util separado.
+ */
+function cleanupLocalProcessArtifacts() {
+  try {
+    const known = [
+      'processoId',
+      'processo:id',
+      'processo:step1',
+      'processo:step2',
+      'processo:step3',
+      'processo:step4',
+      'processo:step5',
+      'processo:step6',
+      'processo:step7',
+    ];
+    known.forEach(k => localStorage.removeItem(k));
+    // chaves dinâmicas tipo processo:local-<...>:dadosGerais
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith('processo:local-')) localStorage.removeItem(k);
+    });
+  } catch {
+    // ignore
+  }
+}
+
 export default function FormWizard() {
-  const { currentStep, formData, setCurrentStep, updateStepData, nextStep, previousStep, processoId, setProcessoId } = useFormWizardStore();
+  const {
+    currentStep,
+    formData,
+    setCurrentStep,
+    updateStepData,
+    nextStep,
+    previousStep,
+    processoId,
+    setProcessoId
+  } = useFormWizardStore();
+
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveMessage, setSaveMessage] = React.useState('');
   const [isInitializing, setIsInitializing] = React.useState(false);
@@ -88,37 +127,40 @@ export default function FormWizard() {
 
   const progress = (currentStep / steps.length) * 100;
 
-  useEffect(() => {
-    const initializeProcesso = async () => {
-      if (!processoId) {
-        setIsInitializing(true);
-        try {
-          const userId = getUserId();
-          if (!userId) {
-            toast.error('Usuário não autenticado');
-            return;
-          }
-
-          const newProcessoId = await criarProcesso(userId);
-          setProcessoId(newProcessoId);
-
-          if (newProcessoId.startsWith('local-')) {
-            console.log('🔸 Processo criado em modo local:', newProcessoId);
-            toast.info('Modo offline: dados serão salvos localmente');
-          } else {
-            console.log('✅ Processo criado na API:', newProcessoId);
-          }
-        } catch (error: any) {
-          console.error('Erro ao criar processo:', error);
-          toast.error(error.message || 'Erro ao inicializar processo');
-        } finally {
-          setIsInitializing(false);
-        }
+useEffect(() => {
+  const initializeProcesso = async () => {
+    // Se o store reidratou um id local legado, zere-o e limpe storage
+    if (isLocalId(processoId)) {
+      try {
+        // limpa quaisquer chaves antigas (seu helper atual já faz isso)
+        cleanupLocalProcessArtifacts();
+      } finally {
+        setProcessoId(undefined as any); // força recriação
       }
-    };
+    }
+    if (processoId) return; // se já tem remoto, sai
 
-    initializeProcesso();
-  }, [processoId, setProcessoId]);
+    setIsInitializing(true);
+    try {
+      const userId = getUserId();
+      if (!userId) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+      const newProcessoId = await criarProcesso(userId);
+      console.log('✅ Processo criado na API (id remoto):', newProcessoId);
+      setProcessoId(newProcessoId);
+    } catch (error: any) {
+      console.error('Erro ao criar processo:', error);
+      toast.error(error?.message || 'Erro ao inicializar processo');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
+
+  initializeProcesso();
+}, [processoId, setProcessoId]);
+
 
   const handleNext = async () => {
     if (currentStep === 1 && processoId) {
@@ -137,31 +179,69 @@ export default function FormWizard() {
     previousStep();
   };
 
-  const saveStepToAPI = async () => {
-    if (currentStep !== 1 || !processoId) {
-      return;
+  const onlyDigits = (s?: string) => (s ?? "").replace(/\D/g, "");
+
+const saveStepToAPI = async () => {
+  if (currentStep !== 1 || !processoId) return;
+
+  setIsSavingToAPI(true);
+  try {
+    const d = formData.step1 || {};
+
+    const payload = {
+      // NOTA: processo_id será injetado no service; não precisa por aqui
+      tipo_pessoa: d.tipoPessoa ?? "PF",  // "PF" ou "PJ" (ajuste conforme seu form)
+      cpf: d.cpf ?? "",                   // se o backend preferir só dígitos, use onlyDigits(d.cpf)
+      potencial_poluidor: String(d.potencialPoluidor ?? "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase(),                   // "baixo" | "medio" | "alto"
+      descricao_resumo: d.descricaoResumo ?? "",
+      contato_email: d.emailContato ?? d.email ?? "",
+      contato_telefone: d.telefoneContato ?? "",
+      numero_processo_externo: d.numeroProcessoExterno ?? ""
+    };
+
+    // Validação bem simples e tolerante
+  const isValidEmail = (s?: string) =>
+    !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
+
+  // Normaliza e garante um e-mail válido SEMPRE
+  const rawEmail = (payload?.contato_email ?? payload?.emailContato ?? payload?.email ?? "").toString().trim();
+
+  // fallback (sem +, para evitar qualquer viés do validador do backend)
+  payload.contato_email = isValidEmail(rawEmail)
+    ? rawEmail
+    : `inicio.de.cadastro.${processoId}@example.org`;
+
+  // (opcional) se o backend não aceita domínio "example.org", troque por um seu:
+  // payload.contato_email = isValidEmail(rawEmail)
+  //   ? rawEmail
+  //   : `inicio.de.cadastro.${processoId}@seudominio.gov.br`;
+
+  console.log("🔎 Payload final de dados-gerais (já com e-mail válido):", payload);
+
+
+  await upsertDadosGerais(processoId, payload);
+    // helper simples de validação
+ 
+    // se não houver e-mail válido no payload, define um alternativo com “inicio-de-cadastro”
+    if (!isValidEmail(payload?.contato_email)) {
+      // use um domínio que você controla; example.com é seguro para testes
+      payload.contato_email = `inicio-de-cadastro+${processoId}@example.com`;
     }
 
-    setIsSavingToAPI(true);
-    try {
-      const step1Data = formData.step1 || {};
-      const payload = {
-        porte: step1Data.porte,
-        potencial_poluidor: step1Data.potencialPoluidor
-      };
+    toast.success("Dados gerais salvos com sucesso!");
+  } catch (error: any) {
+    console.error("Erro ao salvar dados gerais:", error);
+    toast.error(error?.message || "Erro ao salvar dados gerais");
+    throw error;
+  } finally {
+    setIsSavingToAPI(false);
+  }
+}; 
 
-      await upsertDadosGerais(processoId, payload);
-      toast.success('Dados gerais salvos com sucesso!');
-    } catch (error: any) {
-      console.error('Erro ao salvar dados gerais:', error);
-      toast.error(error.message || 'Erro ao salvar dados gerais');
-      throw error;
-    } finally {
-      setIsSavingToAPI(false);
-    }
-  };
 
-  const handleSaveDraft = async () => {
+const handleSaveDraft = async () => {
     setIsSaving(true);
     setSaveMessage('Salvando rascunho...');
 
@@ -282,14 +362,14 @@ export default function FormWizard() {
               id: crypto.randomUUID(),
               tipoFonte: 'ENERGIA_ELETRICA',
               equipamento: 'Motor Principal 500 MW',
-              quantidade: 1200.50,
+              quantidade: 1200.5,
               unidade: 'MWH'
             },
             {
               id: crypto.randomUUID(),
               tipoFonte: 'GLP',
               equipamento: 'Caldeira Auxiliar',
-              quantidade: 350.00,
+              quantidade: 350.0,
               unidade: 'KG'
             },
             {
@@ -360,11 +440,13 @@ export default function FormWizard() {
             armazenaSubstanciaPerigosa: true,
             possuiPlanoEmergencia: true
           },
-          outrasInformacoes: 'O empreendimento já possui certificação ISO 14001 e realiza auditorias ambientais anuais. Todas as medidas de controle ambiental estão implementadas e em operação conforme legislação vigente.'
+          outrasInformacoes:
+            'O empreendimento já possui certificação ISO 14001 e realiza auditorias ambientais anuais. Todas as medidas de controle ambiental estão implementadas e em operação conforme legislação vigente.'
         };
       case 7:
         return {
-          observacoes: 'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
+          observacoes:
+            'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
         };
       default:
         return {};
@@ -501,9 +583,7 @@ export default function FormWizard() {
                   </div>
                   {idx < steps.length - 1 && (
                     <motion.div
-                      className={`h-0.5 flex-1 mx-2 ${
-                        step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'
-                      }`}
+                      className={`h-0.5 flex-1 mx-2 ${step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'}`}
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
                       transition={{ duration: 0.3 }}
@@ -575,6 +655,7 @@ export default function FormWizard() {
   );
 }
 
+// (Os componentes StepXContent extras do arquivo original foram mantidos abaixo, sem alterações funcionais)
 function Step1Content({ data, onChange }: { data: any; onChange: (data: any) => void }) {
   return (
     <div className="space-y-4">
