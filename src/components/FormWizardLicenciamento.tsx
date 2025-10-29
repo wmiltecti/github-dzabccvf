@@ -130,24 +130,100 @@ export default function FormWizardLicenciamento() {
     }
   };
 
+  const validateStep1Data = (data: any): string[] => {
+    const errors: string[] = [];
+
+    if (!data.codigoCNAE) {
+      errors.push('Código CNAE é obrigatório');
+    }
+
+    if (!data.numeroEmpregados || parseInt(data.numeroEmpregados) < 0) {
+      errors.push('Número de empregados é obrigatório e deve ser maior ou igual a zero');
+    }
+
+    if (!data.possuiLicencaAnterior) {
+      errors.push('É obrigatório informar se possui licença anterior');
+    }
+
+    if (data.possuiLicencaAnterior === 'sim') {
+      if (!data.licencaAnterior?.tipo) {
+        errors.push('Tipo de licença anterior é obrigatório');
+      }
+      if (!data.licencaAnterior?.numero) {
+        errors.push('Número da licença anterior é obrigatório');
+      }
+      if (!data.licencaAnterior?.ano) {
+        errors.push('Ano de emissão da licença é obrigatório');
+      } else {
+        const ano = parseInt(data.licencaAnterior.ano);
+        const anoAtual = new Date().getFullYear();
+        if (ano < 1900 || ano > anoAtual) {
+          errors.push(`Ano de emissão deve estar entre 1900 e ${anoAtual}`);
+        }
+      }
+      if (!data.licencaAnterior?.validade) {
+        errors.push('Data de validade da licença é obrigatória');
+      }
+    }
+
+    return errors;
+  };
+
   const saveStepToAPI = async (stepNumber: number, data: any) => {
     if (stepNumber !== 1 || !processoId) {
       saveStep(stepNumber, data);
       return;
     }
 
+    console.log('🚀 Iniciando salvamento dos dados gerais...');
+    console.log('📝 Processo ID:', processoId);
+    console.log('📊 Dados do formulário:', data);
+
+    const validationErrors = validateStep1Data(data);
+    if (validationErrors.length > 0) {
+      console.error('⚠️ Erros de validação:', validationErrors);
+      toast.error(`Dados incompletos: ${validationErrors.join(', ')}`);
+      return;
+    }
+
+    console.log('✓ Validação de dados passou com sucesso');
+
     setIsSaving(true);
     try {
-      const payload = {
-        porte: data.porte,
-        potencial_poluidor: data.potencialPoluidor
+      const payload: any = {
+        porte: data.porte || null,
+        potencial_poluidor: data.potencialPoluidor || null,
+        cnae_codigo: data.codigoCNAE || null,
+        cnae_descricao: data.descricaoCNAE || null,
+        numero_empregados: data.numeroEmpregados ? parseInt(data.numeroEmpregados) : null,
+        possui_licenca_anterior: data.possuiLicencaAnterior === 'sim' ? true : data.possuiLicencaAnterior === 'nao' ? false : null,
       };
 
-      await upsertDadosGerais(processoId, payload);
+      if (data.licencaAnterior && data.possuiLicencaAnterior === 'sim') {
+        payload.licenca_tipo = data.licencaAnterior.tipo || null;
+        payload.licenca_numero = data.licencaAnterior.numero || null;
+        payload.licenca_ano = data.licencaAnterior.ano ? parseInt(data.licencaAnterior.ano) : null;
+        payload.licenca_validade = data.licencaAnterior.validade || null;
+      }
+
+      console.log('📤 Payload a ser enviado para API:', payload);
+      console.log('⏰ Timestamp:', new Date().toISOString());
+
+      const response = await upsertDadosGerais(processoId, payload);
+
+      console.log('✅ Dados salvos com sucesso na API!');
+      console.log('📨 Response da API:', response);
+
       saveStep(stepNumber, data);
-      toast.success('Dados salvos com sucesso!');
+
+      if (response && (response as any).protocolo_interno) {
+        toast.success(`✓ Dados salvos! Protocolo: ${(response as any).protocolo_interno}`);
+      } else {
+        toast.success('✓ Dados salvos com sucesso!');
+      }
     } catch (error: any) {
-      console.error('Erro ao salvar dados gerais:', error);
+      console.error('❌ Erro ao salvar dados gerais:', error);
+      console.error('📋 Stack trace:', error.stack);
       toast.error(error.message || 'Erro ao salvar dados');
       throw error;
     } finally {

@@ -40,7 +40,7 @@ export async function criarProcesso(userId?: string): Promise<string> {
 export async function upsertDadosGerais(
   processoId: string,
   payload: processosAPI.DadosGeraisPayload
-): Promise<void> {
+): Promise<processosAPI.DadosGeraisResponse | void> {
   if (!processoId) {
     throw new Error('ID do processo é obrigatório');
   }
@@ -52,7 +52,8 @@ export async function upsertDadosGerais(
   }
 
   try {
-    await processosAPI.upsertDadosGerais(processoId, payload);
+    const response = await processosAPI.upsertDadosGerais(processoId, payload);
+    return response;
   } catch (error: any) {
     const errorMsg = error.message || '';
     if (errorMsg.includes('404') || errorMsg.includes('Network Error')) {
