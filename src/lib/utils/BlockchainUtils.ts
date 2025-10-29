@@ -8,6 +8,7 @@ export interface BlockchainField {
 
 export interface BlockchainPayload {
   IdBlockchain: number;
+  request: string;
   Data: Record<string, any>;
   Fields: BlockchainField[];
 }
@@ -59,6 +60,7 @@ export function formatPayload(
 
   const payload = {
     IdBlockchain: BLOCKCHAIN_PARAMS.idBlockchain,
+    request: 'register',
     Data: formData,
     Fields: [
       {

@@ -131,16 +131,14 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         submitButton.innerHTML = 'Registrando no blockchain...';
       }
 
-      const formDataWithProcessId = { ...formData, processId: createdProcess?.id };
-      const jsonString = JSON.stringify(formDataWithProcessId);
+      // Preparar dados para blockchain (remover documents que é array de File)
+      const blockchainData = {
+        ...formData,
+        processId: createdProcess?.id,
+        documents: formData.documents.map(f => f.name).join(', ') // Converter array de File para string
+      };
+      const jsonString = JSON.stringify(blockchainData);
       const blockchainResult = await sendToBlockchain(jsonString, createdProcess?.id);
-
-      // Mostrar mensagem de sucesso do processo
-      let successMessage = 'Processo criado com sucesso!';
-      if (formData.documents.length > 0) {
-        successMessage += ` ${formData.documents.length} documento(s) anexado(s).`;
-      }
-      toast.success(successMessage);
 
       // Mostrar resultado do blockchain
       if (blockchainResult.success) {
@@ -148,7 +146,15 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         const details = blockchainResult.hashBlock
           ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
           : '';
+
+        // Mensagem de sucesso do processo + blockchain
+        let successMessage = 'Processo criado com sucesso!';
+        if (formData.documents.length > 0) {
+          successMessage += ` ${formData.documents.length} documento(s) anexado(s).`;
+        }
+        toast.success(successMessage);
         toast.success(blockchainMessage + details);
+
         console.log('✅ Blockchain transaction:', {
           hashBlock: blockchainResult.hashBlock,
           idBlock: blockchainResult.idBlock,
@@ -157,7 +163,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         });
       } else {
         const errorMessage = blockchainResult.error || 'Erro ao registrar no blockchain';
-        toast.warning(errorMessage);
+        toast.error(errorMessage);
         console.error('⚠️ Blockchain error:', blockchainResult.error);
       }
 
