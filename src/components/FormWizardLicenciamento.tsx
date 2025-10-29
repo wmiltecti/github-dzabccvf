@@ -242,7 +242,7 @@ export default function FormWizardLicenciamento() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Formulário de Licenciamento Ambiental
+                Formulário de Licenciamento AmbientalProcesso criado com sucesso!
               </h1>
               <p className="text-sm text-gray-500 mt-1">
                 Etapa {currentStep} de {steps.length}
