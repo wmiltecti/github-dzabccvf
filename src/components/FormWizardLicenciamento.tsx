@@ -136,13 +136,21 @@ export default function FormWizardLicenciamento() {
       const allFormData = { ...stepData, processoId };
       const jsonString = JSON.stringify(allFormData);
 
-      const blockchainResult = await sendToBlockchain(jsonString);
+      const blockchainResult = await sendToBlockchain(jsonString, processoId);
 
       if (blockchainResult.success) {
-        toast.success('Dados salvos e registrados no blockchain com sucesso!');
-        console.log('✅ Blockchain transaction:', blockchainResult.transactionId);
+        const details = blockchainResult.hashBlock
+          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
+          : '';
+        toast.success('Dados registrados no blockchain com sucesso!' + details);
+        console.log('✅ Blockchain transaction:', {
+          hashBlock: blockchainResult.hashBlock,
+          idBlock: blockchainResult.idBlock,
+          executed: blockchainResult.executed,
+          message: blockchainResult.message
+        });
       } else {
-        toast.warning('Dados salvos, mas houve erro ao registrar no blockchain: ' + blockchainResult.error);
+        toast.warning('Houve erro ao registrar no blockchain: ' + blockchainResult.error);
         console.error('❌ Blockchain error:', blockchainResult.error);
       }
     } catch (error: any) {
