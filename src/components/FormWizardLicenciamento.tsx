@@ -139,10 +139,11 @@ export default function FormWizardLicenciamento() {
       const blockchainResult = await sendToBlockchain(jsonString, processoId);
 
       if (blockchainResult.success) {
+        const message = blockchainResult.message || 'Dados registrados no blockchain';
         const details = blockchainResult.hashBlock
           ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
           : '';
-        toast.success('Dados registrados no blockchain com sucesso!' + details);
+        toast.success(message + details);
         console.log('✅ Blockchain transaction:', {
           hashBlock: blockchainResult.hashBlock,
           idBlock: blockchainResult.idBlock,
@@ -150,7 +151,8 @@ export default function FormWizardLicenciamento() {
           message: blockchainResult.message
         });
       } else {
-        toast.warning('Houve erro ao registrar no blockchain: ' + blockchainResult.error);
+        const errorMessage = blockchainResult.error || 'Erro desconhecido ao registrar no blockchain';
+        toast.error(errorMessage);
         console.error('❌ Blockchain error:', blockchainResult.error);
       }
     } catch (error: any) {
