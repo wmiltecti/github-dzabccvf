@@ -91,12 +91,17 @@ export interface SubmitResponse {
 
 export async function criarProcesso(userId: string): Promise<ProcessoResponse> {
   try {
-    const response = await http.post<ProcessoResponse>('/processos', {
+    console.log('📡 criarProcesso - Iniciando chamada:', { userId });
+
+    const response = await http.post<ProcessoResponse>('/api/v1/processos/', {
       user_id: userId,
       status: 'draft'
     });
+
+    console.log('📡 criarProcesso - Response recebido:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('📡 criarProcesso - Erro:', error);
     const message = error?.response?.data?.detail || error?.message || 'Erro ao criar processo';
     throw new Error(message);
   }
@@ -107,12 +112,20 @@ export async function upsertDadosGerais(
   payload: DadosGeraisPayload
 ): Promise<DadosGeraisResponse> {
   try {
-    const response = await http.put<DadosGeraisResponse>(`/processos/${processoId}/dados-gerais`, {
+    console.log('📡 upsertDadosGerais - Iniciando chamada:', {
+      processoId,
+      payload
+    });
+
+    const response = await http.put<DadosGeraisResponse>(`/api/v1/processos/${processoId}/dados-gerais`, {
       processo_id: processoId,
       ...payload
     });
+
+    console.log('📡 upsertDadosGerais - Response recebido:', response.data);
     return response.data;
   } catch (error: any) {
+    console.error('📡 upsertDadosGerais - Erro:', error);
     const message = error?.response?.data?.detail || error?.message || 'Erro ao salvar dados gerais';
     throw new Error(message);
   }

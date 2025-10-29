@@ -10,6 +10,14 @@ const http = axios.create({
 
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    console.log('🌐 HTTP Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      data: config.data
+    });
+
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -23,9 +31,24 @@ http.interceptors.request.use(
 
 http.interceptors.response.use(
   (response) => {
+    console.log('✅ HTTP Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.config.url,
+      data: response.data
+    });
     return response;
   },
   (error: AxiosError) => {
+    console.error('❌ HTTP Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      errorCode: error.code,
+      responseData: error.response?.data,
+      message: error.message
+    });
+
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token');
     }
