@@ -239,8 +239,11 @@ export default function StepCaracteristicasEmpreendimento({
         <input
           type="number"
           min="0"
-          value={data.numeroEmpregados || ''}
-          onChange={(e) => handleChange('numeroEmpregados', parseInt(e.target.value) || 0)}
+          value={data.numeroEmpregados === undefined ? '' : data.numeroEmpregados}
+          onChange={(e) => {
+            const value = e.target.value;
+            handleChange('numeroEmpregados', value === '' ? undefined : parseInt(value));
+          }}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           placeholder="0"
         />

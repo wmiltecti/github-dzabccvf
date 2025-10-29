@@ -113,12 +113,15 @@ export default function FormWizardLicenciamento() {
   const handleNext = async () => {
     if (currentStep < steps.length) {
       if (currentStep === 1) {
-        await saveStepToAPI(currentStep, stepData[currentStep] || {});
+        try {
+          await saveStepToAPI(currentStep, stepData[currentStep] || {});
+          setCurrentStep(currentStep + 1);
+        } catch (error) {
+          console.error('❌ Erro ao salvar, não avançando para próxima aba');
+          return;
+        }
       } else {
         saveStep(currentStep, stepData[currentStep] || {});
-      }
-
-      if (!isSaving) {
         setCurrentStep(currentStep + 1);
       }
     }
@@ -137,8 +140,10 @@ export default function FormWizardLicenciamento() {
       errors.push('Código CNAE é obrigatório');
     }
 
-    if (!data.numeroEmpregados || parseInt(data.numeroEmpregados) < 0) {
-      errors.push('Número de empregados é obrigatório e deve ser maior ou igual a zero');
+    if (data.numeroEmpregados === undefined || data.numeroEmpregados === null || data.numeroEmpregados === '') {
+      errors.push('Número de empregados é obrigatório');
+    } else if (parseInt(data.numeroEmpregados) < 0) {
+      errors.push('Número de empregados deve ser maior ou igual a zero');
     }
 
     if (!data.possuiLicencaAnterior) {
@@ -182,8 +187,8 @@ export default function FormWizardLicenciamento() {
     const validationErrors = validateStep1Data(data);
     if (validationErrors.length > 0) {
       console.error('⚠️ Erros de validação:', validationErrors);
-      toast.error(`Dados incompletos: ${validationErrors.join(', ')}`);
-      return;
+      toast.error(`Dados incompletos: ${validationErrors[0]}`);
+      throw new Error(`Validação falhou: ${validationErrors.join(', ')}`);
     }
 
     console.log('✓ Validação de dados passou com sucesso');
