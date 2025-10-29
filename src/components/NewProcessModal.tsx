@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Calendar, Building2, FileText, MapPin, Zap } from 'lucide-react';
 import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
+import { toast } from 'react-toastify';
 
 interface NewProcessModalProps {
   isOpen: boolean;
@@ -132,23 +133,33 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
       const formDataWithProcessId = { ...formData, processId: createdProcess?.id };
       const jsonString = JSON.stringify(formDataWithProcessId);
-      const blockchainResult = await sendToBlockchain(jsonString);
+      const blockchainResult = await sendToBlockchain(jsonString, createdProcess?.id);
 
-      if (blockchainResult.success) {
-        console.log('✅ Blockchain transaction:', blockchainResult.transactionId);
-      } else {
-        console.error('⚠️ Blockchain error:', blockchainResult.error);
-      }
-
-      // Mostrar mensagem de sucesso
+      // Mostrar mensagem de sucesso do processo
       let successMessage = 'Processo criado com sucesso!';
       if (formData.documents.length > 0) {
         successMessage += ` ${formData.documents.length} documento(s) anexado(s).`;
       }
+      toast.success(successMessage);
+
+      // Mostrar resultado do blockchain
       if (blockchainResult.success) {
-        successMessage += ' Dados registrados no blockchain.';
+        const blockchainMessage = blockchainResult.message || 'Dados registrados no blockchain';
+        const details = blockchainResult.hashBlock
+          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
+          : '';
+        toast.success(blockchainMessage + details);
+        console.log('✅ Blockchain transaction:', {
+          hashBlock: blockchainResult.hashBlock,
+          idBlock: blockchainResult.idBlock,
+          executed: blockchainResult.executed,
+          message: blockchainResult.message
+        });
+      } else {
+        const errorMessage = blockchainResult.error || 'Erro ao registrar no blockchain';
+        toast.warning(errorMessage);
+        console.error('⚠️ Blockchain error:', blockchainResult.error);
       }
-      alert(successMessage);
 
       // Fechar modal e resetar formulário
       onClose();
@@ -174,7 +185,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
 
     } catch (error) {
       console.error('Erro ao criar processo:', error);
-      alert('Erro ao criar processo: ' + (error as Error).message);
+      toast.error('Erro ao criar processo: ' + (error as Error).message);
 
       // Restaurar botão em caso de erro
       const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
