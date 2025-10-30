@@ -326,7 +326,7 @@ const saveStep2ToAPI = async () => {
     console.log("🔎 Payload da Aba 2 - Uso de Recursos e Energia:", payload);
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/v1/uso-recursos-energia`,
+      `${import.meta.env.VITE_API_BASE_URL}/uso-recursos-energia`,
       {
         method: 'POST',
         headers: {
