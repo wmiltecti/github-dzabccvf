@@ -16,7 +16,7 @@ const isValidCNPJ = (cnpj: string | null): boolean => {
 export class PessoasJuridicasService {
   static async getPessoasJuridicas() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/pessoas/juridicas`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/pessoas/juridicas`, {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
@@ -54,7 +54,7 @@ export class PessoasJuridicasService {
 
     try {
       console.log(`Fetching pessoa by CNPJ: ${cleanedCnpj}`);
-      const response = await axios.get(`${API_BASE_URL}/pessoas/cnpj/${cleanedCnpj}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/pessoas/cnpj/${cleanedCnpj}`, {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
