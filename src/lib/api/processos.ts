@@ -131,6 +131,28 @@ export async function upsertDadosGerais(
   }
 }
 
+export async function getDadosGerais(
+  processoId: string
+): Promise<DadosGeraisResponse | null> {
+  try {
+    console.log('📡 getDadosGerais - Iniciando chamada:', { processoId });
+
+    const response = await http.get<DadosGeraisResponse>(`/api/v1/processos/${processoId}/dados-gerais`);
+
+    console.log('📡 getDadosGerais - Response recebido:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('📡 getDadosGerais - Erro:', error);
+    // Se retornar 404, significa que não há dados ainda
+    if (error?.response?.status === 404) {
+      console.log('📡 getDadosGerais - Nenhum dado encontrado (404)');
+      return null;
+    }
+    const message = error?.response?.data?.detail || error?.message || 'Erro ao buscar dados gerais';
+    throw new Error(message);
+  }
+}
+
 export async function addLocalizacao(
   processoId: string,
   payload: LocalizacaoPayload
