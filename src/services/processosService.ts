@@ -97,12 +97,14 @@ export async function getDadosGerais(processoId: string) {
   }
 
   try {
-    const res = await http.get(`/processos/${processoId}/dados-gerais`);
+    // Usa o endpoint /processos/{id} em vez de /processos/{id}/dados-gerais
+    const res = await http.get(`/processos/${processoId}`);
     return res.data;
   } catch (err: any) {
     const status = err?.response?.status;
-    // Se retornar 404, retorna null (não há dados ainda)
-    if (status === 404) {
+    // Se retornar 404 ou 405, retorna null (endpoint não existe ou não há dados ainda)
+    if (status === 404 || status === 405) {
+      console.log(`📡 getDadosGerais - Status ${status}, retornando null`);
       return null;
     }
     const data = err?.response?.data;
