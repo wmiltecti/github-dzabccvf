@@ -18,7 +18,7 @@ import { toast } from 'react-toastify';
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
 import { getUserId } from '../utils/authToken';
-import { criarProcesso, upsertDadosGerais } from '../services/processosService';
+import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -161,6 +161,67 @@ useEffect(() => {
   initializeProcesso();
 }, [processoId, setProcessoId]);
 
+// Carregar dados existentes quando o processo já existe
+useEffect(() => {
+  const loadDadosGerais = async () => {
+    if (processoId && !processoId.startsWith('local-')) {
+      try {
+        console.log('🔍 [FormWizard] Carregando dados gerais existentes para processo:', processoId);
+        const dadosExistentes = await getDadosGerais(processoId);
+        
+        if (dadosExistentes) {
+          console.log('📥 [FormWizard] Dados gerais carregados:', dadosExistentes);
+          
+          // Converter dados da API para o formato do formulário
+          const dadosFormulario: any = {
+            tipoPessoa: dadosExistentes.tipo_pessoa,
+            cpf: dadosExistentes.cpf,
+            cnpj: dadosExistentes.cnpj,
+            razaoSocial: dadosExistentes.razao_social,
+            nomeFantasia: dadosExistentes.nome_fantasia,
+            area: dadosExistentes.area,
+            porte: dadosExistentes.porte,
+            potencialPoluidor: dadosExistentes.potencial_poluidor,
+            cnaeCodigo: dadosExistentes.cnae_codigo,
+            cnaeDescricao: dadosExistentes.cnae_descricao,
+            numeroEmpregados: dadosExistentes.numero_empregados,
+            horarioInicio: dadosExistentes.horario_inicio,
+            horarioFim: dadosExistentes.horario_fim,
+            descricaoResumo: dadosExistentes.descricao_resumo,
+            emailContato: dadosExistentes.contato_email,
+            telefoneContato: dadosExistentes.contato_telefone,
+            numeroProcessoExterno: dadosExistentes.numero_processo_externo,
+            possuiLicencaAnterior: dadosExistentes.possui_licenca_anterior === true ? 'sim' : 
+                                    dadosExistentes.possui_licenca_anterior === false ? 'nao' : '',
+          };
+
+          // Se possui licença anterior, adicionar dados da licença
+          if (dadosExistentes.possui_licenca_anterior && 
+              (dadosExistentes.licenca_tipo || dadosExistentes.licenca_numero)) {
+            dadosFormulario.licencaAnterior = {
+              tipo: dadosExistentes.licenca_tipo || '',
+              numero: dadosExistentes.licenca_numero || '',
+              ano: dadosExistentes.licenca_ano ? String(dadosExistentes.licenca_ano) : '',
+              validade: dadosExistentes.licenca_validade || '',
+            };
+          }
+
+          // Atualizar formData com os dados carregados
+          updateStepData(1, dadosFormulario);
+
+          console.log('✅ [FormWizard] Dados do formulário carregados no estado:', dadosFormulario);
+        } else {
+          console.log('ℹ️ [FormWizard] Nenhum dado existente encontrado para este processo');
+        }
+      } catch (error: any) {
+        console.error('❌ [FormWizard] Erro ao carregar dados gerais:', error);
+      }
+    }
+  };
+
+  loadDadosGerais();
+}, [processoId]);
+
 
   const handleNext = async () => {
     if (currentStep === 1 && processoId) {
@@ -188,40 +249,50 @@ const saveStepToAPI = async () => {
   try {
     const d = formData.step1 || {};
 
-    const payload = {
-      // NOTA: processo_id será injetado no service; não precisa por aqui
-      tipo_pessoa: d.tipoPessoa ?? "PF",  // "PF" ou "PJ" (ajuste conforme seu form)
-      cpf: d.cpf ?? "",                   // se o backend preferir só dígitos, use onlyDigits(d.cpf)
+    const payload: any = {
+      tipo_pessoa: d.tipoPessoa ?? "PF",
+      cpf: d.cpf ?? "",
+      cnpj: d.cnpj ?? "",
+      razao_social: d.razaoSocial ?? "",
+      nome_fantasia: d.nomeFantasia ?? "",
+      area: d.area ? parseFloat(d.area) : null,
+      porte: d.porte ?? "",
       potencial_poluidor: String(d.potencialPoluidor ?? "")
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase(),                   // "baixo" | "medio" | "alto"
+        .toLowerCase(),
+      cnae_codigo: d.cnaeCodigo ?? "",
+      cnae_descricao: d.cnaeDescricao ?? "",
+      numero_empregados: d.numeroEmpregados ? parseInt(d.numeroEmpregados) : null,
+      horario_inicio: d.horarioInicio ?? "",
+      horario_fim: d.horarioFim ?? "",
       descricao_resumo: d.descricaoResumo ?? "",
       contato_email: d.emailContato ?? d.email ?? "",
       contato_telefone: d.telefoneContato ?? "",
-      numero_processo_externo: d.numeroProcessoExterno ?? ""
+      numero_processo_externo: d.numeroProcessoExterno ?? "",
+      possui_licenca_anterior: d.possuiLicencaAnterior === 'sim' ? true : 
+                                d.possuiLicencaAnterior === 'nao' ? false : null,
     };
 
-    // Validação bem simples e tolerante
-  const isValidEmail = (s?: string) =>
-    !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
+    // Se possui licença anterior, adicionar dados da licença
+    if (d.licencaAnterior && d.possuiLicencaAnterior === 'sim') {
+      payload.licenca_tipo = d.licencaAnterior.tipo ?? "";
+      payload.licenca_numero = d.licencaAnterior.numero ?? "";
+      payload.licenca_ano = d.licencaAnterior.ano ? parseInt(d.licencaAnterior.ano) : null;
+      payload.licenca_validade = d.licencaAnterior.validade ?? "";
+    }
 
-  // Normaliza e garante um e-mail válido SEMPRE
-  const rawEmail = (payload?.contato_email ?? payload?.emailContato ?? payload?.email ?? "").toString().trim();
+    // Validação de e-mail
+    const isValidEmail = (s?: string) =>
+      !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
 
-  // fallback (sem +, para evitar qualquer viés do validador do backend)
-  payload.contato_email = isValidEmail(rawEmail)
-    ? rawEmail
-    : `inicio.de.cadastro.${processoId}@example.org`;
+    const rawEmail = (payload?.contato_email ?? "").toString().trim();
+    payload.contato_email = isValidEmail(rawEmail)
+      ? rawEmail
+      : `inicio.de.cadastro.${processoId}@example.org`;
 
-  // (opcional) se o backend não aceita domínio "example.org", troque por um seu:
-  // payload.contato_email = isValidEmail(rawEmail)
-  //   ? rawEmail
-  //   : `inicio.de.cadastro.${processoId}@seudominio.gov.br`;
+    console.log("🔎 Payload final de dados-gerais (já com e-mail válido):", payload);
 
-  console.log("🔎 Payload final de dados-gerais (já com e-mail válido):", payload);
-
-
-  await upsertDadosGerais(processoId, payload);
+    await upsertDadosGerais(processoId, payload);
     // helper simples de validação
  
     // se não houver e-mail válido no payload, define um alternativo com “inicio-de-cadastro”
