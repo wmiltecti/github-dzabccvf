@@ -362,41 +362,6 @@ const saveStep2ToAPI = async () => {
 };
 
 
-const handleSaveDraft = async () => {
-  const handleSaveAndFinish = async () => {
-    setIsSaving(true);
-    try {
-      console.log('💾 Salvando todos os dados do formulário:', formData);
-
-      const allFormData = { ...formData, processoId };
-      const jsonString = JSON.stringify(allFormData);
-
-      const blockchainResult = await sendToBlockchain(jsonString, processoId);
-
-      if (blockchainResult.success) {
-        const message = blockchainResult.message || 'Dados registrados no blockchain';
-        const details = blockchainResult.hashBlock
-          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
-          : '';
-        toast.success(message + details);
-        console.log('✅ Blockchain transaction:', {
-          hashBlock: blockchainResult.hashBlock,
-          idBlock: blockchainResult.idBlock,
-          executed: blockchainResult.executed,
-          message: blockchainResult.message
-        });
-      } else {
-        const errorMessage = blockchainResult.error || 'Erro desconhecido ao registrar no blockchain';
-        toast.error(errorMessage);
-        console.error('❌ Blockchain error:', blockchainResult.error);
-      }
-    } catch (error: any) {
-      console.error('Erro ao finalizar processo:', error);
-      toast.error('Erro ao salvar dados: ' + error.message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleSaveDraft = async () => {
     setIsSaving(true);
