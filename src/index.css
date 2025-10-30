@@ -10,7 +10,7 @@
 /* Background image for the entire application */
 body {
   font-family: 'Poppins', sans-serif;
-  background-image: url('/backgroud copy.png');
+  background-image: url('/backgroud');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
