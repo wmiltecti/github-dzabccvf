@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -15,8 +15,6 @@ import {
   Wand2
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useFormWizardStore } from '../store/formWizardStore';
-import { saveStep, saveDraft } from '../services/formWizardService';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
@@ -79,92 +77,77 @@ const steps: Step[] = [
   }
 ];
 
-const isLocalId = (id?: string) => !!id && id.startsWith("local-");
-
-/**
- * Remove qualquer rastro legado do modo local no navegador.
- * Mantido aqui (local ao arquivo) para evitar criar arquivo util separado.
- */
-function cleanupLocalProcessArtifacts() {
-  try {
-    const known = [
-      'processoId',
-      'processo:id',
-      'processo:step1',
-      'processo:step2',
-      'processo:step3',
-      'processo:step4',
-      'processo:step5',
-      'processo:step6',
-      'processo:step7',
-    ];
-    known.forEach(k => localStorage.removeItem(k));
-    // chaves dinâmicas tipo processo:local-<...>:dadosGerais
-    Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith('processo:local-')) localStorage.removeItem(k);
-    });
-  } catch {
-    // ignore
-  }
-}
-
 export default function FormWizard() {
-  const {
-    currentStep,
-    formData,
-    setCurrentStep,
-    updateStepData,
-    nextStep,
-    previousStep,
-    processoId,
-    setProcessoId
-  } = useFormWizardStore();
-
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [saveMessage, setSaveMessage] = React.useState('');
-  const [isInitializing, setIsInitializing] = React.useState(false);
-  const [isSavingToAPI, setIsSavingToAPI] = React.useState(false);
+  // React state local (sem persistência)
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<any>({});
+  const [processoId, setProcessoId] = useState<string | null>(null);
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isSavingToAPI, setIsSavingToAPI] = useState(false);
+  
+  // Flag para evitar criação duplicada de processo no StrictMode
+  const isCreatingProcesso = useRef(false);
 
   const progress = (currentStep / steps.length) * 100;
 
-useEffect(() => {
-  const initializeProcesso = async () => {
-    // Se o store reidratou um id local legado, zere-o e limpe storage
-    if (isLocalId(processoId)) {
-      try {
-        // limpa quaisquer chaves antigas (seu helper atual já faz isso)
-        cleanupLocalProcessArtifacts();
-      } finally {
-        setProcessoId(undefined as any); // força recriação
-      }
-    }
-    if (processoId) return; // se já tem remoto, sai
-
-    setIsInitializing(true);
-    try {
-      const userId = getUserId();
-      if (!userId) {
-        toast.error('Usuário não autenticado');
-        return;
-      }
-      const newProcessoId = await criarProcesso(userId);
-      console.log('✅ Processo criado na API (id remoto):', newProcessoId);
-      setProcessoId(newProcessoId);
-    } catch (error: any) {
-      console.error('Erro ao criar processo:', error);
-      toast.error(error?.message || 'Erro ao inicializar processo');
-    } finally {
-      setIsInitializing(false);
-    }
+  // Funções de navegação
+  const nextStep = () => {
+    setCurrentStep(prev => Math.min(prev + 1, steps.length));
   };
 
-  initializeProcesso();
-}, [processoId, setProcessoId]);
+  const previousStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const updateStepData = (step: number, data: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [`step${step}`]: { ...prev[`step${step}`], ...data }
+    }));
+  };
+
+  // Criar processo ao montar o componente
+  useEffect(() => {
+    const initializeProcesso = async () => {
+      if (processoId) return; // se já tem, sai
+      
+      // Evita criação duplicada no StrictMode (React executa useEffect 2x em dev)
+      if (isCreatingProcesso.current) {
+        console.log('🔒 [FormWizard] Já está criando processo, aguardando...');
+        return;
+      }
+
+      setIsInitializing(true);
+      isCreatingProcesso.current = true;
+      
+      try {
+        const userId = getUserId();
+        if (!userId) {
+          toast.error('Usuário não autenticado');
+          return;
+        }
+        const newProcessoId = await criarProcesso(userId);
+        console.log('✅ Processo criado na API (id remoto):', newProcessoId);
+        setProcessoId(newProcessoId);
+      } catch (error: any) {
+        console.error('Erro ao criar processo:', error);
+        toast.error(error?.message || 'Erro ao inicializar processo');
+      } finally {
+        setIsInitializing(false);
+        isCreatingProcesso.current = false;
+      }
+    };
+
+    initializeProcesso();
+  }, []); // Executa apenas uma vez ao montar
 
 // Carregar dados existentes quando o processo já existe
 useEffect(() => {
   const loadDadosGerais = async () => {
-    if (processoId && !processoId.startsWith('local-')) {
+    if (processoId) {
       try {
         console.log('🔍 [FormWizard] Carregando dados gerais existentes para processo:', processoId);
         const dadosExistentes = await getDadosGerais(processoId);
@@ -293,13 +276,6 @@ const saveStepToAPI = async () => {
     console.log("🔎 Payload final de dados-gerais (já com e-mail válido):", payload);
 
     await upsertDadosGerais(processoId, payload);
-    // helper simples de validação
- 
-    // se não houver e-mail válido no payload, define um alternativo com “inicio-de-cadastro”
-    if (!isValidEmail(payload?.contato_email)) {
-      // use um domínio que você controla; example.com é seguro para testes
-      payload.contato_email = `inicio-de-cadastro+${processoId}@example.com`;
-    }
 
     toast.success("Dados gerais salvos com sucesso!");
   } catch (error: any) {
@@ -327,16 +303,9 @@ const handleSaveDraft = async () => {
       }
     }
 
-    const result = await saveDraft(currentStep, formData);
-
+    // Apenas salva na API (sem localStorage)
     setIsSaving(false);
-
-    if (result.error) {
-      setSaveMessage('Erro ao salvar rascunho');
-    } else {
-      setSaveMessage('Rascunho salvo com sucesso!');
-    }
-
+    setSaveMessage('Dados salvos na API!');
     setTimeout(() => setSaveMessage(''), 3000);
   };
 
@@ -543,7 +512,7 @@ const handleSaveDraft = async () => {
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
-          {currentStep === 7 && <StepRevisao formData={formData} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
+          {currentStep === 7 && <StepRevisao formData={formData} processoId={processoId} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
         </motion.div>
       </AnimatePresence>
     );
