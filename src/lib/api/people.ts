@@ -75,7 +75,7 @@ export async function getByCpf(cpf: string) {
       return { data: null, error: err('CPF inválido. Deve conter 11 dígitos', 'VALIDATION') };
     }
 
-    const { data } = await http.get(`/pessoas/cpf/${cpfDigits}`);
+    const { data } = await http.get(`/api/v1/pessoas/cpf/${cpfDigits}`);
     const formattedData = formatPersonData(data);
     return { data: formattedData, error: null as ServiceError | null };
   } catch (error: any) {
