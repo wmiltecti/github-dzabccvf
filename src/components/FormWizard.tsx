@@ -15,6 +15,9 @@ import {
   Wand2
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useFormWizardStore } from '../store/formWizardStore';
+import { saveStep, saveDraft } from '../services/formWizardService';
+import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
@@ -208,12 +211,16 @@ useEffect(() => {
 
 
   const handleNext = async () => {
-    if (currentStep === 1 && processoId) {
-      try {
-        await saveStepToAPI();
+    if (currentStep < steps.length) {
+      if (currentStep === 1 && processoId) {
+        try {
+          await saveStepToAPI();
+          nextStep();
+        } catch (error) {
+          console.error('Erro ao salvar etapa 1:', error);
+        }
+      } else {
         nextStep();
-      } catch (error) {
-        console.error('Erro ao salvar etapa 1:', error);
       }
     } else if (currentStep === 2 && processoId) {
       try {
@@ -356,6 +363,42 @@ const saveStep2ToAPI = async () => {
 
 
 const handleSaveDraft = async () => {
+  const handleSaveAndFinish = async () => {
+    setIsSaving(true);
+    try {
+      console.log('💾 Salvando todos os dados do formulário:', formData);
+
+      const allFormData = { ...formData, processoId };
+      const jsonString = JSON.stringify(allFormData);
+
+      const blockchainResult = await sendToBlockchain(jsonString, processoId);
+
+      if (blockchainResult.success) {
+        const message = blockchainResult.message || 'Dados registrados no blockchain';
+        const details = blockchainResult.hashBlock
+          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
+          : '';
+        toast.success(message + details);
+        console.log('✅ Blockchain transaction:', {
+          hashBlock: blockchainResult.hashBlock,
+          idBlock: blockchainResult.idBlock,
+          executed: blockchainResult.executed,
+          message: blockchainResult.message
+        });
+      } else {
+        const errorMessage = blockchainResult.error || 'Erro desconhecido ao registrar no blockchain';
+        toast.error(errorMessage);
+        console.error('❌ Blockchain error:', blockchainResult.error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao finalizar processo:', error);
+      toast.error('Erro ao salvar dados: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
     setIsSaving(true);
     setSaveMessage('Salvando rascunho...');
 
@@ -759,7 +802,10 @@ const handleSaveDraft = async () => {
                 Salvando...
               </>
             ) : currentStep === steps.length ? (
-              'Concluído'
+              <>
+                <Save className="w-4 h-4" />
+                Salvar
+              </>
             ) : (
               <>
                 Avançar

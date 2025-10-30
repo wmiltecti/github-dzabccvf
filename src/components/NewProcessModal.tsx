@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, Calendar, Building2, FileText, MapPin, Zap } from 'lucide-react';
+import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
+import { toast } from 'react-toastify';
 
 interface NewProcessModalProps {
   isOpen: boolean;
@@ -25,7 +27,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   // Test data for each step
   const testData = {
@@ -78,45 +80,37 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Apenas avança para próxima etapa, não salva ainda
-    if (currentStep < totalSteps) {
-      nextStep();
-      return;
-    }
-
-    // Só salva quando estiver na última etapa (step 4)
+  const handleSaveProcess = async () => {
+    // Este método só é chamado quando o usuário clica explicitamente em "Salvar"
 
     try {
       // Mostrar feedback visual de que está processando
       const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.innerHTML = '⏳ Criando processo...';
+        submitButton.innerHTML = 'Criando processo...';
       }
 
       // Submeter o processo e obter o ID do processo criado
       const createdProcess = await onSubmit(formData);
-      
+
       // Se há documentos para upload, fazer upload após criar o processo
       if (formData.documents.length > 0 && createdProcess?.id) {
         console.log('📁 Uploading documents for new process:', createdProcess.id);
-        
+
         // Importar o DocumentService
         const { DocumentService } = await import('../services/documentService');
         const { useAuth } = await import('../contexts/AuthContext');
-        
+
         // Obter o usuário atual
         const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
-        
+
         if (user) {
           // Atualizar texto do botão
           if (submitButton) {
-            submitButton.innerHTML = '📎 Enviando documentos...';
+            submitButton.innerHTML = 'Enviando documentos...';
           }
-          
+
           // Upload cada documento
           for (const file of formData.documents) {
             try {
@@ -127,17 +121,47 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
               // Continua com outros documentos mesmo se um falhar
             }
           }
-          
+
           console.log('✅ All documents processed');
         }
       }
-      
-      // Mostrar mensagem de sucesso
-      const successMessage = formData.documents.length > 0 
-        ? `✅ Processo criado com sucesso! ${formData.documents.length} documento(s) anexado(s).`
-        : '✅ Processo criado com sucesso!';
-      alert(successMessage);
-      
+
+      // Enviar dados para blockchain
+      if (submitButton) {
+        submitButton.innerHTML = 'Registrando no blockchain...';
+      }
+
+      // Preparar dados para blockchain (remover documents que é array de File)
+      const blockchainData = {
+        ...formData,
+        processId: createdProcess?.id,
+        documents: formData.documents.map(f => f.name).join(', ') // Converter array de File para string
+      };
+      const jsonString = JSON.stringify(blockchainData);
+      const blockchainResult = await sendToBlockchain(jsonString, createdProcess?.id);
+
+      // Mostrar resultado do blockchain
+      if (blockchainResult.success) {
+        const blockchainMessage = blockchainResult.message || 'Dados registrados no blockchain';
+        const details = blockchainResult.hashBlock
+          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
+          : '';
+
+        // Apenas mensagem do blockchain
+        toast.success(blockchainMessage + details);
+
+        console.log('✅ Blockchain transaction:', {
+          hashBlock: blockchainResult.hashBlock,
+          idBlock: blockchainResult.idBlock,
+          executed: blockchainResult.executed,
+          message: blockchainResult.message
+        });
+      } else {
+        const errorMessage = blockchainResult.error || 'Erro ao registrar no blockchain';
+        toast.error(errorMessage);
+        console.error('⚠️ Blockchain error:', blockchainResult.error);
+      }
+
       // Fechar modal e resetar formulário
       onClose();
       setFormData({
@@ -156,19 +180,19 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
         documents: []
       });
       setCurrentStep(1);
-      
+
       // Redirecionar para a tela de processos (se não estiver já)
       // Isso será feito pelo componente pai (App.tsx) automaticamente
-      
+
     } catch (error) {
       console.error('Erro ao criar processo:', error);
-      alert('❌ Erro ao criar processo: ' + (error as Error).message);
-      
+      toast.error('Erro ao criar processo: ' + (error as Error).message);
+
       // Restaurar botão em caso de erro
       const submitButton = document.querySelector('[data-submit-button]') as HTMLButtonElement;
       if (submitButton) {
         submitButton.disabled = false;
-        submitButton.innerHTML = '🎯 Finalizar Cadastro do Processo';
+        submitButton.innerHTML = 'Salvar';
       }
     }
   };
@@ -565,7 +589,7 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()}>
           {/* Content */}
           <div className="p-6 max-h-[60vh] overflow-y-auto">
             {currentStep === 1 && renderStep1()}
@@ -599,11 +623,12 @@ export default function NewProcessModal({ isOpen, onClose, onSubmit }: NewProces
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
                   data-submit-button
+                  onClick={handleSaveProcess}
                   className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
-                  💾 Salvar
+                  Salvar
                 </button>
               )}
             </div>
