@@ -137,7 +137,8 @@ export async function getDadosGerais(
   try {
     console.log('📡 getDadosGerais - Iniciando chamada:', { processoId });
 
-    const response = await http.get<DadosGeraisResponse>(`/api/v1/processos/${processoId}/dados-gerais`);
+    // Usa o endpoint /processos/{id} e extrai os dados gerais
+    const response = await http.get<any>(`/api/v1/processos/${processoId}`);
 
     console.log('📡 getDadosGerais - Response recebido:', response.data);
     return response.data;
