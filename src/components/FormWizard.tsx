@@ -17,6 +17,7 @@ import {
 import { toast } from 'react-toastify';
 import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
+import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
@@ -121,15 +122,19 @@ export default function FormWizard() {
   }, [processoId, setProcessoId]);
 
   const handleNext = async () => {
-    if (currentStep === 1 && processoId) {
-      try {
-        await saveStepToAPI();
+    if (currentStep < steps.length) {
+      if (currentStep === 1 && processoId) {
+        try {
+          await saveStepToAPI();
+          nextStep();
+        } catch (error) {
+          console.error('Erro ao salvar etapa 1:', error);
+        }
+      } else {
         nextStep();
-      } catch (error) {
-        console.error('Erro ao salvar etapa 1:', error);
       }
-    } else {
-      nextStep();
+    } else if (currentStep === steps.length) {
+      await handleSaveAndFinish();
     }
   };
 
@@ -158,6 +163,41 @@ export default function FormWizard() {
       throw error;
     } finally {
       setIsSavingToAPI(false);
+    }
+  };
+
+  const handleSaveAndFinish = async () => {
+    setIsSaving(true);
+    try {
+      console.log('💾 Salvando todos os dados do formulário:', formData);
+
+      const allFormData = { ...formData, processoId };
+      const jsonString = JSON.stringify(allFormData);
+
+      const blockchainResult = await sendToBlockchain(jsonString, processoId);
+
+      if (blockchainResult.success) {
+        const message = blockchainResult.message || 'Dados registrados no blockchain';
+        const details = blockchainResult.hashBlock
+          ? ` (Hash: ${blockchainResult.hashBlock.substring(0, 8)}...)`
+          : '';
+        toast.success(message + details);
+        console.log('✅ Blockchain transaction:', {
+          hashBlock: blockchainResult.hashBlock,
+          idBlock: blockchainResult.idBlock,
+          executed: blockchainResult.executed,
+          message: blockchainResult.message
+        });
+      } else {
+        const errorMessage = blockchainResult.error || 'Erro desconhecido ao registrar no blockchain';
+        toast.error(errorMessage);
+        console.error('❌ Blockchain error:', blockchainResult.error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao finalizar processo:', error);
+      toast.error('Erro ao salvar dados: ' + error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -552,16 +592,24 @@ export default function FormWizard() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI}
+            disabled={isSaving || isInitializing || isSavingToAPI}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSavingToAPI ? (
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Salvando...
+              </>
+            ) : isSavingToAPI ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...
               </>
             ) : currentStep === steps.length ? (
-              'Concluído'
+              <>
+                <Save className="w-4 h-4" />
+                Salvar
+              </>
             ) : (
               <>
                 Avançar
