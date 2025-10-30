@@ -87,6 +87,7 @@ export default function FormWizard() {
   const [saveMessage, setSaveMessage] = useState('');
   const [isInitializing, setIsInitializing] = useState(false);
   const [isSavingToAPI, setIsSavingToAPI] = useState(false);
+  const [isSavingStep2, setIsSavingStep2] = useState(false);
   
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
@@ -214,6 +215,13 @@ useEffect(() => {
       } catch (error) {
         console.error('Erro ao salvar etapa 1:', error);
       }
+    } else if (currentStep === 2 && processoId) {
+      try {
+        await saveStep2ToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 2:', error);
+      }
     } else {
       nextStep();
     }
@@ -287,6 +295,65 @@ const saveStepToAPI = async () => {
   }
 }; 
 
+// Salvar dados da Aba 2 - Uso de Recursos e Energia
+const saveStep2ToAPI = async () => {
+  if (currentStep !== 2 || !processoId) return;
+
+  setIsSavingStep2(true);
+  try {
+    const d = formData.step2 || {};
+
+    // Converter combustíveis do formato do formulário para o formato da API
+    const combustiveisEnergia = (d.combustiveis || []).map((c: any) => ({
+      tipo_fonte: c.tipoFonte || "",
+      equipamento: c.equipamento || "",
+      quantidade: c.quantidade ? parseFloat(c.quantidade) : 0,
+      unidade: c.unidade || "m³"
+    }));
+
+    const payload = {
+      processo_id: processoId,
+      usa_lenha: d.usaLenha === 'sim',
+      quantidade_lenha_m3: d.lenhaQuantidade ? parseFloat(d.lenhaQuantidade) : null,
+      num_ceprof: d.lenhaCeprof || null,
+      possui_caldeira: d.possuiCaldeira === 'sim',
+      altura_chamine_metros: d.caldeiraAlturaChamine ? parseFloat(d.caldeiraAlturaChamine) : null,
+      possui_fornos: d.possuiFornos === 'sim',
+      sistema_captacao: d.fornosSistemaCaptacao || null,
+      combustiveis_energia: combustiveisEnergia
+    };
+
+    console.log("🔎 Payload da Aba 2 - Uso de Recursos e Energia:", payload);
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/v1/uso-recursos-energia`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!response.ok) {
+      const erro = await response.json();
+      throw new Error(erro.detail || 'Erro ao salvar dados da Aba 2');
+    }
+
+    const resultado = await response.json();
+    console.log('✅ Aba 2 salva com sucesso:', resultado);
+    
+    toast.success("Dados de Recursos e Energia salvos com sucesso!");
+  } catch (error: any) {
+    console.error("❌ Erro ao salvar Aba 2:", error);
+    toast.error(error?.message || "Erro ao salvar dados da Aba 2. Verifique os campos e tente novamente.");
+    throw error;
+  } finally {
+    setIsSavingStep2(false);
+  }
+};
+
 
 const handleSaveDraft = async () => {
     setIsSaving(true);
@@ -295,6 +362,17 @@ const handleSaveDraft = async () => {
     if (currentStep === 1 && processoId) {
       try {
         await saveStepToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
+    }
+
+    if (currentStep === 2 && processoId) {
+      try {
+        await saveStep2ToAPI();
       } catch (error) {
         setIsSaving(false);
         setSaveMessage('Erro ao salvar rascunho');
@@ -540,15 +618,15 @@ const handleSaveDraft = async () => {
               </button>
               <button
                 onClick={handleSaveDraft}
-                disabled={isSaving || isInitializing || isSavingToAPI}
+                disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                {isSaving || isSavingToAPI ? (
+                {isSaving || isSavingToAPI || isSavingStep2 ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {isSaving || isSavingToAPI ? 'Salvando...' : 'Salvar Rascunho'}
+                {isSaving || isSavingToAPI || isSavingStep2 ? 'Salvando...' : 'Salvar Rascunho'}
               </button>
             </div>
           </div>
@@ -672,10 +750,10 @@ const handleSaveDraft = async () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSavingToAPI ? (
+            {isSavingToAPI || isSavingStep2 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...
