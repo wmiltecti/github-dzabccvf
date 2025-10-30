@@ -315,10 +315,9 @@ export default function Dashboard() {
             <span className="xs:hidden">Processo</span>
           </button>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg opacity-50 cursor-not-allowed"
-            onClick={() => toast.info('Funcionalidade de inscrição em desenvolvimento')}
-            title="Funcionalidade em desenvolvimento"
-            disabled
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => navigate('/inscricao/participantes')}
+            title="Iniciar nova inscrição"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden xs:inline">Nova Inscrição</span>
@@ -441,10 +440,9 @@ export default function Dashboard() {
             <span className="xs:hidden">Processo</span>
           </button>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg opacity-50 cursor-not-allowed"
-            onClick={() => toast.info('Funcionalidade de inscrição em desenvolvimento')}
-            title="Funcionalidade em desenvolvimento"
-            disabled
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => navigate('/inscricao/participantes')}
+            title="Iniciar nova inscrição"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="hidden xs:inline">Nova Inscrição</span>
@@ -665,7 +663,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mb-4">Não há inscrições que correspondam aos filtros selecionados.</p>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                      onClick={() => toast.info('Funcionalidade de inscrição em desenvolvimento')}
+                      onClick={() => navigate('/inscricao/participantes')}
                     >
                       <Plus className="w-4 h-4" />
                       Criar Nova Inscrição
@@ -807,7 +805,7 @@ export default function Dashboard() {
                     key={item.id}
                     onClick={() => {
                       if (item.isRoute) {
-                        toast.info('Funcionalidade de inscrição em desenvolvimento');
+                        navigate('/inscricao/participantes');
                       } else {
                         setActiveTab(item.id);
                       }
