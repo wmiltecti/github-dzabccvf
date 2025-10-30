@@ -6,22 +6,23 @@ export interface DadosGeraisPayload {
   cnpj?: string;
   razao_social?: string;
   nome_fantasia?: string;
-  area?: number;
+  area_total?: number;
   porte?: string;
   potencial_poluidor?: string;
   cnae_codigo?: string;
   cnae_descricao?: string;
   possui_licenca_anterior?: boolean;
-  licenca_tipo?: string;
-  licenca_numero?: string;
-  licenca_ano?: number;
-  licenca_validade?: string;
+  tipo_licenca_anterior?: string;
+  numero_licenca_anterior?: string;
+  ano_emissao_licenca?: number;
+  validade_licenca?: string;
   numero_empregados?: number;
-  horario_inicio?: string;
-  horario_fim?: string;
+  horario_funcionamento_inicio?: string;
+  horario_funcionamento_fim?: string;
   descricao_resumo?: string;
   contato_email?: string;
   contato_telefone?: string;
+  numero_processo_externo?: string;
 }
 
 export interface LocalizacaoPayload {
@@ -54,19 +55,19 @@ export interface DadosGeraisResponse {
   cnpj?: string;
   razao_social?: string;
   nome_fantasia?: string;
-  area?: number;
+  area_total?: number;
   porte?: string;
   potencial_poluidor?: string;
   cnae_codigo?: string;
   cnae_descricao?: string;
   possui_licenca_anterior?: boolean;
-  licenca_tipo?: string;
-  licenca_numero?: string;
-  licenca_ano?: number;
-  licenca_validade?: string;
+  tipo_licenca_anterior?: string;
+  numero_licenca_anterior?: string;
+  ano_emissao_licenca?: number;
+  validade_licenca?: string;
   numero_empregados?: number;
-  horario_inicio?: string;
-  horario_fim?: string;
+  horario_funcionamento_inicio?: string;
+  horario_funcionamento_fim?: string;
   descricao_resumo?: string;
   contato_email?: string;
   contato_telefone?: string;
