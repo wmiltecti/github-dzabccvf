@@ -162,14 +162,14 @@ useEffect(() => {
             cnpj: dadosExistentes.cnpj,
             razaoSocial: dadosExistentes.razao_social,
             nomeFantasia: dadosExistentes.nome_fantasia,
-            area: dadosExistentes.area,
+            area: dadosExistentes.area_total,
             porte: dadosExistentes.porte,
             potencialPoluidor: dadosExistentes.potencial_poluidor,
             cnaeCodigo: dadosExistentes.cnae_codigo,
             cnaeDescricao: dadosExistentes.cnae_descricao,
             numeroEmpregados: dadosExistentes.numero_empregados,
-            horarioInicio: dadosExistentes.horario_inicio,
-            horarioFim: dadosExistentes.horario_fim,
+            horarioInicio: dadosExistentes.horario_funcionamento_inicio,
+            horarioFim: dadosExistentes.horario_funcionamento_fim,
             descricaoResumo: dadosExistentes.descricao_resumo,
             emailContato: dadosExistentes.contato_email,
             telefoneContato: dadosExistentes.contato_telefone,
@@ -180,12 +180,12 @@ useEffect(() => {
 
           // Se possui licença anterior, adicionar dados da licença
           if (dadosExistentes.possui_licenca_anterior && 
-              (dadosExistentes.licenca_tipo || dadosExistentes.licenca_numero)) {
+              (dadosExistentes.tipo_licenca_anterior || dadosExistentes.numero_licenca_anterior)) {
             dadosFormulario.licencaAnterior = {
-              tipo: dadosExistentes.licenca_tipo || '',
-              numero: dadosExistentes.licenca_numero || '',
-              ano: dadosExistentes.licenca_ano ? String(dadosExistentes.licenca_ano) : '',
-              validade: dadosExistentes.licenca_validade || '',
+              tipo: dadosExistentes.tipo_licenca_anterior || '',
+              numero: dadosExistentes.numero_licenca_anterior || '',
+              ano: dadosExistentes.ano_emissao_licenca ? String(dadosExistentes.ano_emissao_licenca) : '',
+              validade: dadosExistentes.validade_licenca || '',
             };
           }
 
@@ -238,7 +238,7 @@ const saveStepToAPI = async () => {
       cnpj: d.cnpj ?? "",
       razao_social: d.razaoSocial ?? "",
       nome_fantasia: d.nomeFantasia ?? "",
-      area: d.area ? parseFloat(d.area) : null,
+      area_total: d.area ? parseFloat(d.area) : null,
       porte: d.porte ?? "",
       potencial_poluidor: String(d.potencialPoluidor ?? "")
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -246,8 +246,8 @@ const saveStepToAPI = async () => {
       cnae_codigo: d.cnaeCodigo ?? "",
       cnae_descricao: d.cnaeDescricao ?? "",
       numero_empregados: d.numeroEmpregados ? parseInt(d.numeroEmpregados) : null,
-      horario_inicio: d.horarioInicio ?? "",
-      horario_fim: d.horarioFim ?? "",
+      horario_funcionamento_inicio: d.horarioInicio ?? "",
+      horario_funcionamento_fim: d.horarioFim ?? "",
       descricao_resumo: d.descricaoResumo ?? "",
       contato_email: d.emailContato ?? d.email ?? "",
       contato_telefone: d.telefoneContato ?? "",
@@ -258,10 +258,10 @@ const saveStepToAPI = async () => {
 
     // Se possui licença anterior, adicionar dados da licença
     if (d.licencaAnterior && d.possuiLicencaAnterior === 'sim') {
-      payload.licenca_tipo = d.licencaAnterior.tipo ?? "";
-      payload.licenca_numero = d.licencaAnterior.numero ?? "";
-      payload.licenca_ano = d.licencaAnterior.ano ? parseInt(d.licencaAnterior.ano) : null;
-      payload.licenca_validade = d.licencaAnterior.validade ?? "";
+      payload.tipo_licenca_anterior = d.licencaAnterior.tipo ?? "";
+      payload.numero_licenca_anterior = d.licencaAnterior.numero ?? "";
+      payload.ano_emissao_licenca = d.licencaAnterior.ano ? parseInt(d.licencaAnterior.ano) : null;
+      payload.validade_licenca = d.licencaAnterior.validade ?? "";
     }
 
     // Validação de e-mail
