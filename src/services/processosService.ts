@@ -91,6 +91,27 @@ export async function upsertDadosGerais(processoId: string, payload: any) {
   }
 }
 
+export async function getDadosGerais(processoId: string) {
+  if (!processoId || processoId.startsWith("local-")) {
+    throw new Error("Processo inválido: esperado ID remoto da API.");
+  }
+
+  try {
+    const res = await http.get(`/processos/${processoId}/dados-gerais`);
+    return res.data;
+  } catch (err: any) {
+    const status = err?.response?.status;
+    // Se retornar 404, retorna null (não há dados ainda)
+    if (status === 404) {
+      return null;
+    }
+    const data = err?.response?.data;
+    console.error("❌ getDadosGerais error:", status, data);
+    const msg = data?.detail || err.message || "Erro ao buscar dados gerais.";
+    throw new Error(msg);
+  }
+}
+
 
 // --- Tipos auxiliares (ajuste conforme seu backend) ---
 export type WizardStatus = {
