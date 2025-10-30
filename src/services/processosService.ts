@@ -117,11 +117,15 @@ export async function getDadosGerais(processoId: string) {
 
 // --- Tipos auxiliares (ajuste conforme seu backend) ---
 export type WizardStatus = {
+  processo_id?: string;
+  v_dados_gerais?: boolean;       // dados gerais validados
+  n_localizacoes?: number;         // número de localizações
+  n_atividades?: number;           // número de atividades
+  v_resp_tecnico?: boolean;        // responsável técnico validado
   current_step?: number;           // etapa atual (1..7)
   completed_steps?: number[];      // etapas concluídas
   is_complete?: boolean;           // se finalizou o wizard
   updated_at?: string;             // ISO string
-  // ...adicione campos que sua API realmente retorna
 };
 
 /**
