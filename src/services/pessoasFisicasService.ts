@@ -16,7 +16,7 @@ const isValidCPF = (cpf: string | null): boolean => {
 export class PessoasFisicasService {
   static async getPessoas() {
     try {
-      const response = await axios.get(`${API_BASE_URL}/pessoas`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/pessoas`, {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',
@@ -54,7 +54,7 @@ export class PessoasFisicasService {
 
     try {
       console.log(`Fetching pessoa by CPF: ${cleanedCpf}`);
-      const response = await axios.get(`${API_BASE_URL}/pessoas/cpf/${cleanedCpf}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/pessoas/cpf/${cleanedCpf}`, {
         timeout: 30000,
         headers: {
           'Accept': 'application/json',

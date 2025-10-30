@@ -16,21 +16,20 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { useFormWizardStore } from '../store/formWizardStore';
-import { getWizardStatus, submitProcesso, type WizardStatusResponse } from '../services/processosService';
+import { getWizardStatus, submitProcesso, type WizardStatus } from '../services/processosService';
 
 interface StepRevisaoProps {
   formData: any;
+  processoId: string | null;
   onNavigateToStep: (step: number) => void;
   onFinish: () => void;
 }
 
-export default function StepRevisao({ formData, onNavigateToStep, onFinish }: StepRevisaoProps) {
-  const { processoId } = useFormWizardStore();
+export default function StepRevisao({ formData, processoId, onNavigateToStep, onFinish }: StepRevisaoProps) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [wizardStatus, setWizardStatus] = useState<WizardStatusResponse | null>(null);
+  const [wizardStatus, setWizardStatus] = useState<WizardStatus | null>(null);
   const [protocolo, setProtocolo] = useState<string>('');
 
   useEffect(() => {

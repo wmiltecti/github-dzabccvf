@@ -14,12 +14,18 @@ interface FormWizardStore {
   currentStep: number;
   formData: FormData;
   processoId: string | null;
+  protocoloInterno?: string;
+  numeroProcessoExterno?: string | null;
+  isOfflineMode: boolean;
   setCurrentStep: (step: number) => void;
   updateStepData: (step: number, data: any) => void;
   clearFormData: () => void;
   nextStep: () => void;
   previousStep: () => void;
   setProcessoId: (id: string) => void;
+  setProtocoloInterno: (protocolo: string) => void;
+  setNumeroProcessoExterno: (numero: string | null) => void;
+  setOfflineMode: (isOffline: boolean) => void;
   resetProcesso: () => void;
 }
 
@@ -29,6 +35,9 @@ export const useFormWizardStore = create<FormWizardStore>()(
       currentStep: 1,
       formData: {},
       processoId: null,
+      protocoloInterno: undefined,
+      numeroProcessoExterno: undefined,
+      isOfflineMode: false,
 
       setCurrentStep: (step: number) => set({ currentStep: step }),
 
@@ -52,7 +61,20 @@ export const useFormWizardStore = create<FormWizardStore>()(
 
       setProcessoId: (id: string) => set({ processoId: id }),
 
-      resetProcesso: () => set({ processoId: null, formData: {}, currentStep: 1 })
+      setProtocoloInterno: (protocolo: string) => set({ protocoloInterno: protocolo }),
+
+      setNumeroProcessoExterno: (numero: string | null) => set({ numeroProcessoExterno: numero }),
+
+      setOfflineMode: (isOffline: boolean) => set({ isOfflineMode: isOffline }),
+
+      resetProcesso: () => set({
+        processoId: null,
+        formData: {},
+        currentStep: 1,
+        protocoloInterno: undefined,
+        numeroProcessoExterno: undefined,
+        isOfflineMode: false
+      })
     }),
     {
       name: 'form-wizard-storage',

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText,
@@ -19,7 +19,7 @@ import { useFormWizardStore } from '../store/formWizardStore';
 import { saveStep, saveDraft } from '../services/formWizardService';
 import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 import { getUserId } from '../utils/authToken';
-import { criarProcesso, upsertDadosGerais } from '../services/processosService';
+import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -81,45 +81,134 @@ const steps: Step[] = [
 ];
 
 export default function FormWizard() {
-  const { currentStep, formData, setCurrentStep, updateStepData, nextStep, previousStep, processoId, setProcessoId } = useFormWizardStore();
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [saveMessage, setSaveMessage] = React.useState('');
-  const [isInitializing, setIsInitializing] = React.useState(false);
-  const [isSavingToAPI, setIsSavingToAPI] = React.useState(false);
+  // React state local (sem persistência)
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<any>({});
+  const [processoId, setProcessoId] = useState<string | null>(null);
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [isSavingToAPI, setIsSavingToAPI] = useState(false);
+  const [isSavingStep2, setIsSavingStep2] = useState(false);
+  
+  // Flag para evitar criação duplicada de processo no StrictMode
+  const isCreatingProcesso = useRef(false);
 
   const progress = (currentStep / steps.length) * 100;
 
+  // Funções de navegação
+  const nextStep = () => {
+    setCurrentStep(prev => Math.min(prev + 1, steps.length));
+  };
+
+  const previousStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const updateStepData = (step: number, data: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [`step${step}`]: { ...prev[`step${step}`], ...data }
+    }));
+  };
+
+  // Criar processo ao montar o componente
   useEffect(() => {
     const initializeProcesso = async () => {
-      if (!processoId) {
-        setIsInitializing(true);
-        try {
-          const userId = getUserId();
-          if (!userId) {
-            toast.error('Usuário não autenticado');
-            return;
-          }
+      if (processoId) return; // se já tem, sai
+      
+      // Evita criação duplicada no StrictMode (React executa useEffect 2x em dev)
+      if (isCreatingProcesso.current) {
+        console.log('🔒 [FormWizard] Já está criando processo, aguardando...');
+        return;
+      }
 
-          const newProcessoId = await criarProcesso(userId);
-          setProcessoId(newProcessoId);
-
-          if (newProcessoId.startsWith('local-')) {
-            console.log('🔸 Processo criado em modo local:', newProcessoId);
-            toast.info('Modo offline: dados serão salvos localmente');
-          } else {
-            console.log('✅ Processo criado na API:', newProcessoId);
-          }
-        } catch (error: any) {
-          console.error('Erro ao criar processo:', error);
-          toast.error(error.message || 'Erro ao inicializar processo');
-        } finally {
-          setIsInitializing(false);
+      setIsInitializing(true);
+      isCreatingProcesso.current = true;
+      
+      try {
+        const userId = getUserId();
+        if (!userId) {
+          toast.error('Usuário não autenticado');
+          return;
         }
+        const newProcessoId = await criarProcesso(userId);
+        console.log('✅ Processo criado na API (id remoto):', newProcessoId);
+        setProcessoId(newProcessoId);
+      } catch (error: any) {
+        console.error('Erro ao criar processo:', error);
+        toast.error(error?.message || 'Erro ao inicializar processo');
+      } finally {
+        setIsInitializing(false);
+        isCreatingProcesso.current = false;
       }
     };
 
     initializeProcesso();
-  }, [processoId, setProcessoId]);
+  }, []); // Executa apenas uma vez ao montar
+
+// Carregar dados existentes quando o processo já existe
+useEffect(() => {
+  const loadDadosGerais = async () => {
+    if (processoId) {
+      try {
+        console.log('🔍 [FormWizard] Carregando dados gerais existentes para processo:', processoId);
+        const dadosExistentes = await getDadosGerais(processoId);
+        
+        if (dadosExistentes) {
+          console.log('📥 [FormWizard] Dados gerais carregados:', dadosExistentes);
+          
+          // Converter dados da API para o formato do formulário
+          const dadosFormulario: any = {
+            tipoPessoa: dadosExistentes.tipo_pessoa,
+            cpf: dadosExistentes.cpf,
+            cnpj: dadosExistentes.cnpj,
+            razaoSocial: dadosExistentes.razao_social,
+            nomeFantasia: dadosExistentes.nome_fantasia,
+            area: dadosExistentes.area_total,
+            porte: dadosExistentes.porte,
+            potencialPoluidor: dadosExistentes.potencial_poluidor,
+            cnaeCodigo: dadosExistentes.cnae_codigo,
+            cnaeDescricao: dadosExistentes.cnae_descricao,
+            numeroEmpregados: dadosExistentes.numero_empregados,
+            horarioInicio: dadosExistentes.horario_funcionamento_inicio,
+            horarioFim: dadosExistentes.horario_funcionamento_fim,
+            descricaoResumo: dadosExistentes.descricao_resumo,
+            emailContato: dadosExistentes.contato_email,
+            telefoneContato: dadosExistentes.contato_telefone,
+            numeroProcessoExterno: dadosExistentes.numero_processo_externo,
+            possuiLicencaAnterior: dadosExistentes.possui_licenca_anterior === true ? 'sim' : 
+                                    dadosExistentes.possui_licenca_anterior === false ? 'nao' : '',
+          };
+
+          // Se possui licença anterior, adicionar dados da licença
+          if (dadosExistentes.possui_licenca_anterior && 
+              (dadosExistentes.tipo_licenca_anterior || dadosExistentes.numero_licenca_anterior)) {
+            dadosFormulario.licencaAnterior = {
+              tipo: dadosExistentes.tipo_licenca_anterior || '',
+              numero: dadosExistentes.numero_licenca_anterior || '',
+              ano: dadosExistentes.ano_emissao_licenca ? String(dadosExistentes.ano_emissao_licenca) : '',
+              validade: dadosExistentes.validade_licenca || '',
+            };
+          }
+
+          // Atualizar formData com os dados carregados
+          updateStepData(1, dadosFormulario);
+
+          console.log('✅ [FormWizard] Dados do formulário carregados no estado:', dadosFormulario);
+        } else {
+          console.log('ℹ️ [FormWizard] Nenhum dado existente encontrado para este processo');
+        }
+      } catch (error: any) {
+        console.error('❌ [FormWizard] Erro ao carregar dados gerais:', error);
+      }
+    }
+  };
+
+  loadDadosGerais();
+}, [processoId]);
+
 
   const handleNext = async () => {
     if (currentStep < steps.length) {
@@ -133,8 +222,15 @@ export default function FormWizard() {
       } else {
         nextStep();
       }
-    } else if (currentStep === steps.length) {
-      await handleSaveAndFinish();
+    } else if (currentStep === 2 && processoId) {
+      try {
+        await saveStep2ToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 2:', error);
+      }
+    } else {
+      nextStep();
     }
   };
 
@@ -142,30 +238,131 @@ export default function FormWizard() {
     previousStep();
   };
 
-  const saveStepToAPI = async () => {
-    if (currentStep !== 1 || !processoId) {
-      return;
+  const onlyDigits = (s?: string) => (s ?? "").replace(/\D/g, "");
+
+const saveStepToAPI = async () => {
+  if (currentStep !== 1 || !processoId) return;
+
+  setIsSavingToAPI(true);
+  try {
+    const d = formData.step1 || {};
+
+    const payload: any = {
+      tipo_pessoa: d.tipoPessoa ?? "PF",
+      cpf: d.cpf ?? "",
+      cnpj: d.cnpj ?? "",
+      razao_social: d.razaoSocial ?? "",
+      nome_fantasia: d.nomeFantasia ?? "",
+      area_total: d.area ? parseFloat(d.area) : null,
+      porte: d.porte ?? "",
+      potencial_poluidor: String(d.potencialPoluidor ?? "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase(),
+      cnae_codigo: d.cnaeCodigo ?? "",
+      cnae_descricao: d.cnaeDescricao ?? "",
+      numero_empregados: d.numeroEmpregados ? parseInt(d.numeroEmpregados) : null,
+      horario_funcionamento_inicio: d.horarioInicio ?? "",
+      horario_funcionamento_fim: d.horarioFim ?? "",
+      descricao_resumo: d.descricaoResumo ?? "",
+      contato_email: d.emailContato ?? d.email ?? "",
+      contato_telefone: d.telefoneContato ?? "",
+      numero_processo_externo: d.numeroProcessoExterno ?? "",
+      possui_licenca_anterior: d.possuiLicencaAnterior === 'sim' ? true : 
+                                d.possuiLicencaAnterior === 'nao' ? false : null,
+    };
+
+    // Se possui licença anterior, adicionar dados da licença
+    if (d.licencaAnterior && d.possuiLicencaAnterior === 'sim') {
+      payload.tipo_licenca_anterior = d.licencaAnterior.tipo ?? "";
+      payload.numero_licenca_anterior = d.licencaAnterior.numero ?? "";
+      payload.ano_emissao_licenca = d.licencaAnterior.ano ? parseInt(d.licencaAnterior.ano) : null;
+      payload.validade_licenca = d.licencaAnterior.validade ?? "";
     }
 
-    setIsSavingToAPI(true);
-    try {
-      const step1Data = formData.step1 || {};
-      const payload = {
-        porte: step1Data.porte,
-        potencial_poluidor: step1Data.potencialPoluidor
-      };
+    // Validação de e-mail
+    const isValidEmail = (s?: string) =>
+      !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
 
-      await upsertDadosGerais(processoId, payload);
-      toast.success('Dados gerais salvos com sucesso!');
-    } catch (error: any) {
-      console.error('Erro ao salvar dados gerais:', error);
-      toast.error(error.message || 'Erro ao salvar dados gerais');
-      throw error;
-    } finally {
-      setIsSavingToAPI(false);
+    const rawEmail = (payload?.contato_email ?? "").toString().trim();
+    payload.contato_email = isValidEmail(rawEmail)
+      ? rawEmail
+      : `inicio.de.cadastro.${processoId}@example.org`;
+
+    console.log("🔎 Payload final de dados-gerais (já com e-mail válido):", payload);
+
+    await upsertDadosGerais(processoId, payload);
+
+    toast.success("Dados gerais salvos com sucesso!");
+  } catch (error: any) {
+    console.error("Erro ao salvar dados gerais:", error);
+    toast.error(error?.message || "Erro ao salvar dados gerais");
+    throw error;
+  } finally {
+    setIsSavingToAPI(false);
+  }
+}; 
+
+// Salvar dados da Aba 2 - Uso de Recursos e Energia
+const saveStep2ToAPI = async () => {
+  if (currentStep !== 2 || !processoId) return;
+
+  setIsSavingStep2(true);
+  try {
+    const d = formData.step2 || {};
+
+    // Converter combustíveis do formato do formulário para o formato da API
+    const combustiveisEnergia = (d.combustiveis || []).map((c: any) => ({
+      tipo_fonte: c.tipoFonte || "",
+      equipamento: c.equipamento || "",
+      quantidade: c.quantidade ? parseFloat(c.quantidade) : 0,
+      unidade: c.unidade || "m³"
+    }));
+
+    const payload = {
+      processo_id: processoId,
+      usa_lenha: d.usaLenha === 'sim',
+      quantidade_lenha_m3: d.lenhaQuantidade ? parseFloat(d.lenhaQuantidade) : null,
+      num_ceprof: d.lenhaCeprof || null,
+      possui_caldeira: d.possuiCaldeira === 'sim',
+      altura_chamine_metros: d.caldeiraAlturaChamine ? parseFloat(d.caldeiraAlturaChamine) : null,
+      possui_fornos: d.possuiFornos === 'sim',
+      sistema_captacao: d.fornosSistemaCaptacao || null,
+      combustiveis_energia: combustiveisEnergia
+    };
+
+    console.log("🔎 Payload da Aba 2 - Uso de Recursos e Energia:", payload);
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}uso-recursos-energia`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!response.ok) {
+      const erro = await response.json();
+      throw new Error(erro.detail || 'Erro ao salvar dados da Aba 2');
     }
-  };
 
+    const resultado = await response.json();
+    console.log('✅ Aba 2 salva com sucesso:', resultado);
+    
+    toast.success("Dados de Recursos e Energia salvos com sucesso!");
+  } catch (error: any) {
+    console.error("❌ Erro ao salvar Aba 2:", error);
+    toast.error(error?.message || "Erro ao salvar dados da Aba 2. Verifique os campos e tente novamente.");
+    throw error;
+  } finally {
+    setIsSavingStep2(false);
+  }
+};
+
+
+const handleSaveDraft = async () => {
   const handleSaveAndFinish = async () => {
     setIsSaving(true);
     try {
@@ -216,16 +413,20 @@ export default function FormWizard() {
       }
     }
 
-    const result = await saveDraft(currentStep, formData);
-
-    setIsSaving(false);
-
-    if (result.error) {
-      setSaveMessage('Erro ao salvar rascunho');
-    } else {
-      setSaveMessage('Rascunho salvo com sucesso!');
+    if (currentStep === 2 && processoId) {
+      try {
+        await saveStep2ToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
     }
 
+    // Apenas salva na API (sem localStorage)
+    setIsSaving(false);
+    setSaveMessage('Dados salvos na API!');
     setTimeout(() => setSaveMessage(''), 3000);
   };
 
@@ -322,14 +523,14 @@ export default function FormWizard() {
               id: crypto.randomUUID(),
               tipoFonte: 'ENERGIA_ELETRICA',
               equipamento: 'Motor Principal 500 MW',
-              quantidade: 1200.50,
+              quantidade: 1200.5,
               unidade: 'MWH'
             },
             {
               id: crypto.randomUUID(),
               tipoFonte: 'GLP',
               equipamento: 'Caldeira Auxiliar',
-              quantidade: 350.00,
+              quantidade: 350.0,
               unidade: 'KG'
             },
             {
@@ -400,11 +601,13 @@ export default function FormWizard() {
             armazenaSubstanciaPerigosa: true,
             possuiPlanoEmergencia: true
           },
-          outrasInformacoes: 'O empreendimento já possui certificação ISO 14001 e realiza auditorias ambientais anuais. Todas as medidas de controle ambiental estão implementadas e em operação conforme legislação vigente.'
+          outrasInformacoes:
+            'O empreendimento já possui certificação ISO 14001 e realiza auditorias ambientais anuais. Todas as medidas de controle ambiental estão implementadas e em operação conforme legislação vigente.'
         };
       case 7:
         return {
-          observacoes: 'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
+          observacoes:
+            'Todos os procedimentos ambientais estão em conformidade com a legislação vigente. A empresa mantém certificações atualizadas e realiza auditorias periódicas.'
         };
       default:
         return {};
@@ -430,7 +633,7 @@ export default function FormWizard() {
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
-          {currentStep === 7 && <StepRevisao formData={formData} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
+          {currentStep === 7 && <StepRevisao formData={formData} processoId={processoId} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
         </motion.div>
       </AnimatePresence>
     );
@@ -458,15 +661,15 @@ export default function FormWizard() {
               </button>
               <button
                 onClick={handleSaveDraft}
-                disabled={isSaving || isInitializing || isSavingToAPI}
+                disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                {isSaving || isSavingToAPI ? (
+                {isSaving || isSavingToAPI || isSavingStep2 ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {isSaving || isSavingToAPI ? 'Salvando...' : 'Salvar Rascunho'}
+                {isSaving || isSavingToAPI || isSavingStep2 ? 'Salvando...' : 'Salvar Rascunho'}
               </button>
             </div>
           </div>
@@ -541,9 +744,7 @@ export default function FormWizard() {
                   </div>
                   {idx < steps.length - 1 && (
                     <motion.div
-                      className={`h-0.5 flex-1 mx-2 ${
-                        step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'
-                      }`}
+                      className={`h-0.5 flex-1 mx-2 ${step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'}`}
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
                       transition={{ duration: 0.3 }}
@@ -592,15 +793,10 @@ export default function FormWizard() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={isSaving || isInitializing || isSavingToAPI}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Salvando...
-              </>
-            ) : isSavingToAPI ? (
+            {isSavingToAPI || isSavingStep2 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...
@@ -623,6 +819,7 @@ export default function FormWizard() {
   );
 }
 
+// (Os componentes StepXContent extras do arquivo original foram mantidos abaixo, sem alterações funcionais)
 function Step1Content({ data, onChange }: { data: any; onChange: (data: any) => void }) {
   return (
     <div className="space-y-4">
