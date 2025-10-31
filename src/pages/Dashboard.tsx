@@ -783,13 +783,13 @@ export default function Dashboard() {
         <div className="dashboard-container flex gap-3 sm:gap-4 lg:gap-6 w-full mx-auto px-1 sm:px-2 lg:px-4">
         {sidebarOpen && (
           <div
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 sidebar-overlay"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         <div className={`sidebar-nav shadow-lg flex-shrink-0 w-64 sm:w-72 lg:w-80 z-50 ${
-          sidebarOpen ? '' : 'lg:block hidden'
+          sidebarOpen ? 'sidebar-open' : ''
         }`}>
           <div className="flex flex-col h-full">
             <div className="flex items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
