@@ -328,63 +328,63 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
+        <div className="stat-card p-3 sm:p-4 lg:p-6 rounded-lg hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className="p-2 sm:p-2.5 bg-blue-100 rounded-lg flex-shrink-0">
+              <FileText className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total de Processos</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Processos</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div className="stat-card p-3 sm:p-4 lg:p-6 rounded-lg hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+            <div className="p-2 sm:p-2.5 bg-yellow-100 rounded-lg flex-shrink-0">
+              <Clock className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-yellow-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Pendentes</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pending}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.pending}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div className="stat-card p-3 sm:p-4 lg:p-6 rounded-lg hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className="p-2 sm:p-2.5 bg-blue-100 rounded-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Em Análise</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.analysis}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.analysis}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div className="stat-card p-3 sm:p-4 lg:p-6 rounded-lg hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div className="p-2 sm:p-2.5 bg-green-100 rounded-lg flex-shrink-0">
+              <CheckCircle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Aprovadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.approved}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.approved}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div className="stat-card p-3 sm:p-4 lg:p-6 rounded-lg hover:shadow-lg transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+            <div className="p-2 sm:p-2.5 bg-red-100 rounded-lg flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Rejeitadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejected}</p>
+            <div className="ml-2 sm:ml-3 lg:ml-4 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.rejected}</p>
             </div>
           </div>
         </div>
