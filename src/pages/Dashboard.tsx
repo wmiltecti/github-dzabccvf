@@ -769,8 +769,8 @@ export default function Dashboard() {
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
-            <div className="flex items-center gap-2 bg-gray-700 px-3 py-2 rounded-lg border border-gray-600">
-              <User className="w-4 h-4 text-gray-300" />
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-gray-300" />
               <span className="text-sm font-medium text-white">
                 {getFirstName()}
               </span>
