@@ -207,34 +207,124 @@ body::before {
 @media (max-width: 768px) {
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+
+  table {
+    font-size: 0.75rem;
   }
 
   table th,
   table td {
-    min-width: 100px;
-    font-size: 0.875rem;
-    padding: 0.75rem 1rem;
+    min-width: 80px;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .stat-card p {
+    font-size: 0.75rem;
+  }
+
+  .stat-card .text-2xl {
+    font-size: 1.25rem;
+  }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1023px) {
+  table th,
+  table td {
     font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
   }
 }
 
 /* Responsive grid adjustments */
 @media (max-width: 640px) {
-  .grid.md\:grid-cols-2.lg\:grid-cols-5 {
+  .grid.md\:grid-cols-2.lg\:grid-cols-5,
+  .grid.sm\:grid-cols-2.lg\:grid-cols-5 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 641px) and (max-width: 1023px) {
-  .grid.md\:grid-cols-2.lg\:grid-cols-5 {
+  .grid.md\:grid-cols-2.lg\:grid-cols-5,
+  .grid.sm\:grid-cols-2.lg\:grid-cols-5 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile button adjustments */
+@media (max-width: 640px) {
+  button {
+    font-size: 0.875rem;
+  }
+
+  button.text-sm {
+    font-size: 0.75rem;
+  }
+}
+
+/* Modal responsiveness */
+@media (max-width: 640px) {
+  .login-modal,
+  [class*="modal"] {
+    max-width: 95vw !important;
+    margin: 1rem;
+  }
+
+  .login-modal h2,
+  [class*="modal"] h2 {
+    font-size: 1.125rem;
+  }
+
+  .login-modal p,
+  [class*="modal"] p {
+    font-size: 0.75rem;
+  }
+
+  .login-modal form,
+  [class*="modal"] form {
+    padding: 1rem !important;
+  }
+
+  .login-modal input,
+  .login-modal select,
+  .login-modal textarea,
+  [class*="modal"] input,
+  [class*="modal"] select,
+  [class*="modal"] textarea {
+    font-size: 0.875rem;
+    padding: 0.625rem;
+  }
+}
+
+/* Form field improvements */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 1rem;
+  }
+
+  label {
+    font-size: 0.875rem;
+  }
+}
+
+/* Dashboard container adjustments */
+@media (max-width: 1023px) {
+  .dashboard-container {
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .content-area {
+    border-radius: 8px;
   }
 }
 

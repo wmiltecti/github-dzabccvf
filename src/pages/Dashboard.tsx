@@ -727,51 +727,51 @@ export default function Dashboard() {
   return (
     <div className="h-screen flex flex-col">
       <header className="dark-header flex-shrink-0">
-        <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2 sm:space-x-4">
+        <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
+              className="lg:hidden p-1.5 sm:p-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
               aria-label="Toggle menu"
             >
-              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {sidebarOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
             </button>
 
             <img
               src="/logo.png"
               alt="Logo"
-              className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
+              className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 object-contain"
             />
             <button
               onClick={() => {
                 setActiveTab('dashboard');
                 setSidebarOpen(false);
               }}
-              className="hidden sm:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
+              className="hidden md:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
             >
               <img
                 src={homeIcon}
                 alt="Home"
-                className="w-5 h-5"
+                className="w-4 h-4 lg:w-5 lg:h-5"
               />
-              <span className="text-sm font-medium">Painel</span>
+              <span className="text-xs lg:text-sm font-medium">Painel</span>
             </button>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
             <button
               onClick={handleSignOut}
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
+              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
               title="Sair"
             >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-xs sm:text-sm font-medium hidden sm:inline">Sair</span>
+              <LogOut className="w-4 h-4" />
+              <span className="text-xs sm:text-sm font-medium hidden md:inline">Sair</span>
             </button>
 
-            <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
+            <div className="hidden md:block h-6 lg:h-8 w-px bg-gray-600"></div>
 
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5 text-gray-300" />
-              <span className="text-sm font-medium text-white">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
+              <span className="text-xs sm:text-sm font-medium text-white">
                 {getFirstName()}
               </span>
             </div>
@@ -779,8 +779,8 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden p-3 sm:p-6">
-        <div className="dashboard-container flex gap-4 lg:gap-6 w-full mx-auto px-2 sm:px-4 lg:px-8">
+      <div className="flex-1 flex overflow-hidden p-2 sm:p-4 lg:p-6">
+        <div className="dashboard-container flex gap-3 sm:gap-4 lg:gap-6 w-full mx-auto px-1 sm:px-2 lg:px-4">
         {sidebarOpen && (
           <div
             className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
@@ -788,19 +788,19 @@ export default function Dashboard() {
           />
         )}
 
-        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 z-50 ${
+        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-64 sm:w-72 lg:w-80 z-50 ${
           sidebarOpen ? '' : 'lg:block hidden'
         }`}>
           <div className="flex flex-col h-full">
-            <div className="flex items-center px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
               <div className="flex items-center">
-                <div className="ml-3">
-                  <p className="text-xs text-gray-500">Licenciamento Ambiental - Integracao</p>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs text-gray-500 truncate">Licenciamento Ambiental</p>
                 </div>
               </div>
             </div>
 
-            <nav className="flex-1 px-4 py-6 space-y-1">
+            <nav className="flex-1 px-3 sm:px-4 py-4 sm:py-6 space-y-1 overflow-y-auto">
               {navigation.map((item) => {
                 return (
                   <button
@@ -813,7 +813,7 @@ export default function Dashboard() {
                       }
                       setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
+                    className={`w-full flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium nav-item ${
                       activeTab === item.id
                         ? 'active text-green-700'
                         : 'text-gray-600 hover:text-gray-900'
@@ -822,7 +822,7 @@ export default function Dashboard() {
                     <img
                       src={treeIcon}
                       alt={item.name}
-                      className="w-5 h-5 flex-shrink-0 mr-3"
+                      className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
                     />
                     {item.name}
                   </button>
@@ -832,7 +832,7 @@ export default function Dashboard() {
               <div>
                 <button
                   onClick={() => setGeralExpanded(!geralExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium nav-item ${
+                  className={`w-full flex items-center justify-between px-2 sm:px-3 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium nav-item ${
                     activeTab.startsWith('geral')
                       ? 'active text-green-700'
                       : 'text-gray-600 hover:text-gray-900'
@@ -842,7 +842,7 @@ export default function Dashboard() {
                     <img
                       src={arrowIcon}
                       alt="Geral"
-                      className={`w-5 h-5 flex-shrink-0 mr-3 transition-transform duration-200 ${
+                      className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3 transition-transform duration-200 ${
                         geralExpanded ? 'rotate-90' : ''
                       }`}
                     />
@@ -851,7 +851,7 @@ export default function Dashboard() {
                 </button>
 
                 {geralExpanded && (
-                  <div className="mt-1 space-y-1 pl-8 max-h-64 overflow-y-auto">
+                  <div className="mt-1 space-y-1 pl-6 sm:pl-8 max-h-64 overflow-y-auto">
                     {geralSubSections.map((subItem) => (
                       <button
                         key={subItem.id}
@@ -859,7 +859,7 @@ export default function Dashboard() {
                           setActiveTab(`geral-${subItem.id}`);
                           setSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                           activeTab === `geral-${subItem.id}`
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -868,9 +868,9 @@ export default function Dashboard() {
                         <img
                           src={submenuIcon}
                           alt=""
-                          className="w-5 h-5 flex-shrink-0 mr-3"
+                          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
                         />
-                        {subItem.name}
+                        <span className="truncate">{subItem.name}</span>
                       </button>
                     ))}
                   </div>
@@ -885,7 +885,7 @@ export default function Dashboard() {
                       setActiveTab(item.id);
                       setSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
+                    className={`w-full flex items-center px-2 sm:px-3 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium nav-item ${
                       activeTab === item.id
                         ? 'active text-green-700'
                         : 'text-gray-600 hover:text-gray-900'
@@ -894,9 +894,9 @@ export default function Dashboard() {
                     <img
                       src={treeIcon}
                       alt={item.name}
-                      className="w-5 h-5 flex-shrink-0 mr-3"
+                      className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
                     />
-                    {item.name}
+                    <span className="truncate">{item.name}</span>
                   </button>
                 );
               })}
@@ -904,7 +904,7 @@ export default function Dashboard() {
               <div>
                 <button
                   onClick={() => setAdminExpanded(!adminExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium nav-item ${
+                  className={`w-full flex items-center justify-between px-2 sm:px-3 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-medium nav-item ${
                     activeTab.startsWith('admin')
                       ? 'active text-green-700'
                       : 'text-gray-600 hover:text-gray-900'
@@ -914,16 +914,16 @@ export default function Dashboard() {
                     <img
                       src={arrowIcon}
                       alt="Administração"
-                      className={`w-5 h-5 flex-shrink-0 mr-3 transition-transform duration-200 ${
+                      className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3 transition-transform duration-200 ${
                         adminExpanded ? 'rotate-90' : ''
                       }`}
                     />
-                    Administração
+                    <span className="truncate">Administração</span>
                   </div>
                 </button>
 
                 {adminExpanded && (
-                  <div className="mt-1 space-y-1 pl-8 max-h-64 overflow-y-auto">
+                  <div className="mt-1 space-y-1 pl-6 sm:pl-8 max-h-64 overflow-y-auto">
                     {adminSubSections.map((subItem) => (
                       <button
                         key={subItem.id}
@@ -931,7 +931,7 @@ export default function Dashboard() {
                           setActiveTab(`admin-${subItem.id}`);
                           setSidebarOpen(false);
                         }}
-                        className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                           activeTab === `admin-${subItem.id}`
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -940,9 +940,9 @@ export default function Dashboard() {
                         <img
                           src={submenuIcon}
                           alt=""
-                          className="w-5 h-5 flex-shrink-0 mr-3"
+                          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
                         />
-                        {subItem.name}
+                        <span className="truncate">{subItem.name}</span>
                       </button>
                     ))}
                   </div>
