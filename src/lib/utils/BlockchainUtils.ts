@@ -91,7 +91,7 @@ export async function sendToBlockchain(
 
     console.log('⏳ [sendToBlockchain] Enviando requisição...');
     const response = await http.post<BlockchainResponse>(
-      '/api/v1/blockchain/register',
+      '/blockchain/register',
       payload
     );
 
