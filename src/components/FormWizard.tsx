@@ -20,6 +20,7 @@ import { saveStep, saveDraft } from '../services/formWizardService';
 import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
+import { saveConsumoAgua } from '../services/usoAguaService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -91,6 +92,7 @@ export default function FormWizard() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [isSavingToAPI, setIsSavingToAPI] = useState(false);
   const [isSavingStep2, setIsSavingStep2] = useState(false);
+  const [isSavingStep3, setIsSavingStep3] = useState(false);
   
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
@@ -211,16 +213,12 @@ useEffect(() => {
 
 
   const handleNext = async () => {
-    if (currentStep < steps.length) {
-      if (currentStep === 1 && processoId) {
-        try {
-          await saveStepToAPI();
-          nextStep();
-        } catch (error) {
-          console.error('Erro ao salvar etapa 1:', error);
-        }
-      } else {
+    if (currentStep === 1 && processoId) {
+      try {
+        await saveStepToAPI();
         nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 1:', error);
       }
     } else if (currentStep === 2 && processoId) {
       try {
@@ -229,7 +227,14 @@ useEffect(() => {
       } catch (error) {
         console.error('Erro ao salvar etapa 2:', error);
       }
-    } else {
+    } else if (currentStep === 3 && processoId) {
+      try {
+        await saveStep3ToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 3:', error);
+      }
+    } else if (currentStep < steps.length) {
       nextStep();
     }
   };
@@ -301,6 +306,30 @@ const saveStepToAPI = async () => {
     setIsSavingToAPI(false);
   }
 }; 
+
+// Salvar dados da Aba 3 - Uso de Água
+const saveStep3ToAPI = async () => {
+  if (currentStep !== 3 || !processoId) return;
+
+  setIsSavingStep3(true);
+  try {
+    const d = formData.step3 || {};
+
+    console.log('💧 [FormWizard] Salvando dados de Uso de Água...');
+    console.log('📊 Dados do formulário:', d);
+
+    await saveConsumoAgua(processoId, d);
+
+    console.log('✅ Aba 3 salva com sucesso');
+    toast.success('Dados de Uso de Água salvos com sucesso!');
+  } catch (error: any) {
+    console.error('❌ Erro ao salvar Aba 3:', error);
+    toast.error(error?.message || 'Erro ao salvar dados da Aba 3. Verifique os campos e tente novamente.');
+    throw error;
+  } finally {
+    setIsSavingStep3(false);
+  }
+};
 
 // Salvar dados da Aba 2 - Uso de Recursos e Energia
 const saveStep2ToAPI = async () => {
@@ -381,6 +410,17 @@ const saveStep2ToAPI = async () => {
     if (currentStep === 2 && processoId) {
       try {
         await saveStep2ToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
+    }
+
+    if (currentStep === 3 && processoId) {
+      try {
+        await saveStep3ToAPI();
       } catch (error) {
         setIsSaving(false);
         setSaveMessage('Erro ao salvar rascunho');
@@ -594,7 +634,7 @@ const saveStep2ToAPI = async () => {
         >
           {currentStep === 1 && <Step1Caracteristicas data={data} onChange={handleStepDataChange} unidadeMedida="m²" />}
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
-          {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} />}
+          {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} processoId={processoId} />}
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
@@ -626,15 +666,15 @@ const saveStep2ToAPI = async () => {
               </button>
               <button
                 onClick={handleSaveDraft}
-                disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2}
+                disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
                 className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
-                {isSaving || isSavingToAPI || isSavingStep2 ? (
+                {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {isSaving || isSavingToAPI || isSavingStep2 ? 'Salvando...' : 'Salvar Rascunho'}
+                {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? 'Salvando...' : 'Salvar Rascunho'}
               </button>
             </div>
           </div>
@@ -758,10 +798,10 @@ const saveStep2ToAPI = async () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSavingToAPI || isSavingStep2 ? (
+            {isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...

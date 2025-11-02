@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Droplet, Info, AlertCircle, CheckCircle, Plus, Trash2, Edit2 } from 'lucide-react';
+import { Droplet, Info, AlertCircle, CheckCircle, Plus, Trash2, Edit2, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { saveConsumoAgua, loadConsumoAgua } from '../services/usoAguaService';
 
 interface Step3UsoAguaProps {
   data: any;
   onChange: (data: any) => void;
   onValidation?: (isValid: boolean) => void;
+  processoId?: string | null;
 }
 
 interface Outorga {
@@ -34,7 +37,7 @@ const destinosFinais = [
   'Outro'
 ];
 
-export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoAguaProps) {
+export default function Step3UsoAgua({ data, onChange, onValidation, processoId }: Step3UsoAguaProps) {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [isAddingOutorga, setIsAddingOutorga] = useState(false);
   const [editingOutorgaId, setEditingOutorgaId] = useState<string | null>(null);
@@ -45,6 +48,9 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
     validade: '',
     vazao: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
 
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
@@ -77,15 +83,15 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
       errors.push('Selecione ao menos uma origem de água');
     }
 
-    if (!data?.consumoHumano) {
-      errors.push('Informe o consumo para uso humano');
+    // Validar consumos - pelo menos um deve estar preenchido
+    const temConsumoHumano = data?.consumoHumano && parseFloat(data.consumoHumano) > 0;
+    const temConsumoOutros = data?.consumoOutros && parseFloat(data.consumoOutros) > 0;
+
+    if (!temConsumoHumano && !temConsumoOutros) {
+      errors.push('Informe ao menos um tipo de consumo (humano ou outros usos)');
     }
 
-    if (!data?.consumoOutros) {
-      errors.push('Informe o consumo para outros usos');
-    }
-
-    if (!data?.volumeDespejo) {
+    if (!data?.volumeDespejo && data?.volumeDespejo !== '0') {
       errors.push('Informe o volume de despejo');
     }
 
@@ -93,19 +99,13 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
       errors.push('Selecione o destino final do efluente');
     }
 
-    if (needsOutorga()) {
-      const outorgas = data?.outorgas || [];
-      if (outorgas.length === 0) {
-        errors.push('É obrigatório cadastrar ao menos uma outorga para as condições selecionadas');
-      } else {
-        const outorgasIncompletas = outorgas.filter(
-          (o: Outorga) => !o.tipo || !o.numero || !o.validade || !o.vazao
-        );
-        if (outorgasIncompletas.length > 0) {
-          errors.push('Existem outorgas com campos incompletos');
-        }
-      }
-    }
+    // Outorgas são opcionais até definição com PO
+    // if (needsOutorga()) {
+    //   const outorgas = data?.outorgas || [];
+    //   if (outorgas.length === 0) {
+    //     errors.push('É obrigatório cadastrar ao menos uma outorga para as condições selecionadas');
+    //   }
+    // }
 
     setValidationErrors(errors);
     const isValid = errors.length === 0;
@@ -116,6 +116,29 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
 
     return isValid;
   };
+
+  // Carregar dados da API ao montar o componente
+  useEffect(() => {
+    const loadData = async () => {
+      if (!processoId || hasLoadedData) return;
+
+      setIsLoading(true);
+      try {
+        const dadosCarregados = await loadConsumoAgua(processoId);
+        if (dadosCarregados) {
+          console.log('📥 [Step3UsoAgua] Dados carregados:', dadosCarregados);
+          onChange(dadosCarregados);
+        }
+        setHasLoadedData(true);
+      } catch (error: any) {
+        console.error('❌ [Step3UsoAgua] Erro ao carregar dados:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [processoId]);
 
   useEffect(() => {
     validarOutorga();
@@ -175,6 +198,41 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
     setIsAddingOutorga(false);
     setEditingOutorgaId(null);
   };
+
+  // Função para salvar rascunho
+  const handleSaveDraft = async () => {
+    if (!processoId) {
+      toast.error('ID do processo não encontrado');
+      return;
+    }
+
+    // Validar antes de salvar
+    if (!validarOutorga()) {
+      toast.error('Corrija os erros antes de salvar');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveConsumoAgua(processoId, data);
+      toast.success('Dados de uso de água salvos com sucesso!');
+    } catch (error: any) {
+      console.error('❌ Erro ao salvar:', error);
+      toast.error(error?.message || 'Erro ao salvar dados');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Mostrar loading durante carregamento inicial
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-3 text-gray-600">Carregando dados...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -268,10 +326,11 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
         <div className="flex items-center gap-2 mb-4">
           <Droplet className="w-5 h-5 text-cyan-600" />
           <h3 className="text-lg font-semibold text-gray-900">Consumo de Água</h3>
+          <span className="text-red-500">*</span>
           <div className="relative group">
             <Info className="w-4 h-4 text-gray-400 cursor-help" />
             <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-800 text-white text-xs rounded-lg z-10">
-              Informe o consumo diário de água em metros cúbicos (m³/dia). Separe entre consumo humano e outros usos.
+              Informe o consumo diário de água em metros cúbicos (m³/dia). Pelo menos um dos campos deve ser preenchido.
             </div>
           </div>
         </div>
@@ -279,7 +338,7 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Consumo para Uso Humano <span className="text-red-500">*</span>
+              Consumo para Uso Humano
             </label>
             <div className="relative">
               <input
@@ -299,7 +358,7 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Consumo para Outros Usos <span className="text-red-500">*</span>
+              Consumo para Outros Usos
             </label>
             <div className="relative">
               <input
@@ -391,6 +450,24 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
         </div>
       </div>
 
+      {/* Botão Salvar Rascunho */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSaveDraft}
+          disabled={isSaving || !processoId}
+          className="flex items-center gap-2 px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            'Salvar Rascunho'
+          )}
+        </button>
+      </div>
+
       {/* Outorgas */}
       {needsOutorga() && (
         <div className="border border-orange-300 rounded-lg p-4 bg-orange-50">
@@ -398,13 +475,12 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
             <div className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-orange-600" />
               <h3 className="text-lg font-semibold text-gray-900">
-                Outorgas <span className="text-red-500">*</span>
+                Outorgas
               </h3>
               <div className="relative group">
                 <Info className="w-4 h-4 text-gray-400 cursor-help" />
                 <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-80 p-2 bg-gray-800 text-white text-xs rounded-lg z-10">
-                  Outorgas são obrigatórias quando a origem não é apenas rede pública ou quando o destino final é corpo receptor.
-                  Cadastre todas as outorgas relacionadas ao uso da água.
+                  Cadastre as outorgas relacionadas ao uso da água. Este campo está temporariamente opcional até definição final com a equipe.
                 </div>
               </div>
             </div>
@@ -420,9 +496,9 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
             )}
           </div>
 
-          <div className="mb-4 p-3 bg-orange-100 border border-orange-200 rounded-lg">
-            <p className="text-sm text-orange-900">
-              <strong>Atenção:</strong> É obrigatório cadastrar ao menos uma outorga para as condições selecionadas.
+          <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-900">
+              <strong>Informação:</strong> Cadastre as outorgas se já possuir. Este campo é opcional até definição final.
             </p>
           </div>
 
@@ -565,7 +641,7 @@ export default function Step3UsoAgua({ data, onChange, onValidation }: Step3UsoA
             <div className="text-center py-8 text-gray-500 bg-white rounded-lg">
               <Droplet className="w-12 h-12 mx-auto mb-2 text-gray-300" />
               <p className="text-sm">Nenhuma outorga cadastrada</p>
-              <p className="text-xs mt-1">É obrigatório adicionar ao menos uma outorga</p>
+              <p className="text-xs mt-1">Clique em "Adicionar Outorga" para cadastrar</p>
             </div>
           )}
         </div>
