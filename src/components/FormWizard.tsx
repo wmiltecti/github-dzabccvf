@@ -656,26 +656,33 @@ const saveStep2ToAPI = async () => {
                 Etapa {currentStep} de {steps.length}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleFillMockData}
-                className="flex items-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                <Wand2 className="w-4 h-4" />
-                Preencher
-              </button>
-              <button
-                onClick={handleSaveDraft}
-                disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-              >
-                {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? 'Salvando...' : 'Salvar Rascunho'}
-              </button>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleFillMockData}
+                  className="flex items-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  Preencher
+                </button>
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? 'Salvando...' : 'Salvar Rascunho'}
+                </button>
+              </div>
+              {processoId && (
+                <div className="text-xs text-gray-500 font-mono">
+                  uso interno: {processoId}
+                </div>
+              )}
             </div>
           </div>
 
