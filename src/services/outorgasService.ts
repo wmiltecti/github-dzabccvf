@@ -63,7 +63,7 @@ export async function saveOutorgas(processoId: string, outorgas: OutorgaFormData
   console.log('📤 Payload de outorgas:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}corpo-dagua`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}outorgas`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -94,7 +94,7 @@ export async function loadOutorgas(processoId: string): Promise<OutorgaFormData[
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}corpo-dagua/${processoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}outorgas?processo_id=${processoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {

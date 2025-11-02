@@ -147,7 +147,7 @@ export async function saveConsumoAgua(processoId: string, formData: any): Promis
   console.log('📤 Payload a ser enviado para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}consumo-agua`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}consumo-de-agua`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -194,7 +194,7 @@ export async function loadConsumoAgua(processoId: string): Promise<any | null> {
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}consumo-agua/${processoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}consumo-de-agua/${processoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {
