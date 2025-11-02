@@ -1,3 +1,5 @@
+import { saveOutorgas, loadOutorgas } from './outorgasService';
+
 // Service para integração da Aba 3 - Uso de Água com FastAPI
 
 interface ConsumoAguaPayload {
@@ -84,9 +86,7 @@ export function transformFromAPI(apiData: ConsumoAguaResponse): any {
     consumoOutros: apiData.consumo_outros_m3_dia?.toString() || '',
     volumeDespejo: apiData.volume_despejo_m3_dia?.toString() || '',
     destinoFinal: apiData.destino_final || '',
-    destinoFinalOutroTexto: apiData.destino_final_outro_texto || '',
-    // Outorgas não são persistidas na API ainda (conforme acordo com PO)
-    outorgas: []
+    destinoFinalOutroTexto: apiData.destino_final_outro_texto || ''
   };
 }
 
@@ -168,6 +168,17 @@ export async function saveConsumoAgua(processoId: string, formData: any): Promis
     console.log('✅ [usoAguaService] Dados salvos com sucesso na API!');
     console.log('📨 Response da API:', resultado);
 
+    // Salvar outorgas se existirem
+    if (formData.outorgas && formData.outorgas.length > 0) {
+      try {
+        console.log('🌊 [usoAguaService] Salvando outorgas...');
+        await saveOutorgas(processoId, formData.outorgas);
+        console.log('✅ [usoAguaService] Outorgas salvas com sucesso!');
+      } catch (outorgaError: any) {
+        console.warn('⚠️ [usoAguaService] Erro ao salvar outorgas (não bloqueante):', outorgaError);
+      }
+    }
+
     return resultado;
   } catch (error: any) {
     console.error('❌ [usoAguaService] Erro ao salvar:', error);
@@ -211,6 +222,17 @@ export async function loadConsumoAgua(processoId: string): Promise<any | null> {
     // Transformar dados da API para formato do formulário
     const formData = transformFromAPI(apiData);
     console.log('✅ [usoAguaService] Dados transformados para o formulário:', formData);
+
+    // Carregar outorgas
+    try {
+      console.log('🌊 [usoAguaService] Carregando outorgas...');
+      const outorgas = await loadOutorgas(processoId);
+      formData.outorgas = outorgas;
+      console.log('✅ [usoAguaService] Outorgas carregadas:', outorgas);
+    } catch (outorgaError: any) {
+      console.warn('⚠️ [usoAguaService] Erro ao carregar outorgas:', outorgaError);
+      formData.outorgas = [];
+    }
 
     return formData;
   } catch (error: any) {
