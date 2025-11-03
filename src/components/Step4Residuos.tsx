@@ -110,11 +110,12 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
   const [editingGeralId, setEditingGeralId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isSavingGrupoA, setIsSavingGrupoA] = useState(false);
-  const [isSavingGrupoB, setIsSavingGrupoB] = useState(false);
-  const [isSavingGeral, setIsSavingGeral] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<{ id: string; tipo: string; grupo: 'A' | 'B' | 'GERAL' } | null>(null);
+  const [showEditModalGrupoA, setShowEditModalGrupoA] = useState<ResiduoGrupo | null>(null);
+  const [showEditModalGrupoB, setShowEditModalGrupoB] = useState<ResiduoGrupo | null>(null);
+  const [showEditModalGeral, setShowEditModalGeral] = useState<ResiduoGeral | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const [currentGrupoA, setCurrentGrupoA] = useState<ResiduoGrupo>({
     id: '',
@@ -172,55 +173,38 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
     }
   };
 
-  const handleAddGrupoA = async () => {
+  const handleAddGrupoA = () => {
     if (!currentGrupoA.tipo || !currentGrupoA.quantidade || !currentGrupoA.destino) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    if (!processoId) {
-      toast.error('Processo não identificado. Recarregue a página.');
-      return;
-    }
-
-    setIsSavingGrupoA(true);
     const residuosGrupoA = data?.residuosGrupoA || [];
 
-    try {
-      if (editingGrupoAId) {
-        const updated = await updateResiduoGrupoA(editingGrupoAId, currentGrupoA, processoId);
-        const updatedList = residuosGrupoA.map((r: ResiduoGrupo) =>
-          r.id === editingGrupoAId ? { ...currentGrupoA, id: updated.id } : r
-        );
-        handleChange('residuosGrupoA', updatedList);
-        toast.success('Resíduo Grupo A atualizado com sucesso!');
-        setEditingGrupoAId(null);
-      } else {
-        const saved = await saveResiduoGrupoA(processoId, currentGrupoA);
-        const newResiduo = {
-          id: saved.id,
-          tipo: saved.tipo,
-          quantidade: saved.quantidade.toString(),
-          destino: saved.destino,
-        };
-        handleChange('residuosGrupoA', [...residuosGrupoA, newResiduo]);
-        toast.success('Resíduo Grupo A adicionado com sucesso!');
-      }
-
-      setCurrentGrupoA({ id: '', tipo: '', quantidade: '', destino: '' });
-      setIsAddingGrupoA(false);
-    } catch (error: any) {
-      console.error('Erro ao salvar Grupo A:', error);
-      toast.error(error.message || 'Erro ao salvar resíduo');
-    } finally {
-      setIsSavingGrupoA(false);
+    if (editingGrupoAId) {
+      const updatedList = residuosGrupoA.map((r: ResiduoGrupo) =>
+        r.id === editingGrupoAId ? { ...currentGrupoA, id: editingGrupoAId } : r
+      );
+      handleChange('residuosGrupoA', updatedList);
+      toast.success('Resíduo Grupo A atualizado localmente!');
+      setEditingGrupoAId(null);
+    } else {
+      const newResiduo = {
+        id: crypto.randomUUID(),
+        tipo: currentGrupoA.tipo,
+        quantidade: currentGrupoA.quantidade,
+        destino: currentGrupoA.destino,
+      };
+      handleChange('residuosGrupoA', [...residuosGrupoA, newResiduo]);
+      toast.success('Resíduo Grupo A adicionado!');
     }
+
+    setCurrentGrupoA({ id: '', tipo: '', quantidade: '', destino: '' });
+    setIsAddingGrupoA(false);
   };
 
   const handleEditGrupoA = (residuo: ResiduoGrupo) => {
-    setCurrentGrupoA(residuo);
-    setEditingGrupoAId(residuo.id);
-    setIsAddingGrupoA(true);
+    setShowEditModalGrupoA(residuo);
   };
 
   const handleDeleteGrupoA = (residuo: ResiduoGrupo) => {
@@ -233,55 +217,38 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
     setEditingGrupoAId(null);
   };
 
-  const handleAddGrupoB = async () => {
+  const handleAddGrupoB = () => {
     if (!currentGrupoB.tipo || !currentGrupoB.quantidade || !currentGrupoB.destino) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    if (!processoId) {
-      toast.error('Processo não identificado. Recarregue a página.');
-      return;
-    }
-
-    setIsSavingGrupoB(true);
     const residuosGrupoB = data?.residuosGrupoB || [];
 
-    try {
-      if (editingGrupoBId) {
-        const updated = await updateResiduoGrupoB(editingGrupoBId, currentGrupoB, processoId);
-        const updatedList = residuosGrupoB.map((r: ResiduoGrupo) =>
-          r.id === editingGrupoBId ? { ...currentGrupoB, id: updated.id } : r
-        );
-        handleChange('residuosGrupoB', updatedList);
-        toast.success('Resíduo Grupo B atualizado com sucesso!');
-        setEditingGrupoBId(null);
-      } else {
-        const saved = await saveResiduoGrupoB(processoId, currentGrupoB);
-        const newResiduo = {
-          id: saved.id,
-          tipo: saved.tipo,
-          quantidade: saved.quantidade.toString(),
-          destino: saved.destino,
-        };
-        handleChange('residuosGrupoB', [...residuosGrupoB, newResiduo]);
-        toast.success('Resíduo Grupo B adicionado com sucesso!');
-      }
-
-      setCurrentGrupoB({ id: '', tipo: '', quantidade: '', destino: '' });
-      setIsAddingGrupoB(false);
-    } catch (error: any) {
-      console.error('Erro ao salvar Grupo B:', error);
-      toast.error(error.message || 'Erro ao salvar resíduo');
-    } finally {
-      setIsSavingGrupoB(false);
+    if (editingGrupoBId) {
+      const updatedList = residuosGrupoB.map((r: ResiduoGrupo) =>
+        r.id === editingGrupoBId ? { ...currentGrupoB, id: editingGrupoBId } : r
+      );
+      handleChange('residuosGrupoB', updatedList);
+      toast.success('Resíduo Grupo B atualizado localmente!');
+      setEditingGrupoBId(null);
+    } else {
+      const newResiduo = {
+        id: crypto.randomUUID(),
+        tipo: currentGrupoB.tipo,
+        quantidade: currentGrupoB.quantidade,
+        destino: currentGrupoB.destino,
+      };
+      handleChange('residuosGrupoB', [...residuosGrupoB, newResiduo]);
+      toast.success('Resíduo Grupo B adicionado!');
     }
+
+    setCurrentGrupoB({ id: '', tipo: '', quantidade: '', destino: '' });
+    setIsAddingGrupoB(false);
   };
 
   const handleEditGrupoB = (residuo: ResiduoGrupo) => {
-    setCurrentGrupoB(residuo);
-    setEditingGrupoBId(residuo.id);
-    setIsAddingGrupoB(true);
+    setShowEditModalGrupoB(residuo);
   };
 
   const handleDeleteGrupoB = (residuo: ResiduoGrupo) => {
@@ -294,74 +261,57 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
     setEditingGrupoBId(null);
   };
 
-  const handleAddGeral = async () => {
+  const handleAddGeral = () => {
     if (!currentGeral.categoria || !currentGeral.tipo || !currentGeral.destino || !currentGeral.quantidade) {
       toast.error('Preencha todos os campos obrigatórios (Categoria, Tipo, Destino e Quantidade)');
       return;
     }
 
-    if (!processoId) {
-      toast.error('Processo não identificado. Recarregue a página.');
-      return;
-    }
-
-    setIsSavingGeral(true);
     const residuosGerais = data?.residuosGerais || [];
 
-    try {
-      if (editingGeralId) {
-        const updated = await updateResiduoGeral(editingGeralId, currentGeral, processoId);
-        const updatedList = residuosGerais.map((r: ResiduoGeral) =>
-          r.id === editingGeralId ? {
-            id: updated.id,
-            categoria: updated.categoria,
-            tipo: updated.tipo,
-            origem: updated.origem || '',
-            quantidade: updated.quantidade.toString(),
-            tratamento: updated.tratamento || '',
-            destino: updated.destino,
-          } : r
-        );
-        handleChange('residuosGerais', updatedList);
-        toast.success('Resíduo geral atualizado com sucesso!');
-        setEditingGeralId(null);
-      } else {
-        const saved = await saveResiduoGeral(processoId, currentGeral);
-        const newResiduo = {
-          id: saved.id,
-          categoria: saved.categoria,
-          tipo: saved.tipo,
-          origem: saved.origem || '',
-          quantidade: saved.quantidade.toString(),
-          tratamento: saved.tratamento || '',
-          destino: saved.destino,
-        };
-        handleChange('residuosGerais', [...residuosGerais, newResiduo]);
-        toast.success('Resíduo geral adicionado com sucesso!');
-      }
-
-      setCurrentGeral({
-        id: '',
-        categoria: '',
-        tipo: '',
-        origem: '',
-        tratamento: '',
-        destino: '',
-        quantidade: ''
-      });
-      setIsAddingGeral(false);
-    } catch (error: any) {
-      console.error('Erro ao salvar resíduo geral:', error);
-      toast.error(error.message || 'Erro ao salvar resíduo');
-    } finally {
-      setIsSavingGeral(false);
+    if (editingGeralId) {
+      const updatedList = residuosGerais.map((r: ResiduoGeral) =>
+        r.id === editingGeralId ? {
+          id: editingGeralId,
+          categoria: currentGeral.categoria,
+          tipo: currentGeral.tipo,
+          origem: currentGeral.origem || '',
+          quantidade: currentGeral.quantidade,
+          tratamento: currentGeral.tratamento || '',
+          destino: currentGeral.destino,
+        } : r
+      );
+      handleChange('residuosGerais', updatedList);
+      toast.success('Resíduo geral atualizado localmente!');
+      setEditingGeralId(null);
+    } else {
+      const newResiduo = {
+        id: crypto.randomUUID(),
+        categoria: currentGeral.categoria,
+        tipo: currentGeral.tipo,
+        origem: currentGeral.origem || '',
+        quantidade: currentGeral.quantidade,
+        tratamento: currentGeral.tratamento || '',
+        destino: currentGeral.destino,
+      };
+      handleChange('residuosGerais', [...residuosGerais, newResiduo]);
+      toast.success('Resíduo geral adicionado!');
     }
+
+    setCurrentGeral({
+      id: '',
+      categoria: '',
+      tipo: '',
+      origem: '',
+      tratamento: '',
+      destino: '',
+      quantidade: ''
+    });
+    setIsAddingGeral(false);
   };
 
   const handleEditGeral = (residuo: ResiduoGeral) => {
-    setCurrentGeral(residuo);
-    setEditingGeralId(residuo.id);
-    setIsAddingGeral(true);
+    setShowEditModalGeral(residuo);
   };
 
   const handleDeleteGeral = (residuo: ResiduoGeral) => {
@@ -419,6 +369,87 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
       return tiposResiduosLiquidos;
     }
     return [];
+  };
+
+  const saveEditGrupoA = async () => {
+    if (!showEditModalGrupoA || !processoId) return;
+
+    setIsSavingEdit(true);
+    try {
+      const updated = await updateResiduoGrupoA(showEditModalGrupoA.id, showEditModalGrupoA, processoId);
+      const residuosGrupoA = data?.residuosGrupoA || [];
+      const updatedList = residuosGrupoA.map((r: ResiduoGrupo) =>
+        r.id === showEditModalGrupoA.id ? {
+          id: updated.id,
+          tipo: updated.tipo,
+          quantidade: updated.quantidade.toString(),
+          destino: updated.destino,
+        } : r
+      );
+      handleChange('residuosGrupoA', updatedList);
+      toast.success('Resíduo Grupo A atualizado com sucesso!');
+      setShowEditModalGrupoA(null);
+    } catch (error: any) {
+      console.error('Erro ao atualizar Grupo A:', error);
+      toast.error(error.message || 'Erro ao atualizar resíduo');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const saveEditGrupoB = async () => {
+    if (!showEditModalGrupoB || !processoId) return;
+
+    setIsSavingEdit(true);
+    try {
+      const updated = await updateResiduoGrupoB(showEditModalGrupoB.id, showEditModalGrupoB, processoId);
+      const residuosGrupoB = data?.residuosGrupoB || [];
+      const updatedList = residuosGrupoB.map((r: ResiduoGrupo) =>
+        r.id === showEditModalGrupoB.id ? {
+          id: updated.id,
+          tipo: updated.tipo,
+          quantidade: updated.quantidade.toString(),
+          destino: updated.destino,
+        } : r
+      );
+      handleChange('residuosGrupoB', updatedList);
+      toast.success('Resíduo Grupo B atualizado com sucesso!');
+      setShowEditModalGrupoB(null);
+    } catch (error: any) {
+      console.error('Erro ao atualizar Grupo B:', error);
+      toast.error(error.message || 'Erro ao atualizar resíduo');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const saveEditGeral = async () => {
+    if (!showEditModalGeral || !processoId) return;
+
+    setIsSavingEdit(true);
+    try {
+      const updated = await updateResiduoGeral(showEditModalGeral.id, showEditModalGeral, processoId);
+      const residuosGerais = data?.residuosGerais || [];
+      const updatedList = residuosGerais.map((r: ResiduoGeral) =>
+        r.id === showEditModalGeral.id ? {
+          id: updated.id,
+          categoria: updated.categoria,
+          tipo: updated.tipo,
+          origem: updated.origem || '',
+          quantidade: updated.quantidade.toString(),
+          tratamento: updated.tratamento || '',
+          destino: updated.destino,
+        } : r
+      );
+      handleChange('residuosGerais', updatedList);
+      toast.success('Resíduo geral atualizado com sucesso!');
+      setShowEditModalGeral(null);
+    } catch (error: any) {
+      console.error('Erro ao atualizar resíduo geral:', error);
+      toast.error(error.message || 'Erro ao atualizar resíduo');
+    } finally {
+      setIsSavingEdit(false);
+    }
   };
 
   return (
@@ -524,10 +555,8 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
               </button>
               <button
                 onClick={handleAddGrupoA}
-                disabled={isSavingGrupoA}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
-                {isSavingGrupoA && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGrupoAId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -667,10 +696,8 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
               </button>
               <button
                 onClick={handleAddGrupoB}
-                disabled={isSavingGrupoB}
-                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors"
               >
-                {isSavingGrupoB && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGrupoBId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -855,10 +882,8 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
               </button>
               <button
                 onClick={handleAddGeral}
-                disabled={isSavingGeral}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
               >
-                {isSavingGeral && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGeralId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -957,6 +982,280 @@ export default function Step4Residuos({ data, onChange, processoId }: Step4Resid
               >
                 {isDeletingId && <Loader2 className="w-4 h-4 animate-spin" />}
                 Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição - Grupo A */}
+      {showEditModalGrupoA && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Editar Resíduo Grupo A</h3>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Tipo <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGrupoA.tipo}
+                  onChange={(e) => setShowEditModalGrupoA({ ...showEditModalGrupoA, tipo: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {tiposGrupoA.map(tipo => (
+                    <option key={tipo} value={tipo}>{tipo}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Quantidade (kg/mês) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={showEditModalGrupoA.quantidade}
+                  onChange={(e) => setShowEditModalGrupoA({ ...showEditModalGrupoA, quantidade: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Destino <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGrupoA.destino}
+                  onChange={(e) => setShowEditModalGrupoA({ ...showEditModalGrupoA, destino: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {destinosResiduos.map(destino => (
+                    <option key={destino} value={destino}>{destino}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowEditModalGrupoA(null)}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEditGrupoA}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSavingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição - Grupo B */}
+      {showEditModalGrupoB && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Editar Resíduo Grupo B</h3>
+
+            <div className="space-y-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Tipo <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGrupoB.tipo}
+                  onChange={(e) => setShowEditModalGrupoB({ ...showEditModalGrupoB, tipo: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {tiposGrupoB.map(tipo => (
+                    <option key={tipo} value={tipo}>{tipo}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Quantidade (kg/mês) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={showEditModalGrupoB.quantidade}
+                  onChange={(e) => setShowEditModalGrupoB({ ...showEditModalGrupoB, quantidade: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Destino <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGrupoB.destino}
+                  onChange={(e) => setShowEditModalGrupoB({ ...showEditModalGrupoB, destino: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {destinosResiduos.map(destino => (
+                    <option key={destino} value={destino}>{destino}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowEditModalGrupoB(null)}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEditGrupoB}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSavingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição - Resíduos Gerais */}
+      {showEditModalGeral && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Editar Resíduo Geral</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Categoria <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGeral.categoria}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, categoria: e.target.value, tipo: '' })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  <option value="Sólidos">Sólidos</option>
+                  <option value="Líquidos">Líquidos</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Tipo <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGeral.tipo}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, tipo: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  disabled={!showEditModalGeral.categoria}
+                >
+                  <option value="">Selecione a categoria primeiro...</option>
+                  {(showEditModalGeral.categoria === 'Sólidos' ? tiposResiduosSolidos :
+                    showEditModalGeral.categoria === 'Líquidos' ? tiposResiduosLiquidos : []).map(tipo => (
+                    <option key={tipo} value={tipo}>{tipo}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Origem
+                </label>
+                <input
+                  type="text"
+                  value={showEditModalGeral.origem}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, origem: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: Setor de produção"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Tratamento
+                </label>
+                <select
+                  value={showEditModalGeral.tratamento}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, tratamento: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {tratamentos.map(trat => (
+                    <option key={trat} value={trat}>{trat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Destino <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={showEditModalGeral.destino}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, destino: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  {destinosResiduos.map(dest => (
+                    <option key={dest} value={dest}>{dest}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Quantidade (kg/mês) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={showEditModalGeral.quantidade}
+                  onChange={(e) => setShowEditModalGeral({ ...showEditModalGeral, quantidade: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowEditModalGeral(null)}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEditGeral}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSavingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Salvar
               </button>
             </div>
           </div>

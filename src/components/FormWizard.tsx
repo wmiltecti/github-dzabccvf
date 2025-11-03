@@ -21,6 +21,14 @@ import { sendToBlockchain } from '../lib/utils/BlockchainUtils';
 import { getUserId } from '../utils/authToken';
 import { criarProcesso, upsertDadosGerais, getDadosGerais } from '../services/processosService';
 import { saveConsumoAgua } from '../services/usoAguaService';
+import {
+  saveResiduoGrupoA,
+  saveResiduoGrupoB,
+  saveResiduoGeral,
+  loadResiduosGrupoA,
+  loadResiduosGrupoB,
+  loadResiduosGerais,
+} from '../services/residuosService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -93,7 +101,8 @@ export default function FormWizard() {
   const [isSavingToAPI, setIsSavingToAPI] = useState(false);
   const [isSavingStep2, setIsSavingStep2] = useState(false);
   const [isSavingStep3, setIsSavingStep3] = useState(false);
-  
+  const [isSavingStep5, setIsSavingStep5] = useState(false);
+
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
 
@@ -234,6 +243,13 @@ useEffect(() => {
       } catch (error) {
         console.error('Erro ao salvar etapa 3:', error);
       }
+    } else if (currentStep === 5 && processoId) {
+      try {
+        await saveStep5ToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 5:', error);
+      }
     } else if (currentStep < steps.length) {
       nextStep();
     }
@@ -331,6 +347,119 @@ const saveStep3ToAPI = async () => {
   }
 };
 
+// Helper para verificar se um ID é temporário (gerado com crypto.randomUUID)
+const isTemporaryId = (id: string): boolean => {
+  // UUIDs temporários têm 36 caracteres (formato: 8-4-4-4-12)
+  // IDs da API geralmente são números ou têm formato diferente
+  return id.length === 36 && id.includes('-');
+};
+
+// Salvar dados da Aba 5 - Resíduos
+const saveStep5ToAPI = async () => {
+  if (currentStep !== 5 || !processoId) return;
+
+  setIsSavingStep5(true);
+  const d = formData.step5 || {};
+
+  try {
+    console.log('🗑️ [FormWizard] Salvando resíduos...');
+
+    let savedCount = 0;
+    let failedCount = 0;
+    const errors: string[] = [];
+
+    // Salvar Resíduos Grupo A (apenas os novos)
+    const residuosGrupoA = (d.residuosGrupoA || []).filter((r: any) =>
+      !r.id || isTemporaryId(r.id)
+    );
+    console.log(`📊 Grupo A: ${residuosGrupoA.length} novos resíduos para salvar`);
+
+    for (const residuo of residuosGrupoA) {
+      try {
+        await saveResiduoGrupoA(processoId, residuo);
+        savedCount++;
+      } catch (error: any) {
+        console.error('❌ Erro ao salvar Grupo A:', error);
+        failedCount++;
+        errors.push(`Grupo A (${residuo.tipo}): ${error.message}`);
+      }
+    }
+
+    // Salvar Resíduos Grupo B (apenas os novos)
+    const residuosGrupoB = (d.residuosGrupoB || []).filter((r: any) =>
+      !r.id || isTemporaryId(r.id)
+    );
+    console.log(`📊 Grupo B: ${residuosGrupoB.length} novos resíduos para salvar`);
+
+    for (const residuo of residuosGrupoB) {
+      try {
+        await saveResiduoGrupoB(processoId, residuo);
+        savedCount++;
+      } catch (error: any) {
+        console.error('❌ Erro ao salvar Grupo B:', error);
+        failedCount++;
+        errors.push(`Grupo B (${residuo.tipo}): ${error.message}`);
+      }
+    }
+
+    // Salvar Resíduos Gerais (apenas os novos)
+    const residuosGerais = (d.residuosGerais || []).filter((r: any) =>
+      !r.id || isTemporaryId(r.id)
+    );
+    console.log(`📊 Resíduos Gerais: ${residuosGerais.length} novos resíduos para salvar`);
+
+    for (const residuo of residuosGerais) {
+      try {
+        await saveResiduoGeral(processoId, residuo);
+        savedCount++;
+      } catch (error: any) {
+        console.error('❌ Erro ao salvar resíduo geral:', error);
+        failedCount++;
+        errors.push(`Geral (${residuo.tipo}): ${error.message}`);
+      }
+    }
+
+    // Recarregar resíduos da API após salvar
+    console.log('🔄 Recarregando resíduos da API...');
+    const [grupoA, grupoB, gerais] = await Promise.all([
+      loadResiduosGrupoA(processoId),
+      loadResiduosGrupoB(processoId),
+      loadResiduosGerais(processoId),
+    ]);
+
+    // Atualizar estado com dados recarregados
+    updateStepData(5, {
+      residuosGrupoA: grupoA,
+      residuosGrupoB: grupoB,
+      residuosGerais: gerais,
+    });
+
+    // Mostrar resultado
+    if (savedCount > 0 && failedCount === 0) {
+      console.log(`✅ ${savedCount} resíduos salvos com sucesso`);
+      toast.success(`${savedCount} resíduo(s) salvo(s) com sucesso!`);
+    } else if (savedCount > 0 && failedCount > 0) {
+      console.warn(`⚠️ ${savedCount} salvos, ${failedCount} falharam`);
+      toast.warning(`${savedCount} resíduo(s) salvo(s), mas ${failedCount} falharam. Verifique os erros.`);
+      console.error('Erros:', errors);
+    } else if (failedCount > 0) {
+      console.error(`❌ Todos os ${failedCount} resíduos falharam`);
+      toast.error(`Erro ao salvar resíduos. Verifique os dados e tente novamente.`);
+      console.error('Erros:', errors);
+      throw new Error('Falha ao salvar resíduos');
+    } else {
+      console.log('ℹ️ Nenhum resíduo novo para salvar');
+      toast.info('Nenhum resíduo novo para salvar');
+    }
+  } catch (error: any) {
+    console.error('❌ Erro ao salvar Aba 5:', error);
+    toast.error(error?.message || 'Erro ao salvar resíduos. Verifique os campos e tente novamente.');
+    throw error;
+  } finally {
+    setIsSavingStep5(false);
+  }
+};
+
 // Salvar dados da Aba 2 - Uso de Recursos e Energia
 const saveStep2ToAPI = async () => {
   if (currentStep !== 2 || !processoId) return;
@@ -421,6 +550,17 @@ const saveStep2ToAPI = async () => {
     if (currentStep === 3 && processoId) {
       try {
         await saveStep3ToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
+    }
+
+    if (currentStep === 5 && processoId) {
+      try {
+        await saveStep5ToAPI();
       } catch (error) {
         setIsSaving(false);
         setSaveMessage('Erro ao salvar rascunho');
@@ -667,15 +807,15 @@ const saveStep2ToAPI = async () => {
                 </button>
                 <button
                   onClick={handleSaveDraft}
-                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
+                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5}
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
-                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 ? 'Salvando...' : 'Salvar Rascunho'}
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? 'Salvando...' : 'Salvar Rascunho'}
                 </button>
               </div>
               {processoId && (
@@ -805,10 +945,10 @@ const saveStep2ToAPI = async () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSavingToAPI || isSavingStep2 || isSavingStep3 ? (
+            {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...
