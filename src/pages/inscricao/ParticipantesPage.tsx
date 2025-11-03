@@ -28,6 +28,10 @@ export default function ParticipantesPage() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    console.log('🔷 ParticipantesPage - processId changed:', processId);
+  }, [processId]);
+
   const loadParticipantes = useCallback(async () => {
     if (!processId) return;
 
@@ -106,22 +110,46 @@ export default function ParticipantesPage() {
   };
 
   const handleAddParticipante = async () => {
-    if (!selectedPessoa || !selectedPapel || !processId) return;
+    console.log('🔷 handleAddParticipante - Iniciando', {
+      selectedPessoa,
+      selectedPapel,
+      processId
+    });
+
+    if (!selectedPessoa || !selectedPapel || !processId) {
+      console.error('🔷 handleAddParticipante - Validação falhou:', {
+        selectedPessoa: !!selectedPessoa,
+        selectedPapel: !!selectedPapel,
+        processId: !!processId
+      });
+      setError('Dados incompletos. Selecione uma pessoa e um papel.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
+      console.log('🔷 handleAddParticipante - Chamando API:', {
+        processId: processId.toString(),
+        payload: {
+          pessoa_id: selectedPessoa.pkpessoa,
+          papel: selectedPapel
+        }
+      });
+
       await addParticipanteProcesso(processId.toString(), {
         pessoa_id: selectedPessoa.pkpessoa,
         papel: selectedPapel
       });
 
+      console.log('🔷 handleAddParticipante - Sucesso! Recarregando lista...');
       await loadParticipantes();
       handleCloseModal();
 
       alert(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${selectedPapel}`);
     } catch (err: any) {
+      console.error('🔷 handleAddParticipante - Erro:', err);
       setError(err.message || 'Erro ao adicionar participante');
     } finally {
       setLoading(false);
