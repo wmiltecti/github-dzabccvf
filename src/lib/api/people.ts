@@ -193,7 +193,7 @@ export async function searchPessoas(query: string) {
     }
 
     const cleanQuery = query.trim();
-    const { data } = await http.get(`/api/v1/pessoas/buscar?q=${encodeURIComponent(cleanQuery)}`);
+    const { data } = await http.get(`/pessoas/buscar?q=${encodeURIComponent(cleanQuery)}`);
 
     const formattedData = (data || []).map((pessoa: any) => ({
       ...pessoa,

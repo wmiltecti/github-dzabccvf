@@ -217,7 +217,7 @@ export async function addParticipanteProcesso(
     });
 
     const response = await http.post<ParticipanteProcessoResponse>(
-      `/api/v1/processos/${processoId}/participantes`,
+      `/processos/${processoId}/participantes`,
       payload
     );
 
@@ -246,7 +246,7 @@ export async function getParticipantesProcesso(
     console.log('📡 getParticipantesProcesso - Iniciando chamada:', { processoId });
 
     const response = await http.get<ParticipanteProcessoResponse[]>(
-      `/api/v1/processos/${processoId}/participantes`
+      `/processos/${processoId}/participantes`
     );
 
     console.log('📡 getParticipantesProcesso - Response recebido:', response.data);
@@ -271,7 +271,7 @@ export async function removeParticipanteProcesso(
       participanteId
     });
 
-    await http.delete(`/api/v1/processos/${processoId}/participantes/${participanteId}`);
+    await http.delete(`/processos/${processoId}/participantes/${participanteId}`);
 
     console.log('📡 removeParticipanteProcesso - Participante removido com sucesso');
   } catch (error: any) {
