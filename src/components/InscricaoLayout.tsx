@@ -12,11 +12,28 @@ export default function InscricaoLayout() {
   const { user, loading } = useAuth();
   const { processId, setProcessId, currentStep, setCurrentStep, reset } = useInscricaoStore();
 
+  // Fallback: verificar autenticação no localStorage (API remota)
+  const getLocalStorageUser = () => {
+    try {
+      const raw = localStorage.getItem("userData") || localStorage.getItem("userdata");
+      if (raw) {
+        const userData = JSON.parse(raw);
+        return userData;
+      }
+    } catch {}
+    return null;
+  };
+
+  const localUser = getLocalStorageUser();
+  const effectiveUser = user || localUser;
+
   // Log quando o componente monta
   useEffect(() => {
     console.log('🎯 [InscricaoLayout] Component mounted', {
-      user: !!user,
-      userId: user?.id,
+      supabaseUser: !!user,
+      localUser: !!localUser,
+      effectiveUser: !!effectiveUser,
+      userId: user?.id || localUser?.id,
       loading,
       processId,
       location: location.pathname
@@ -53,19 +70,21 @@ export default function InscricaoLayout() {
   useEffect(() => {
     console.log('🔄 [InscricaoLayout] useEffect triggered', {
       loading,
-      hasUser: !!user,
-      userId: user?.id,
+      hasSupabaseUser: !!user,
+      hasLocalUser: !!localUser,
+      hasEffectiveUser: !!effectiveUser,
+      userId: effectiveUser?.id,
       processId,
       isCreating: isCreatingProcesso.current
     });
 
     const initializeProcess = async () => {
       console.log('🧪 [InscricaoLayout] initializeProcess called', {
-        hasUser: !!user,
+        hasEffectiveUser: !!effectiveUser,
         processId
       });
 
-      if (!user) {
+      if (!effectiveUser) {
         console.log('⚠️ [InscricaoLayout] No user, skipping process creation');
         return;
       }
@@ -85,10 +104,10 @@ export default function InscricaoLayout() {
 
       try {
         console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
-        const userId = user.id || user.email || '';
+        const userId = effectiveUser.id || effectiveUser.email || effectiveUser.pkpessoa || '';
         console.log('👤 [InscricaoLayout] Using userId:', userId);
 
-        const newProcessoId = await criarProcesso(userId);
+        const newProcessoId = await criarProcesso(String(userId));
 
         console.log('✅ [InscricaoLayout] Draft process created via API:', newProcessoId);
         setProcessId(parseInt(newProcessoId));
@@ -100,13 +119,13 @@ export default function InscricaoLayout() {
       }
     };
 
-    if (!loading && user) {
+    if (!loading && effectiveUser) {
       console.log('✅ [InscricaoLayout] Conditions met, calling initializeProcess');
       initializeProcess();
     } else {
-      console.log('⏳ [InscricaoLayout] Waiting for user/loading', { loading, hasUser: !!user });
+      console.log('⏳ [InscricaoLayout] Waiting for user/loading', { loading, hasEffectiveUser: !!effectiveUser });
     }
-  }, [user, loading, processId, setProcessId]);
+  }, [user, localUser, effectiveUser, loading, processId, setProcessId]);
 
   // Redirect to first step if on base route
   useEffect(() => {
