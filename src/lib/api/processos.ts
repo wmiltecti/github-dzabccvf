@@ -94,7 +94,7 @@ export async function criarProcesso(userId: string): Promise<ProcessoResponse> {
   try {
     console.log('📡 criarProcesso - Iniciando chamada:', { userId });
 
-    const response = await http.post<ProcessoResponse>('/api/v1/processos/', {
+    const response = await http.post<ProcessoResponse>('/processos/', {
       user_id: userId,
       status: 'draft'
     });
@@ -118,7 +118,7 @@ export async function upsertDadosGerais(
       payload
     });
 
-    const response = await http.put<DadosGeraisResponse>(`/api/v1/processos/${processoId}/dados-gerais`, {
+    const response = await http.put<DadosGeraisResponse>(`/processos/${processoId}/dados-gerais`, {
       processo_id: processoId,
       ...payload
     });
@@ -139,7 +139,7 @@ export async function getDadosGerais(
     console.log('📡 getDadosGerais - Iniciando chamada:', { processoId });
 
     // Usa o endpoint /processos/{id} e extrai os dados gerais
-    const response = await http.get<any>(`/api/v1/processos/${processoId}`);
+    const response = await http.get<any>(`/processos/${processoId}`);
 
     console.log('📡 getDadosGerais - Response recebido:', response.data);
     return response.data;
@@ -225,6 +225,10 @@ export async function addParticipanteProcesso(
     return response.data;
   } catch (error: any) {
     console.error('📡 addParticipanteProcesso - Erro:', error);
+    console.error('📡 Status HTTP:', error?.response?.status);
+    console.error('📡 Detail:', error?.response?.data?.detail);
+    console.error('📡 Response completo:', JSON.stringify(error?.response?.data, null, 2));
+    
     const status = error?.response?.status;
     const detail = error?.response?.data?.detail;
     const message = error?.response?.data?.message || error?.message;
@@ -232,7 +236,9 @@ export async function addParticipanteProcesso(
     if (status === 404) {
       throw new Error(detail || 'Pessoa não encontrada');
     } else if (status === 409) {
-      throw new Error(detail || 'Esta pessoa já possui este papel no processo');
+      // Mostra a mensagem exata do backend se disponível
+      const errorMsg = typeof detail === 'string' ? detail : 'Esta pessoa já está cadastrada com este papel no processo. Escolha outro papel ou remova o cadastro anterior.';
+      throw new Error(errorMsg);
     }
 
     throw new Error(detail || message || 'Erro ao adicionar participante');
