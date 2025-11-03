@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useInscricaoStore } from '../lib/store/inscricao';
-import { createRascunho } from '../lib/api/process';
+import { criarProcesso } from '../services/processosService';
 import InscricaoStepper from './InscricaoStepper';
 import { FileText, ArrowLeft, Save, AlertTriangle } from 'lucide-react';
 
@@ -35,29 +35,35 @@ export default function InscricaoLayout() {
     }
   }, [location.pathname, currentStep, setCurrentStep]);
 
+  // Flag para evitar criação duplicada de processo no StrictMode
+  const isCreatingProcesso = useRef(false);
+
   // Initialize process on mount
   useEffect(() => {
     const initializeProcess = async () => {
       if (!user) return;
 
       if (!processId) {
+        // Evita criação duplicada no StrictMode (React executa useEffect 2x em dev)
+        if (isCreatingProcesso.current) {
+          console.log('🔒 [InscricaoLayout] Já está criando processo, aguardando...');
+          return;
+        }
+
+        isCreatingProcesso.current = true;
+
         try {
-          console.log('🆕 Creating new draft process...');
-          const { data, error } = await createRascunho();
+          console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
+          const userId = user.id || user.email || '';
+          const newProcessoId = await criarProcesso(userId);
 
-          if (error) {
-            console.error('Error creating draft process:', error);
-            alert('Erro ao inicializar processo: ' + error.message);
-            return;
-          }
-
-          if (data) {
-            console.log('✅ Draft process created:', data.id);
-            setProcessId(data.id);
-          }
+          console.log('✅ [InscricaoLayout] Draft process created via API:', newProcessoId);
+          setProcessId(parseInt(newProcessoId));
         } catch (error) {
-          console.error('Error initializing process:', error);
+          console.error('❌ [InscricaoLayout] Error initializing process:', error);
           alert('Erro ao inicializar processo: ' + (error as Error).message);
+        } finally {
+          isCreatingProcesso.current = false;
         }
       }
     };
