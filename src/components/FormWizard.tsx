@@ -636,7 +636,7 @@ const saveStep2ToAPI = async () => {
           {currentStep === 2 && <Step2RecursosEnergia data={data} onChange={handleStepDataChange} />}
           {currentStep === 3 && <Step3UsoAgua data={data} onChange={handleStepDataChange} processoId={processoId} />}
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
-          {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} />}
+          {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} processoId={processoId} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
           {currentStep === 7 && <StepRevisao formData={formData} processoId={processoId} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
         </motion.div>

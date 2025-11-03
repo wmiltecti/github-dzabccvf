@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
-import { Trash2, Plus, Edit2, AlertCircle, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trash2, Plus, Edit2, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import {
+  saveResiduoGrupoA,
+  loadResiduosGrupoA,
+  updateResiduoGrupoA,
+  deleteResiduoGrupoA,
+  saveResiduoGrupoB,
+  loadResiduosGrupoB,
+  updateResiduoGrupoB,
+  deleteResiduoGrupoB,
+  saveResiduoGeral,
+  loadResiduosGerais,
+  updateResiduoGeral,
+  deleteResiduoGeral,
+} from '../services/residuosService';
 
 interface Step4ResiduosProps {
   data: any;
   onChange: (data: any) => void;
+  processoId?: string | null;
 }
 
 interface ResiduoGrupo {
@@ -84,7 +100,7 @@ const tratamentos = [
   'Outro'
 ];
 
-export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
+export default function Step4Residuos({ data, onChange, processoId }: Step4ResiduosProps) {
   const [isAddingGrupoA, setIsAddingGrupoA] = useState(false);
   const [isAddingGrupoB, setIsAddingGrupoB] = useState(false);
   const [isAddingGeral, setIsAddingGeral] = useState(false);
@@ -92,6 +108,13 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
   const [editingGrupoAId, setEditingGrupoAId] = useState<string | null>(null);
   const [editingGrupoBId, setEditingGrupoBId] = useState<string | null>(null);
   const [editingGeralId, setEditingGeralId] = useState<string | null>(null);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSavingGrupoA, setIsSavingGrupoA] = useState(false);
+  const [isSavingGrupoB, setIsSavingGrupoB] = useState(false);
+  const [isSavingGeral, setIsSavingGeral] = useState(false);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<{ id: string; tipo: string; grupo: 'A' | 'B' | 'GERAL' } | null>(null);
 
   const [currentGrupoA, setCurrentGrupoA] = useState<ResiduoGrupo>({
     id: '',
@@ -121,30 +144,77 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     onChange({ ...data, [field]: value });
   };
 
-  const handleAddGrupoA = () => {
+  useEffect(() => {
+    if (processoId) {
+      loadAllResiduos();
+    }
+  }, [processoId]);
+
+  const loadAllResiduos = async () => {
+    if (!processoId) return;
+
+    setIsLoading(true);
+    try {
+      const [grupoA, grupoB, gerais] = await Promise.all([
+        loadResiduosGrupoA(processoId),
+        loadResiduosGrupoB(processoId),
+        loadResiduosGerais(processoId),
+      ]);
+
+      handleChange('residuosGrupoA', grupoA);
+      handleChange('residuosGrupoB', grupoB);
+      handleChange('residuosGerais', gerais);
+    } catch (error: any) {
+      console.error('Erro ao carregar resíduos:', error);
+      toast.warning('Não foi possível carregar resíduos existentes. Você pode adicionar novos.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddGrupoA = async () => {
     if (!currentGrupoA.tipo || !currentGrupoA.quantidade || !currentGrupoA.destino) {
-      alert('Preencha todos os campos obrigatórios');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    const residuosGrupoA = data?.residuosGrupoA || [];
-
-    if (editingGrupoAId) {
-      const updated = residuosGrupoA.map((r: ResiduoGrupo) =>
-        r.id === editingGrupoAId ? { ...currentGrupoA, id: editingGrupoAId } : r
-      );
-      handleChange('residuosGrupoA', updated);
-      setEditingGrupoAId(null);
-    } else {
-      const newResiduo = {
-        ...currentGrupoA,
-        id: Date.now().toString()
-      };
-      handleChange('residuosGrupoA', [...residuosGrupoA, newResiduo]);
+    if (!processoId) {
+      toast.error('Processo não identificado. Recarregue a página.');
+      return;
     }
 
-    setCurrentGrupoA({ id: '', tipo: '', quantidade: '', destino: '' });
-    setIsAddingGrupoA(false);
+    setIsSavingGrupoA(true);
+    const residuosGrupoA = data?.residuosGrupoA || [];
+
+    try {
+      if (editingGrupoAId) {
+        const updated = await updateResiduoGrupoA(editingGrupoAId, currentGrupoA, processoId);
+        const updatedList = residuosGrupoA.map((r: ResiduoGrupo) =>
+          r.id === editingGrupoAId ? { ...currentGrupoA, id: updated.id } : r
+        );
+        handleChange('residuosGrupoA', updatedList);
+        toast.success('Resíduo Grupo A atualizado com sucesso!');
+        setEditingGrupoAId(null);
+      } else {
+        const saved = await saveResiduoGrupoA(processoId, currentGrupoA);
+        const newResiduo = {
+          id: saved.id,
+          tipo: saved.tipo,
+          quantidade: saved.quantidade.toString(),
+          destino: saved.destino,
+        };
+        handleChange('residuosGrupoA', [...residuosGrupoA, newResiduo]);
+        toast.success('Resíduo Grupo A adicionado com sucesso!');
+      }
+
+      setCurrentGrupoA({ id: '', tipo: '', quantidade: '', destino: '' });
+      setIsAddingGrupoA(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar Grupo A:', error);
+      toast.error(error.message || 'Erro ao salvar resíduo');
+    } finally {
+      setIsSavingGrupoA(false);
+    }
   };
 
   const handleEditGrupoA = (residuo: ResiduoGrupo) => {
@@ -153,9 +223,8 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     setIsAddingGrupoA(true);
   };
 
-  const handleDeleteGrupoA = (id: string) => {
-    const residuosGrupoA = data?.residuosGrupoA || [];
-    handleChange('residuosGrupoA', residuosGrupoA.filter((r: ResiduoGrupo) => r.id !== id));
+  const handleDeleteGrupoA = (residuo: ResiduoGrupo) => {
+    setShowDeleteModal({ id: residuo.id, tipo: residuo.tipo, grupo: 'A' });
   };
 
   const handleCancelGrupoA = () => {
@@ -164,30 +233,49 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     setEditingGrupoAId(null);
   };
 
-  const handleAddGrupoB = () => {
+  const handleAddGrupoB = async () => {
     if (!currentGrupoB.tipo || !currentGrupoB.quantidade || !currentGrupoB.destino) {
-      alert('Preencha todos os campos obrigatórios');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    const residuosGrupoB = data?.residuosGrupoB || [];
-
-    if (editingGrupoBId) {
-      const updated = residuosGrupoB.map((r: ResiduoGrupo) =>
-        r.id === editingGrupoBId ? { ...currentGrupoB, id: editingGrupoBId } : r
-      );
-      handleChange('residuosGrupoB', updated);
-      setEditingGrupoBId(null);
-    } else {
-      const newResiduo = {
-        ...currentGrupoB,
-        id: Date.now().toString()
-      };
-      handleChange('residuosGrupoB', [...residuosGrupoB, newResiduo]);
+    if (!processoId) {
+      toast.error('Processo não identificado. Recarregue a página.');
+      return;
     }
 
-    setCurrentGrupoB({ id: '', tipo: '', quantidade: '', destino: '' });
-    setIsAddingGrupoB(false);
+    setIsSavingGrupoB(true);
+    const residuosGrupoB = data?.residuosGrupoB || [];
+
+    try {
+      if (editingGrupoBId) {
+        const updated = await updateResiduoGrupoB(editingGrupoBId, currentGrupoB, processoId);
+        const updatedList = residuosGrupoB.map((r: ResiduoGrupo) =>
+          r.id === editingGrupoBId ? { ...currentGrupoB, id: updated.id } : r
+        );
+        handleChange('residuosGrupoB', updatedList);
+        toast.success('Resíduo Grupo B atualizado com sucesso!');
+        setEditingGrupoBId(null);
+      } else {
+        const saved = await saveResiduoGrupoB(processoId, currentGrupoB);
+        const newResiduo = {
+          id: saved.id,
+          tipo: saved.tipo,
+          quantidade: saved.quantidade.toString(),
+          destino: saved.destino,
+        };
+        handleChange('residuosGrupoB', [...residuosGrupoB, newResiduo]);
+        toast.success('Resíduo Grupo B adicionado com sucesso!');
+      }
+
+      setCurrentGrupoB({ id: '', tipo: '', quantidade: '', destino: '' });
+      setIsAddingGrupoB(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar Grupo B:', error);
+      toast.error(error.message || 'Erro ao salvar resíduo');
+    } finally {
+      setIsSavingGrupoB(false);
+    }
   };
 
   const handleEditGrupoB = (residuo: ResiduoGrupo) => {
@@ -196,9 +284,8 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     setIsAddingGrupoB(true);
   };
 
-  const handleDeleteGrupoB = (id: string) => {
-    const residuosGrupoB = data?.residuosGrupoB || [];
-    handleChange('residuosGrupoB', residuosGrupoB.filter((r: ResiduoGrupo) => r.id !== id));
+  const handleDeleteGrupoB = (residuo: ResiduoGrupo) => {
+    setShowDeleteModal({ id: residuo.id, tipo: residuo.tipo, grupo: 'B' });
   };
 
   const handleCancelGrupoB = () => {
@@ -207,39 +294,68 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     setEditingGrupoBId(null);
   };
 
-  const handleAddGeral = () => {
-    if (!currentGeral.categoria || !currentGeral.tipo || !currentGeral.origem ||
-        !currentGeral.tratamento || !currentGeral.destino || !currentGeral.quantidade) {
-      alert('Preencha todos os campos obrigatórios');
+  const handleAddGeral = async () => {
+    if (!currentGeral.categoria || !currentGeral.tipo || !currentGeral.destino || !currentGeral.quantidade) {
+      toast.error('Preencha todos os campos obrigatórios (Categoria, Tipo, Destino e Quantidade)');
       return;
     }
 
-    const residuosGerais = data?.residuosGerais || [];
-
-    if (editingGeralId) {
-      const updated = residuosGerais.map((r: ResiduoGeral) =>
-        r.id === editingGeralId ? { ...currentGeral, id: editingGeralId } : r
-      );
-      handleChange('residuosGerais', updated);
-      setEditingGeralId(null);
-    } else {
-      const newResiduo = {
-        ...currentGeral,
-        id: Date.now().toString()
-      };
-      handleChange('residuosGerais', [...residuosGerais, newResiduo]);
+    if (!processoId) {
+      toast.error('Processo não identificado. Recarregue a página.');
+      return;
     }
 
-    setCurrentGeral({
-      id: '',
-      categoria: '',
-      tipo: '',
-      origem: '',
-      tratamento: '',
-      destino: '',
-      quantidade: ''
-    });
-    setIsAddingGeral(false);
+    setIsSavingGeral(true);
+    const residuosGerais = data?.residuosGerais || [];
+
+    try {
+      if (editingGeralId) {
+        const updated = await updateResiduoGeral(editingGeralId, currentGeral, processoId);
+        const updatedList = residuosGerais.map((r: ResiduoGeral) =>
+          r.id === editingGeralId ? {
+            id: updated.id,
+            categoria: updated.categoria,
+            tipo: updated.tipo,
+            origem: updated.origem || '',
+            quantidade: updated.quantidade.toString(),
+            tratamento: updated.tratamento || '',
+            destino: updated.destino,
+          } : r
+        );
+        handleChange('residuosGerais', updatedList);
+        toast.success('Resíduo geral atualizado com sucesso!');
+        setEditingGeralId(null);
+      } else {
+        const saved = await saveResiduoGeral(processoId, currentGeral);
+        const newResiduo = {
+          id: saved.id,
+          categoria: saved.categoria,
+          tipo: saved.tipo,
+          origem: saved.origem || '',
+          quantidade: saved.quantidade.toString(),
+          tratamento: saved.tratamento || '',
+          destino: saved.destino,
+        };
+        handleChange('residuosGerais', [...residuosGerais, newResiduo]);
+        toast.success('Resíduo geral adicionado com sucesso!');
+      }
+
+      setCurrentGeral({
+        id: '',
+        categoria: '',
+        tipo: '',
+        origem: '',
+        tratamento: '',
+        destino: '',
+        quantidade: ''
+      });
+      setIsAddingGeral(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar resíduo geral:', error);
+      toast.error(error.message || 'Erro ao salvar resíduo');
+    } finally {
+      setIsSavingGeral(false);
+    }
   };
 
   const handleEditGeral = (residuo: ResiduoGeral) => {
@@ -248,9 +364,38 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
     setIsAddingGeral(true);
   };
 
-  const handleDeleteGeral = (id: string) => {
-    const residuosGerais = data?.residuosGerais || [];
-    handleChange('residuosGerais', residuosGerais.filter((r: ResiduoGeral) => r.id !== id));
+  const handleDeleteGeral = (residuo: ResiduoGeral) => {
+    setShowDeleteModal({ id: residuo.id, tipo: residuo.tipo, grupo: 'GERAL' });
+  };
+
+  const confirmarExclusao = async () => {
+    if (!showDeleteModal) return;
+
+    setIsDeletingId(showDeleteModal.id);
+    try {
+      if (showDeleteModal.grupo === 'A') {
+        await deleteResiduoGrupoA(showDeleteModal.id);
+        const residuosGrupoA = data?.residuosGrupoA || [];
+        handleChange('residuosGrupoA', residuosGrupoA.filter((r: ResiduoGrupo) => r.id !== showDeleteModal.id));
+        toast.success('Resíduo Grupo A excluído com sucesso!');
+      } else if (showDeleteModal.grupo === 'B') {
+        await deleteResiduoGrupoB(showDeleteModal.id);
+        const residuosGrupoB = data?.residuosGrupoB || [];
+        handleChange('residuosGrupoB', residuosGrupoB.filter((r: ResiduoGrupo) => r.id !== showDeleteModal.id));
+        toast.success('Resíduo Grupo B excluído com sucesso!');
+      } else {
+        await deleteResiduoGeral(showDeleteModal.id);
+        const residuosGerais = data?.residuosGerais || [];
+        handleChange('residuosGerais', residuosGerais.filter((r: ResiduoGeral) => r.id !== showDeleteModal.id));
+        toast.success('Resíduo geral excluído com sucesso!');
+      }
+      setShowDeleteModal(null);
+    } catch (error: any) {
+      console.error('Erro ao excluir resíduo:', error);
+      toast.error(error.message || 'Erro ao excluir resíduo');
+    } finally {
+      setIsDeletingId(null);
+    }
   };
 
   const handleCancelGeral = () => {
@@ -285,6 +430,14 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
         </div>
         <h2 className="text-2xl font-bold text-gray-900">Resíduos</h2>
       </div>
+
+      {/* Loading Inicial */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+          <span className="ml-3 text-gray-600">Carregando resíduos...</span>
+        </div>
+      )}
 
       {/* Grupo A - Resíduos Infectantes */}
       <div className="border border-red-300 rounded-lg p-4 bg-red-50">
@@ -371,8 +524,10 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
               </button>
               <button
                 onClick={handleAddGrupoA}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                disabled={isSavingGrupoA}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
+                {isSavingGrupoA && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGrupoAId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -406,7 +561,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteGrupoA(residuo.id)}
+                          onClick={() => handleDeleteGrupoA(residuo)}
                           className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                           title="Excluir"
                         >
@@ -512,8 +667,10 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
               </button>
               <button
                 onClick={handleAddGrupoB}
-                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors"
+                disabled={isSavingGrupoB}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
+                {isSavingGrupoB && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGrupoBId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -547,7 +704,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteGrupoB(residuo.id)}
+                          onClick={() => handleDeleteGrupoB(residuo)}
                           className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                           title="Excluir"
                         >
@@ -630,7 +787,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Origem <span className="text-red-500">*</span>
+                  Origem
                 </label>
                 <input
                   type="text"
@@ -643,7 +800,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Tratamento <span className="text-red-500">*</span>
+                  Tratamento
                 </label>
                 <select
                   value={currentGeral.tratamento}
@@ -698,8 +855,10 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
               </button>
               <button
                 onClick={handleAddGeral}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                disabled={isSavingGeral}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
+                {isSavingGeral && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editingGeralId ? 'Atualizar' : 'Adicionar'}
               </button>
             </div>
@@ -739,7 +898,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteGeral(residuo.id)}
+                          onClick={() => handleDeleteGeral(residuo)}
                           className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                           title="Excluir"
                         >
@@ -760,6 +919,50 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
         )}
       </div>
 
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Confirmar Exclusão</h3>
+                <p className="text-sm text-gray-600">Deseja realmente remover este resíduo?</p>
+              </div>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Tipo:</span> {showDeleteModal.tipo}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Esta ação não pode ser desfeita.
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(null)}
+                disabled={isDeletingId !== null}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarExclusao}
+                disabled={isDeletingId !== null}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeletingId && <Loader2 className="w-4 h-4 animate-spin" />}
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Informações */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
@@ -769,6 +972,7 @@ export default function Step4Residuos({ data, onChange }: Step4ResiduosProps) {
             <p className="text-sm text-gray-600 mt-1">
               Cadastre todos os resíduos gerados pelo empreendimento. Grupo A são resíduos infectantes,
               Grupo B são resíduos químicos, e os Resíduos Gerais incluem sólidos e líquidos comuns.
+              Os campos Origem e Tratamento em Resíduos Gerais são opcionais.
             </p>
           </div>
         </div>
