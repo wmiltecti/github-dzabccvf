@@ -27,9 +27,29 @@ export default function ParticipantesPage() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessReady, setIsProcessReady] = useState(false);
+  const [processInitError, setProcessInitError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('🔷 ParticipantesPage - processId changed:', processId);
+
+    if (processId) {
+      console.log('✅ Process is ready:', processId);
+      setIsProcessReady(true);
+      setProcessInitError(null);
+    } else {
+      console.log('⏳ Waiting for process initialization...');
+      setIsProcessReady(false);
+
+      const timeout = setTimeout(() => {
+        if (!processId) {
+          console.error('❌ Process initialization timeout');
+          setProcessInitError('Tempo limite excedido ao inicializar o processo. Por favor, tente novamente.');
+        }
+      }, 30000);
+
+      return () => clearTimeout(timeout);
+    }
   }, [processId]);
 
   const loadParticipantes = useCallback(async () => {
@@ -110,26 +130,38 @@ export default function ParticipantesPage() {
   };
 
   const handleAddParticipante = async () => {
+    const trimmedPapel = selectedPapel?.trim();
+
     console.log('🔷 handleAddParticipante - Iniciando', {
       selectedPessoa,
       selectedPapel,
+      trimmedPapel,
       selectedPapelType: typeof selectedPapel,
       selectedPapelLength: selectedPapel?.length,
       processId,
-      processIdType: typeof processId
+      processIdType: typeof processId,
+      pessoaId: selectedPessoa?.pkpessoa
     });
 
-    if (!selectedPessoa || !selectedPapel || selectedPapel === '' || !processId) {
-      console.error('🔷 handleAddParticipante - Validação falhou:', {
-        hasPessoa: !!selectedPessoa,
-        pessoaId: selectedPessoa?.pkpessoa,
+    if (!selectedPessoa) {
+      console.error('🔷 handleAddParticipante - Pessoa não selecionada');
+      setError('Por favor, selecione uma pessoa.');
+      return;
+    }
+
+    if (!trimmedPapel || trimmedPapel === '') {
+      console.error('🔷 handleAddParticipante - Papel não selecionado:', {
         selectedPapel,
-        papelIsEmpty: selectedPapel === '',
-        papelIsFalsy: !selectedPapel,
-        hasProcessId: !!processId,
-        processId
+        trimmedPapel,
+        isEmpty: trimmedPapel === ''
       });
-      setError('Dados incompletos. Selecione uma pessoa e um papel.');
+      setError('Por favor, selecione um papel para o participante.');
+      return;
+    }
+
+    if (!processId) {
+      console.error('🔷 handleAddParticipante - ProcessId não disponível');
+      setError('Processo não inicializado. Por favor, aguarde ou recarregue a página.');
       return;
     }
 
@@ -141,20 +173,20 @@ export default function ParticipantesPage() {
         processId: processId.toString(),
         payload: {
           pessoa_id: selectedPessoa.pkpessoa,
-          papel: selectedPapel
+          papel: trimmedPapel
         }
       });
 
       await addParticipanteProcesso(processId.toString(), {
         pessoa_id: selectedPessoa.pkpessoa,
-        papel: selectedPapel
+        papel: trimmedPapel
       });
 
       console.log('🔷 handleAddParticipante - Sucesso! Recarregando lista...');
       await loadParticipantes();
       handleCloseModal();
 
-      alert(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${selectedPapel}`);
+      alert(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${trimmedPapel}`);
     } catch (err: any) {
       console.error('🔷 handleAddParticipante - Erro:', err);
       setError(err.message || 'Erro ao adicionar participante');
@@ -237,6 +269,52 @@ export default function ParticipantesPage() {
   };
 
   const hasRequerente = participantes.some(p => p.papel === 'Requerente');
+
+  const handleRetryProcessInit = () => {
+    console.log('🔄 User requested process initialization retry');
+    setProcessInitError(null);
+    window.location.reload();
+  };
+
+  if (!isProcessReady) {
+    return (
+      <div className="relative min-h-[600px]">
+        <div className="absolute inset-0 bg-white bg-opacity-95 z-50 flex items-center justify-center">
+          <div className="text-center max-w-md px-6">
+            {!processInitError ? (
+              <>
+                <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-6"></div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Inicializando processo...</h3>
+                <p className="text-gray-600 mb-4">
+                  Por favor, aguarde enquanto preparamos seu processo de inscrição.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                  <p className="text-sm text-blue-800">
+                    Este processo levará apenas alguns segundos.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Erro ao inicializar processo</h3>
+                <p className="text-gray-600 mb-6">{processInitError}</p>
+                <button
+                  onClick={handleRetryProcessInit}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Tentar Novamente
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -499,7 +577,7 @@ export default function ParticipantesPage() {
                     </button>
                     <button
                       onClick={handleAddParticipante}
-                      disabled={!selectedPapel || loading}
+                      disabled={!selectedPapel || selectedPapel.trim() === '' || loading}
                       className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                       {loading ? (

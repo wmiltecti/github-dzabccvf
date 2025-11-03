@@ -10,7 +10,7 @@ export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading } = useAuth();
-  const { processId, setProcessId, currentStep, setCurrentStep, reset } = useInscricaoStore();
+  const { processId, setProcessId, currentStep, setCurrentStep, setProcessInitializing, reset } = useInscricaoStore();
 
   // Fallback: verificar autenticação no localStorage (API remota)
   const getLocalStorageUser = () => {
@@ -101,6 +101,7 @@ export default function InscricaoLayout() {
       }
 
       isCreatingProcesso.current = true;
+      setProcessInitializing(true);
 
       try {
         console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
@@ -113,6 +114,7 @@ export default function InscricaoLayout() {
         setProcessId(parseInt(newProcessoId));
       } catch (error) {
         console.error('❌ [InscricaoLayout] Error initializing process:', error);
+        setProcessInitializing(false);
         alert('Erro ao inicializar processo: ' + (error as Error).message);
       } finally {
         isCreatingProcesso.current = false;

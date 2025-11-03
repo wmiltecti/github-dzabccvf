@@ -16,11 +16,13 @@ interface InscricaoStore extends InscricaoState {
   removeTitle: (index: number) => void;
   setAtividadeId: (id: number) => void;
   setCurrentStep: (step: number) => void;
+  setProcessInitializing: (initializing: boolean) => void;
   reset: () => void;
-  
+
   // Computed
   isStepComplete: (step: number) => boolean;
   canProceedToStep: (step: number) => boolean;
+  isProcessInitializing: boolean;
 }
 
 const initialState: InscricaoState = {
@@ -33,48 +35,55 @@ const initialState: InscricaoState = {
   currentStep: 1
 };
 
+const initialStoreState = {
+  ...initialState,
+  isProcessInitializing: false
+};
+
 export const useInscricaoStore = create<InscricaoStore>()(
   persist(
     (set, get) => ({
-      ...initialState,
+      ...initialStoreState,
 
       // Actions
-      setProcessId: (id: number) => set({ processId: id }),
-      
+      setProcessId: (id: number) => set({ processId: id, isProcessInitializing: false }),
+
       setPropertyId: (id: number) => set({ propertyId: id }),
-      
+
       setParticipants: (participants: Participant[]) => set({ participants }),
-      
-      addParticipant: (participant: Participant) => 
+
+      addParticipant: (participant: Participant) =>
         set(state => ({ participants: [...state.participants, participant] })),
-      
-      removeParticipant: (index: number) => 
-        set(state => ({ 
-          participants: state.participants.filter((_, i) => i !== index) 
+
+      removeParticipant: (index: number) =>
+        set(state => ({
+          participants: state.participants.filter((_, i) => i !== index)
         })),
-      
-      updateParticipant: (index: number, participant: Participant) => 
-        set(state => ({ 
-          participants: state.participants.map((p, i) => i === index ? participant : p) 
+
+      updateParticipant: (index: number, participant: Participant) =>
+        set(state => ({
+          participants: state.participants.map((p, i) => i === index ? participant : p)
         })),
-      
+
       setProperty: (property: Property) => set({ property }),
-      
+
       setTitles: (titles: PropertyTitle[]) => set({ titles }),
-      
-      addTitle: (title: PropertyTitle) => 
+
+      addTitle: (title: PropertyTitle) =>
         set(state => ({ titles: [...state.titles, title] })),
-      
-      removeTitle: (index: number) => 
-        set(state => ({ 
-          titles: state.titles.filter((_, i) => i !== index) 
+
+      removeTitle: (index: number) =>
+        set(state => ({
+          titles: state.titles.filter((_, i) => i !== index)
         })),
-      
+
       setAtividadeId: (id: number) => set({ atividadeId: id }),
-      
+
       setCurrentStep: (step: number) => set({ currentStep: step }),
-      
-      reset: () => set(initialState),
+
+      setProcessInitializing: (initializing: boolean) => set({ isProcessInitializing: initializing }),
+
+      reset: () => set(initialStoreState),
 
       // Computed
       isStepComplete: (step: number) => {
