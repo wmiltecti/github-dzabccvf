@@ -12,6 +12,17 @@ export default function InscricaoLayout() {
   const { user, loading } = useAuth();
   const { processId, setProcessId, currentStep, setCurrentStep, reset } = useInscricaoStore();
 
+  // Log quando o componente monta
+  useEffect(() => {
+    console.log('🎯 [InscricaoLayout] Component mounted', {
+      user: !!user,
+      userId: user?.id,
+      loading,
+      processId,
+      location: location.pathname
+    });
+  }, []);
+
   // Map routes to steps
   const routeToStep = {
     '/inscricao/participantes': 1,
@@ -40,36 +51,60 @@ export default function InscricaoLayout() {
 
   // Initialize process on mount
   useEffect(() => {
+    console.log('🔄 [InscricaoLayout] useEffect triggered', {
+      loading,
+      hasUser: !!user,
+      userId: user?.id,
+      processId,
+      isCreating: isCreatingProcesso.current
+    });
+
     const initializeProcess = async () => {
-      if (!user) return;
+      console.log('🧪 [InscricaoLayout] initializeProcess called', {
+        hasUser: !!user,
+        processId
+      });
 
-      if (!processId) {
-        // Evita criação duplicada no StrictMode (React executa useEffect 2x em dev)
-        if (isCreatingProcesso.current) {
-          console.log('🔒 [InscricaoLayout] Já está criando processo, aguardando...');
-          return;
-        }
+      if (!user) {
+        console.log('⚠️ [InscricaoLayout] No user, skipping process creation');
+        return;
+      }
 
-        isCreatingProcesso.current = true;
+      if (processId) {
+        console.log('✅ [InscricaoLayout] Process already exists:', processId);
+        return;
+      }
 
-        try {
-          console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
-          const userId = user.id || user.email || '';
-          const newProcessoId = await criarProcesso(userId);
+      // Evita criação duplicada no StrictMode (React executa useEffect 2x em dev)
+      if (isCreatingProcesso.current) {
+        console.log('🔒 [InscricaoLayout] Já está criando processo, aguardando...');
+        return;
+      }
 
-          console.log('✅ [InscricaoLayout] Draft process created via API:', newProcessoId);
-          setProcessId(parseInt(newProcessoId));
-        } catch (error) {
-          console.error('❌ [InscricaoLayout] Error initializing process:', error);
-          alert('Erro ao inicializar processo: ' + (error as Error).message);
-        } finally {
-          isCreatingProcesso.current = false;
-        }
+      isCreatingProcesso.current = true;
+
+      try {
+        console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
+        const userId = user.id || user.email || '';
+        console.log('👤 [InscricaoLayout] Using userId:', userId);
+
+        const newProcessoId = await criarProcesso(userId);
+
+        console.log('✅ [InscricaoLayout] Draft process created via API:', newProcessoId);
+        setProcessId(parseInt(newProcessoId));
+      } catch (error) {
+        console.error('❌ [InscricaoLayout] Error initializing process:', error);
+        alert('Erro ao inicializar processo: ' + (error as Error).message);
+      } finally {
+        isCreatingProcesso.current = false;
       }
     };
 
     if (!loading && user) {
+      console.log('✅ [InscricaoLayout] Conditions met, calling initializeProcess');
       initializeProcess();
+    } else {
+      console.log('⏳ [InscricaoLayout] Waiting for user/loading', { loading, hasUser: !!user });
     }
   }, [user, loading, processId, setProcessId]);
 
