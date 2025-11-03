@@ -8,6 +8,7 @@ import {
   removeParticipanteProcesso,
   ParticipanteProcessoResponse
 } from '../../lib/api/processos';
+import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 
 type ModalStep = 'search' | 'select-role';
@@ -15,7 +16,8 @@ type PapelType = 'Requerente' | 'Procurador' | 'Responsável Técnico';
 
 export default function ParticipantesPage() {
   const navigate = useNavigate();
-  const { processId, isStepComplete } = useInscricaoStore();
+  const { processoId } = useInscricaoContext(); // ✅ Usa Context ao invés de Zustand
+  const { isStepComplete, setParticipants } = useInscricaoStore();
 
   const [participantes, setParticipantes] = useState<ParticipanteProcessoResponse[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -27,45 +29,41 @@ export default function ParticipantesPage() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isProcessReady, setIsProcessReady] = useState(false);
-  const [processInitError, setProcessInitError] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log('🔷 ParticipantesPage - processId changed:', processId);
-
-    if (processId) {
-      console.log('✅ Process is ready:', processId);
-      setIsProcessReady(true);
-      setProcessInitError(null);
-    } else {
-      console.log('⏳ Waiting for process initialization...');
-      setIsProcessReady(false);
-
-      const timeout = setTimeout(() => {
-        if (!processId) {
-          console.error('❌ Process initialization timeout');
-          setProcessInitError('Tempo limite excedido ao inicializar o processo. Por favor, tente novamente.');
-        }
-      }, 60000);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [processId]);
-
-  const loadParticipantes = useCallback(async () => {
-    if (!processId) return;
+  // Função simples sem useCallback para evitar loops
+  const loadParticipantes = async () => {
+    if (!processoId) return;
 
     try {
-      const data = await getParticipantesProcesso(processId.toString());
+      const data = await getParticipantesProcesso(processoId);
       setParticipantes(data);
+      
+      // Atualiza o store Zustand para validação do botão "Próximo"
+      const participantesForStore = data.map(p => ({
+        id: p.id,
+        type: (p.pessoa_tipo === 0 || p.pessoa_tipo === 1) ? 'PF' : 'PJ' as 'PF' | 'PJ',
+        role: p.papel === 'Requerente' ? 'REQUERENTE' : 
+              p.papel === 'Procurador' ? 'PROCURADOR' : 
+              'RESP_TECNICO' as 'REQUERENTE' | 'PROCURADOR' | 'RESP_TECNICO',
+        cpf: p.pessoa_tipo === 0 ? p.pessoa_cpf_cnpj : undefined,
+        cnpj: p.pessoa_tipo !== 0 ? p.pessoa_cpf_cnpj : undefined,
+        nome: p.pessoa_tipo === 0 ? p.pessoa_nome : undefined,
+        razao_social: p.pessoa_tipo !== 0 ? p.pessoa_nome : undefined,
+        email: p.pessoa_email || '',
+        celular: p.pessoa_telefone || ''
+      }));
+      setParticipants(participantesForStore);
     } catch (err: any) {
       console.error('Erro ao carregar participantes:', err);
     }
-  }, [processId]);
+  };
 
+  // Carrega participantes quando processoId estiver disponível
   useEffect(() => {
-    loadParticipantes();
-  }, [loadParticipantes]);
+    if (processoId) {
+      loadParticipantes();
+    }
+  }, [processoId]); // Só re-executa se processoId mudar de valor
 
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 3) {
@@ -138,8 +136,8 @@ export default function ParticipantesPage() {
       trimmedPapel,
       selectedPapelType: typeof selectedPapel,
       selectedPapelLength: selectedPapel?.length,
-      processId,
-      processIdType: typeof processId,
+      processoId,
+      processoIdType: typeof processoId,
       pessoaId: selectedPessoa?.pkpessoa
     });
 
@@ -159,7 +157,7 @@ export default function ParticipantesPage() {
       return;
     }
 
-    if (!processId) {
+    if (!processoId) {
       console.error('🔷 handleAddParticipante - ProcessId não disponível');
       setError('Processo não inicializado. Por favor, aguarde ou recarregue a página.');
       return;
@@ -170,16 +168,16 @@ export default function ParticipantesPage() {
 
     try {
       console.log('🔷 handleAddParticipante - Chamando API:', {
-        processId: processId.toString(),
+        processoId: processoId,
         payload: {
           pessoa_id: selectedPessoa.pkpessoa,
           papel: trimmedPapel
         }
       });
 
-      await addParticipanteProcesso(processId.toString(), {
+      await addParticipanteProcesso(processoId, {
         pessoa_id: selectedPessoa.pkpessoa,
-        papel: trimmedPapel
+        papel: trimmedPapel as PapelType
       });
 
       console.log('🔷 handleAddParticipante - Sucesso! Recarregando lista...');
@@ -196,13 +194,13 @@ export default function ParticipantesPage() {
   };
 
   const handleRemoveParticipante = async (participante: ParticipanteProcessoResponse) => {
-    if (!processId) return;
+    if (!processoId) return;
 
     const nome = participante.pessoa_nome;
     if (!confirm(`Deseja remover ${nome}?`)) return;
 
     try {
-      await removeParticipanteProcesso(processId.toString(), participante.id);
+      await removeParticipanteProcesso(processoId, participante.id);
       await loadParticipantes();
       alert('Participante removido com sucesso');
     } catch (err: any) {
@@ -270,54 +268,21 @@ export default function ParticipantesPage() {
 
   const hasRequerente = participantes.some(p => p.papel === 'Requerente');
 
-  const handleRetryProcessInit = () => {
-    console.log('🔄 User requested process initialization retry');
-    setProcessInitError(null);
-    window.location.reload();
-  };
-
-  if (!isProcessReady) {
+  // Mostra loading enquanto aguarda processoId (simples, sem timeout)
+  if (!processoId) {
     return (
-      <div className="relative min-h-[600px]">
-        <div className="absolute inset-0 bg-white bg-opacity-95 z-50 flex items-center justify-center">
-          <div className="text-center max-w-md px-6">
-            {!processInitError ? (
-              <>
-                <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mx-auto mb-6"></div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Inicializando processo...</h3>
-                <p className="text-gray-600 mb-4">
-                  Por favor, aguarde enquanto preparamos seu processo de inscrição.
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-                  <p className="text-sm text-blue-800">
-                    Este processo levará apenas alguns segundos.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Erro ao inicializar processo</h3>
-                <p className="text-gray-600 mb-6">{processInitError}</p>
-                <button
-                  onClick={handleRetryProcessInit}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  Tentar Novamente
-                </button>
-              </>
-            )}
-          </div>
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900">Inicializando processo...</h3>
+          <p className="text-gray-600">Aguarde um momento</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6">\
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Participantes do Processo</h2>
         <p className="text-gray-600">
