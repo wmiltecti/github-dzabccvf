@@ -43,8 +43,12 @@ const refreshAuthToken = async (): Promise<string | null> => {
       return null;
     }
 
+    // Usar baseURL + path para manter consistência
+    const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+    const url = baseURL.endsWith('/') ? `${baseURL}auth/refresh` : `${baseURL}/auth/refresh`;
+    
     const response = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
+      url,
       {},
       {
         headers: {
@@ -71,7 +75,7 @@ const refreshAuthToken = async (): Promise<string | null> => {
 
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    console.log('🌐 HTTP Request:', {
+    console.log('📤 HTTP Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
@@ -79,10 +83,12 @@ http.interceptors.request.use(
       data: config.data
     });
 
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // MVP1: Sem autenticação (igual testes Python)
+    // TODO MVP2: Implementar autenticação segura
+    // const token = localStorage.getItem('auth_token');
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`;
+    // }
     return config;
   },
   (error) => {
@@ -113,6 +119,9 @@ http.interceptors.response.use(
       retryCount: originalRequest?._retry || 0
     });
 
+    // MVP1: Sem retry/refresh de token (igual testes Python)
+    // TODO MVP2: Implementar lógica de autenticação e refresh
+    /* 
     if (error.response?.status === 401 && originalRequest) {
       originalRequest._retry = (originalRequest._retry || 0) + 1;
 
@@ -175,6 +184,7 @@ http.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+    */
 
     let errorMessage: string;
 
