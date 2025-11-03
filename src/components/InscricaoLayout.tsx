@@ -105,15 +105,27 @@ export default function InscricaoLayout() {
 
       try {
         console.log('🆕 [InscricaoLayout] Creating new draft process via API...');
+        console.log('🆕 [InscricaoLayout] API Base URL:', import.meta.env.VITE_API_BASE_URL);
+
         const userId = effectiveUser.id || effectiveUser.email || effectiveUser.pkpessoa || '';
         console.log('👤 [InscricaoLayout] Using userId:', userId);
+        console.log('👤 [InscricaoLayout] effectiveUser full:', effectiveUser);
 
         const newProcessoId = await criarProcesso(String(userId));
 
         console.log('✅ [InscricaoLayout] Draft process created via API:', newProcessoId);
-        setProcessId(parseInt(newProcessoId));
+        console.log('✅ [InscricaoLayout] Setting processId to:', parseInt(newProcessoId));
+
+        const parsedId = parseInt(newProcessoId);
+        if (isNaN(parsedId)) {
+          throw new Error(`ID do processo inválido: ${newProcessoId}`);
+        }
+
+        setProcessId(parsedId);
+        console.log('✅ [InscricaoLayout] ProcessId set successfully to:', parsedId);
       } catch (error) {
         console.error('❌ [InscricaoLayout] Error initializing process:', error);
+        console.error('❌ [InscricaoLayout] Error stack:', (error as Error).stack);
         setProcessInitializing(false);
         alert('Erro ao inicializar processo: ' + (error as Error).message);
       } finally {

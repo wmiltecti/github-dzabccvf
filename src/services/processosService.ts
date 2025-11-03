@@ -1,31 +1,4 @@
-import axios from "axios";
-
-/**
- * Instância HTTP com baseURL do .env
- * Ex.: VITE_API_BASE_URL=http://localhost:8000/api/v1
- */
-const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 15000,
-});
-
-http.interceptors.request.use((config) => {
-  try {
-    const raw = localStorage.getItem("userData") || localStorage.getItem("userdata");
-    const directToken = localStorage.getItem("token");
-    let token: string | undefined;
-
-    if (raw) {
-      try { token = JSON.parse(raw)?.token; } catch {}
-    }
-    if (!token && directToken) token = directToken;
-
-    if (token) {
-      config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` };
-    }
-  } catch {}
-  return config;
-});
+import http from '../lib/api/http';
 
 // helper para extrair o id de vários formatos de resposta
 function extractId(data: any): string | undefined {
@@ -50,13 +23,26 @@ export async function criarProcesso(userId: string): Promise<string> {
   }
 
   const payload = { status: "draft", user_id: String(userId) };
+  console.log("📤 criarProcesso - Enviando request:", {
+    url: `${import.meta.env.VITE_API_BASE_URL}/processos/`,
+    payload
+  });
+
   const res = await http.post("/processos/", payload);
 
-  // log temporário para conferência
-  console.log("↩︎ criarProcesso resposta:", res.status, res.data);
+  console.log("📥 criarProcesso resposta completa:", {
+    status: res.status,
+    statusText: res.statusText,
+    data: res.data,
+    dataType: typeof res.data,
+    isArray: Array.isArray(res.data)
+  });
 
   const remoteId = extractId(res.data);
+  console.log("🔍 criarProcesso - ID extraído:", remoteId);
+
   if (!remoteId) {
+    console.error("❌ criarProcesso - Não foi possível extrair ID da resposta:", res.data);
     throw new Error("Resposta da API sem 'id' ou chave equivalente.");
   }
   return String(remoteId);

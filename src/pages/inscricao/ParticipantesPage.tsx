@@ -46,7 +46,7 @@ export default function ParticipantesPage() {
           console.error('❌ Process initialization timeout');
           setProcessInitError('Tempo limite excedido ao inicializar o processo. Por favor, tente novamente.');
         }
-      }, 30000);
+      }, 60000);
 
       return () => clearTimeout(timeout);
     }
