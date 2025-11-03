@@ -1005,47 +1005,44 @@ const saveStep2ToAPI = async () => {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between mt-6">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleBack}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </motion.button>
+        {currentStep < steps.length && (
+          <div className="flex items-center justify-between mt-6">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="flex items-center gap-2 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar
+            </motion.button>
 
-          <div className="text-sm text-gray-600">
-            Etapa {currentStep} de {steps.length}
+            <div className="text-sm text-gray-600">
+              Etapa {currentStep} de {steps.length}
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleNext}
+              disabled={isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
+              className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  Avançar
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </motion.button>
           </div>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
-            className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Salvando...
-              </>
-            ) : currentStep === steps.length ? (
-              <>
-                <Save className="w-4 h-4" />
-                Salvar
-              </>
-            ) : (
-              <>
-                Avançar
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </motion.button>
-        </div>
+        )}
       </div>
     </div>
   );
