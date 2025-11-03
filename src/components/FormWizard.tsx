@@ -29,6 +29,7 @@ import {
   loadResiduosGrupoB,
   loadResiduosGerais,
 } from '../services/residuosService';
+import { saveOutrasInformacoes, loadOutrasInformacoes } from '../services/outrasInformacoesService';
 import Step1Caracteristicas from './Step1Caracteristicas';
 import Step2RecursosEnergia from './Step2RecursosEnergia';
 import Step2Combustiveis from './Step2Combustiveis';
@@ -102,6 +103,7 @@ export default function FormWizard() {
   const [isSavingStep2, setIsSavingStep2] = useState(false);
   const [isSavingStep3, setIsSavingStep3] = useState(false);
   const [isSavingStep5, setIsSavingStep5] = useState(false);
+  const [isSavingStep6, setIsSavingStep6] = useState(false);
 
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
@@ -220,6 +222,30 @@ useEffect(() => {
   loadDadosGerais();
 }, [processoId]);
 
+// Carregar dados de Outras Informações quando o processo já existe
+useEffect(() => {
+  const loadOutrasInfo = async () => {
+    if (processoId) {
+      try {
+        console.log('🔍 [FormWizard] Carregando outras informações para processo:', processoId);
+        const dadosExistentes = await loadOutrasInformacoes(processoId);
+
+        if (dadosExistentes) {
+          console.log('📥 [FormWizard] Outras informações carregadas:', dadosExistentes);
+          updateStepData(6, dadosExistentes);
+          console.log('✅ [FormWizard] Dados da Aba 6 carregados no estado');
+        } else {
+          console.log('ℹ️ [FormWizard] Nenhum dado de outras informações encontrado para este processo');
+        }
+      } catch (error: any) {
+        console.error('❌ [FormWizard] Erro ao carregar outras informações:', error);
+      }
+    }
+  };
+
+  loadOutrasInfo();
+}, [processoId]);
+
 
   const handleNext = async () => {
     if (currentStep === 1 && processoId) {
@@ -249,6 +275,13 @@ useEffect(() => {
         nextStep();
       } catch (error) {
         console.error('Erro ao salvar etapa 5:', error);
+      }
+    } else if (currentStep === 6 && processoId) {
+      try {
+        await saveStep6ToAPI();
+        nextStep();
+      } catch (error) {
+        console.error('Erro ao salvar etapa 6:', error);
       }
     } else if (currentStep < steps.length) {
       nextStep();
@@ -460,6 +493,30 @@ const saveStep5ToAPI = async () => {
   }
 };
 
+// Salvar dados da Aba 6 - Outras Informações
+const saveStep6ToAPI = async () => {
+  if (currentStep !== 6 || !processoId) return;
+
+  setIsSavingStep6(true);
+  try {
+    const d = formData.step6 || {};
+
+    console.log('ℹ️ [FormWizard] Salvando outras informações...');
+    console.log('📊 Dados do formulário:', d);
+
+    await saveOutrasInformacoes(processoId, d);
+
+    console.log('✅ Aba 6 salva com sucesso');
+    toast.success('Outras Informações salvas com sucesso!');
+  } catch (error: any) {
+    console.error('❌ Erro ao salvar Aba 6:', error);
+    toast.error(error?.message || 'Erro ao salvar outras informações. Verifique os campos e tente novamente.');
+    throw error;
+  } finally {
+    setIsSavingStep6(false);
+  }
+};
+
 // Salvar dados da Aba 2 - Uso de Recursos e Energia
 const saveStep2ToAPI = async () => {
   if (currentStep !== 2 || !processoId) return;
@@ -561,6 +618,17 @@ const saveStep2ToAPI = async () => {
     if (currentStep === 5 && processoId) {
       try {
         await saveStep5ToAPI();
+      } catch (error) {
+        setIsSaving(false);
+        setSaveMessage('Erro ao salvar rascunho');
+        setTimeout(() => setSaveMessage(''), 3000);
+        return;
+      }
+    }
+
+    if (currentStep === 6 && processoId) {
+      try {
+        await saveStep6ToAPI();
       } catch (error) {
         setIsSaving(false);
         setSaveMessage('Erro ao salvar rascunho');
@@ -807,15 +875,15 @@ const saveStep2ToAPI = async () => {
                 </button>
                 <button
                   onClick={handleSaveDraft}
-                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5}
+                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
                   className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
-                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? (
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? 'Salvando...' : 'Salvar Rascunho'}
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? 'Salvando...' : 'Salvar Rascunho'}
                 </button>
               </div>
               {processoId && (
@@ -945,10 +1013,10 @@ const saveStep2ToAPI = async () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5}
+            disabled={currentStep === steps.length || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
             className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 ? (
+            {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Salvando...

@@ -247,8 +247,9 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
       renderContent: (data: any) => {
         const respostas = data.respostas || {};
         const totalPerguntas = 10;
-        const respondidas = Object.keys(respostas).length;
+        const respondidas = Object.values(respostas).filter(r => r !== null && r !== undefined).length;
         const respostasPositivas = Object.values(respostas).filter(r => r === true).length;
+        const respostasNegativas = Object.values(respostas).filter(r => r === false).length;
 
         return (
           <div className="space-y-3">
@@ -262,6 +263,10 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
                   <div className="bg-blue-50 rounded px-3 py-1">
                     <p className="text-xs text-gray-600">Respostas "Sim"</p>
                     <p className="text-lg font-semibold text-blue-700">{respostasPositivas}</p>
+                  </div>
+                  <div className="bg-red-50 rounded px-3 py-1">
+                    <p className="text-xs text-gray-600">Respostas "Não"</p>
+                    <p className="text-lg font-semibold text-red-700">{respostasNegativas}</p>
                   </div>
                 </div>
                 {data.outrasInformacoes && (
