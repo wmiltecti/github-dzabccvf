@@ -186,3 +186,104 @@ export async function submitProcesso(processoId: string): Promise<SubmitResponse
     throw new Error(message);
   }
 }
+
+export interface ParticipanteProcessoPayload {
+  pessoa_id: number;
+  papel: 'Requerente' | 'Procurador' | 'Responsável Técnico';
+}
+
+export interface ParticipanteProcessoResponse {
+  id: string;
+  processo_id: string;
+  pessoa_id: number;
+  papel: string;
+  created_at: string;
+  updated_at: string;
+  pessoa_nome: string;
+  pessoa_cpf_cnpj: string;
+  pessoa_tipo: number;
+  pessoa_email?: string;
+  pessoa_telefone?: string;
+}
+
+export async function addParticipanteProcesso(
+  processoId: string,
+  payload: ParticipanteProcessoPayload
+): Promise<ParticipanteProcessoResponse> {
+  try {
+    console.log('📡 addParticipanteProcesso - Iniciando chamada:', {
+      processoId,
+      payload
+    });
+
+    const response = await http.post<ParticipanteProcessoResponse>(
+      `/api/v1/processos/${processoId}/participantes`,
+      payload
+    );
+
+    console.log('📡 addParticipanteProcesso - Response recebido:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('📡 addParticipanteProcesso - Erro:', error);
+    const status = error?.response?.status;
+    const detail = error?.response?.data?.detail;
+    const message = error?.response?.data?.message || error?.message;
+
+    if (status === 404) {
+      throw new Error(detail || 'Pessoa não encontrada');
+    } else if (status === 409) {
+      throw new Error(detail || 'Esta pessoa já possui este papel no processo');
+    }
+
+    throw new Error(detail || message || 'Erro ao adicionar participante');
+  }
+}
+
+export async function getParticipantesProcesso(
+  processoId: string
+): Promise<ParticipanteProcessoResponse[]> {
+  try {
+    console.log('📡 getParticipantesProcesso - Iniciando chamada:', { processoId });
+
+    const response = await http.get<ParticipanteProcessoResponse[]>(
+      `/api/v1/processos/${processoId}/participantes`
+    );
+
+    console.log('📡 getParticipantesProcesso - Response recebido:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('📡 getParticipantesProcesso - Erro:', error);
+    if (error?.response?.status === 404) {
+      return [];
+    }
+    const message = error?.response?.data?.detail || error?.message || 'Erro ao buscar participantes';
+    throw new Error(message);
+  }
+}
+
+export async function removeParticipanteProcesso(
+  processoId: string,
+  participanteId: string
+): Promise<void> {
+  try {
+    console.log('📡 removeParticipanteProcesso - Iniciando chamada:', {
+      processoId,
+      participanteId
+    });
+
+    await http.delete(`/api/v1/processos/${processoId}/participantes/${participanteId}`);
+
+    console.log('📡 removeParticipanteProcesso - Participante removido com sucesso');
+  } catch (error: any) {
+    console.error('📡 removeParticipanteProcesso - Erro:', error);
+    const status = error?.response?.status;
+    const detail = error?.response?.data?.detail;
+    const message = error?.response?.data?.message || error?.message;
+
+    if (status === 404) {
+      throw new Error(detail || 'Participante não encontrado');
+    }
+
+    throw new Error(detail || message || 'Erro ao remover participante');
+  }
+}

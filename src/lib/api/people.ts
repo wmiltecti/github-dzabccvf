@@ -173,3 +173,56 @@ export async function updatePerson(id: ID, patch: Partial<Record<string, any>>) 
   if (error) return { data: null, error: friendlyError(error) };
   return { data, error: null };
 }
+
+export interface SearchPessoaResult {
+  pkpessoa: number;
+  tipo: number;
+  cpf?: string;
+  cnpj?: string;
+  nome?: string;
+  razaosocial?: string;
+  email?: string;
+  telefone?: string;
+  profissao?: string;
+}
+
+export async function searchPessoas(query: string) {
+  try {
+    if (!query || query.trim().length < 3) {
+      return { data: null, error: err('Digite pelo menos 3 caracteres para buscar', 'VALIDATION') };
+    }
+
+    const cleanQuery = query.trim();
+    const { data } = await http.get(`/api/v1/pessoas/buscar?q=${encodeURIComponent(cleanQuery)}`);
+
+    const formattedData = (data || []).map((pessoa: any) => ({
+      ...pessoa,
+      cpf_display: pessoa.cpf ? formatCPF(pessoa.cpf) : undefined,
+      cnpj_display: pessoa.cnpj ? formatCNPJ(pessoa.cnpj) : undefined,
+      telefone_display: pessoa.telefone ? formatPhone(pessoa.telefone) : undefined,
+    }));
+
+    return { data: formattedData, error: null as ServiceError | null };
+  } catch (error: any) {
+    const status = error?.response?.status;
+    const detail = error?.response?.data?.detail;
+    const message = error?.response?.data?.message || error?.message;
+
+    if (status === 400) {
+      const errorMessage = detail || 'Parâmetros de busca inválidos. Verifique e tente novamente.';
+      return { data: null, error: err(errorMessage, 'VALIDATION') };
+    } else if (status === 404) {
+      return { data: [], error: null as ServiceError | null };
+    } else if (status === 500) {
+      const errorMessage = detail || 'Erro interno no servidor ao buscar pessoas. Tente novamente mais tarde.';
+      return { data: null, error: err(errorMessage, 'SERVER_ERROR') };
+    } else if (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT') {
+      return { data: null, error: err('Tempo de resposta excedido. Verifique sua conexão e tente novamente.', 'TIMEOUT') };
+    } else if (!error?.response) {
+      return { data: null, error: err('Não foi possível conectar ao servidor. Verifique sua conexão com a internet.', 'NETWORK_ERROR') };
+    }
+
+    const fallbackMessage = detail || message || 'Erro ao buscar pessoas. Tente novamente.';
+    return { data: null, error: err(fallbackMessage, 'UNKNOWN') };
+  }
+}
