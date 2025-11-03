@@ -113,14 +113,21 @@ export default function ParticipantesPage() {
     console.log('🔷 handleAddParticipante - Iniciando', {
       selectedPessoa,
       selectedPapel,
-      processId
+      selectedPapelType: typeof selectedPapel,
+      selectedPapelLength: selectedPapel?.length,
+      processId,
+      processIdType: typeof processId
     });
 
-    if (!selectedPessoa || !selectedPapel || !processId) {
+    if (!selectedPessoa || !selectedPapel || selectedPapel === '' || !processId) {
       console.error('🔷 handleAddParticipante - Validação falhou:', {
-        selectedPessoa: !!selectedPessoa,
-        selectedPapel: !!selectedPapel,
-        processId: !!processId
+        hasPessoa: !!selectedPessoa,
+        pessoaId: selectedPessoa?.pkpessoa,
+        selectedPapel,
+        papelIsEmpty: selectedPapel === '',
+        papelIsFalsy: !selectedPapel,
+        hasProcessId: !!processId,
+        processId
       });
       setError('Dados incompletos. Selecione uma pessoa e um papel.');
       return;
