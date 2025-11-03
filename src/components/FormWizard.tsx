@@ -846,7 +846,19 @@ const saveStep2ToAPI = async () => {
           {currentStep === 4 && <Step2Combustiveis data={data} onChange={handleStepDataChange} />}
           {currentStep === 5 && <Step4Residuos data={data} onChange={handleStepDataChange} processoId={processoId} />}
           {currentStep === 6 && <Step5OutrasInfo data={data} onChange={handleStepDataChange} />}
-          {currentStep === 7 && <StepRevisao formData={formData} processoId={processoId} onNavigateToStep={setCurrentStep} onFinish={() => setCurrentStep(1)} />}
+          {currentStep === 7 && (
+            <StepRevisao
+              formData={formData}
+              processoId={processoId}
+              onNavigateToStep={setCurrentStep}
+              onFinish={() => setCurrentStep(1)}
+              saveStepToAPI={saveStepToAPI}
+              saveStep2ToAPI={saveStep2ToAPI}
+              saveStep3ToAPI={saveStep3ToAPI}
+              saveStep5ToAPI={saveStep5ToAPI}
+              saveStep6ToAPI={saveStep6ToAPI}
+            />
+          )}
         </motion.div>
       </AnimatePresence>
     );

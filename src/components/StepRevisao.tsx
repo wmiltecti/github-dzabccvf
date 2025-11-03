@@ -23,14 +23,30 @@ interface StepRevisaoProps {
   processoId: string | null;
   onNavigateToStep: (step: number) => void;
   onFinish: () => void;
+  saveStepToAPI?: () => Promise<void>;
+  saveStep2ToAPI?: () => Promise<void>;
+  saveStep3ToAPI?: () => Promise<void>;
+  saveStep5ToAPI?: () => Promise<void>;
+  saveStep6ToAPI?: () => Promise<void>;
 }
 
-export default function StepRevisao({ formData, processoId, onNavigateToStep, onFinish }: StepRevisaoProps) {
+export default function StepRevisao({
+  formData,
+  processoId,
+  onNavigateToStep,
+  onFinish,
+  saveStepToAPI,
+  saveStep2ToAPI,
+  saveStep3ToAPI,
+  saveStep5ToAPI,
+  saveStep6ToAPI
+}: StepRevisaoProps) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [wizardStatus, setWizardStatus] = useState<WizardStatus | null>(null);
   const [protocolo, setProtocolo] = useState<string>('');
+  const [savingStep, setSavingStep] = useState<string>('');
 
   useEffect(() => {
     const loadWizardStatus = async () => {
@@ -55,28 +71,79 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
     loadWizardStatus();
   }, [processoId]);
 
-  const handleFinish = async () => {
+  const hasDataInStep = (stepData: any): boolean => {
+    if (!stepData || typeof stepData !== 'object') return false;
+    return Object.keys(stepData).length > 0;
+  };
+
+  const handleSave = async () => {
     if (!processoId) {
       toast.error('Processo não inicializado');
       return;
     }
 
-    if (wizardStatus && (!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1)) {
-      toast.error('Complete as validações pendentes antes de finalizar');
+    setIsSaving(true);
+    const stepsToSave: Array<{name: string, fn: () => Promise<void>}> = [];
+
+    if (hasDataInStep(formData.step1) && saveStepToAPI) {
+      stepsToSave.push({ name: 'Características do Empreendimento', fn: saveStepToAPI });
+    }
+    if (hasDataInStep(formData.step2) && saveStep2ToAPI) {
+      stepsToSave.push({ name: 'Uso de Recursos e Energia', fn: saveStep2ToAPI });
+    }
+    if (hasDataInStep(formData.step3) && saveStep3ToAPI) {
+      stepsToSave.push({ name: 'Uso de Água', fn: saveStep3ToAPI });
+    }
+    if (hasDataInStep(formData.step5) && saveStep5ToAPI) {
+      stepsToSave.push({ name: 'Resíduos', fn: saveStep5ToAPI });
+    }
+    if (hasDataInStep(formData.step6) && saveStep6ToAPI) {
+      stepsToSave.push({ name: 'Outras Informações', fn: saveStep6ToAPI });
+    }
+
+    if (stepsToSave.length === 0) {
+      toast.info('Nenhuma alteração pendente para salvar');
+      setIsSaving(false);
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const response = await submitProcesso(processoId);
-      setProtocolo(response.protocolo);
-      setShowSuccessModal(true);
-      toast.success('Processo submetido com sucesso!');
-    } catch (error: any) {
-      console.error('Erro ao submeter processo:', error);
-      toast.error(error.message || 'Erro ao submeter processo');
-    } finally {
-      setIsSaving(false);
+    let savedCount = 0;
+    let failedCount = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < stepsToSave.length; i++) {
+      const step = stepsToSave[i];
+      setSavingStep(`Salvando ${step.name} (${i + 1}/${stepsToSave.length})...`);
+
+      try {
+        await step.fn();
+        savedCount++;
+        console.log(`✅ ${step.name} salva com sucesso`);
+      } catch (error: any) {
+        failedCount++;
+        errors.push(`${step.name}: ${error.message}`);
+        console.error(`❌ Erro ao salvar ${step.name}:`, error);
+      }
+    }
+
+    setSavingStep('');
+    setIsSaving(false);
+
+    if (savedCount > 0 && failedCount === 0) {
+      toast.success(`${savedCount} etapa(s) salva(s) com sucesso!`);
+
+      try {
+        const status = await getWizardStatus(processoId);
+        setWizardStatus(status);
+      } catch (error) {
+        console.warn('Erro ao atualizar status:', error);
+      }
+    } else if (savedCount > 0 && failedCount > 0) {
+      toast.warning(`${savedCount} etapa(s) salva(s), mas ${failedCount} falharam.`);
+      console.error('Erros:', errors);
+    } else {
+      toast.error('Erro ao salvar etapas. Verifique os dados e tente novamente.');
+      console.error('Erros:', errors);
     }
   };
 
@@ -425,7 +492,7 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
           {(!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1) && (
             <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
               <AlertCircle className="w-4 h-4 inline mr-1" />
-              Complete os requisitos pendentes antes de finalizar
+              Alguns requisitos ainda não foram completados. Salve os dados pendentes para atualizar o status.
             </div>
           )}
         </div>
@@ -434,9 +501,9 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-gray-900">Antes de finalizar</h3>
+              <h3 className="font-medium text-gray-900">Salvar Alterações</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Revise todas as informações com atenção. Após finalizar, o formulário será enviado para análise.
+                Clique no botão "Salvar" para salvar automaticamente todas as alterações pendentes de todas as abas.
                 Você poderá editar qualquer etapa clicando no botão "Editar" correspondente.
               </p>
             </div>
@@ -444,11 +511,16 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
         </div>
       )}
 
-      {/* Botão de Finalização */}
-      <div className="flex justify-end pt-4">
+      {/* Botão de Salvamento */}
+      <div className="flex flex-col items-end gap-2 pt-4">
+        {savingStep && (
+          <div className="text-sm text-blue-600 font-medium">
+            {savingStep}
+          </div>
+        )}
         <button
-          onClick={handleFinish}
-          disabled={isSaving || isLoading || (wizardStatus && (!wizardStatus.v_dados_gerais || wizardStatus.n_localizacoes < 1))}
+          onClick={handleSave}
+          disabled={isSaving || isLoading}
           className="flex items-center gap-2 px-6 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-lg"
         >
           {isSaving ? (
@@ -464,7 +536,7 @@ export default function StepRevisao({ formData, processoId, onNavigateToStep, on
           ) : (
             <>
               <Save className="w-5 h-5" />
-              Salvar e Finalizar
+              Salvar
             </>
           )}
         </button>
