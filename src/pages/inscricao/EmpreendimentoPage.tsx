@@ -44,9 +44,9 @@ export default function EmpreendimentoPage() {
   };
 
   const handleNext = () => {
-    if (canProceedToStep(4)) {
-      navigate('/inscricao/revisao');
-    }
+    // TODO: Validação temporariamente desabilitada para aprovação de design
+    // Reativar validação: if (canProceedToStep(4))
+    navigate('/inscricao/revisao');
   };
 
   const handleBack = () => {
@@ -176,8 +176,7 @@ export default function EmpreendimentoPage() {
         
         <button
           onClick={handleNext}
-          disabled={!isStepComplete(3)}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
           Próximo: Revisão
           <ArrowRight className="w-4 h-4" />
