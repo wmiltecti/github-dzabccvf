@@ -55,6 +55,15 @@ body::before {
   border-radius: 12px;
 }
 
+/* Desktop sidebar - always visible */
+@media (min-width: 1024px) {
+  .sidebar-nav {
+    position: relative;
+    transform: translateX(0);
+    visibility: visible;
+  }
+}
+
 /* Mobile sidebar positioning */
 @media (max-width: 1023px) {
   .sidebar-nav {
@@ -65,13 +74,22 @@ body::before {
     max-width: 85vw;
     z-index: 50;
     transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0s linear 0.3s;
     overflow-y: auto;
+    visibility: hidden;
   }
 
-  .sidebar-nav:not(.hidden) {
+  .sidebar-nav.sidebar-open {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+/* Sidebar overlay transition */
+.sidebar-overlay {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Navigation item hover effects */
@@ -104,11 +122,36 @@ body::before {
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive stat card adjustments */
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 0.75rem !important;
+  }
+
+  .stat-card p {
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .stat-card .text-lg {
+    font-size: 1rem !important;
+  }
+
+  .stat-card .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  .stat-card .text-2xl {
+    font-size: 1.25rem !important;
+  }
 }
 
 /* Login modal styling */
@@ -207,34 +250,138 @@ body::before {
 @media (max-width: 768px) {
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+
+  table {
+    font-size: 0.75rem;
   }
 
   table th,
   table td {
-    min-width: 100px;
-    font-size: 0.875rem;
-    padding: 0.75rem 1rem;
+    min-width: 80px;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
   }
 
   .stat-card {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .stat-card p {
+    font-size: 0.75rem;
+  }
+
+  .stat-card .text-2xl {
+    font-size: 1.25rem;
+  }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1023px) {
+  table th,
+  table td {
     font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
   }
 }
 
 /* Responsive grid adjustments */
-@media (max-width: 640px) {
-  .grid.md\:grid-cols-2.lg\:grid-cols-5 {
+@media (max-width: 474px) {
+  /* Mobile small: 1 coluna */
+  .grid.xs\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-5 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 641px) and (max-width: 1023px) {
-  .grid.md\:grid-cols-2.lg\:grid-cols-5 {
+@media (min-width: 475px) and (max-width: 767px) {
+  /* Mobile large / XS: 2 colunas */
+  .grid.xs\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-5 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  /* Tablet / MD: 3 colunas */
+  .grid.xs\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Desktop / XL: 5 colunas */
+  .grid.xs\:grid-cols-2.md\:grid-cols-3.xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Mobile button adjustments */
+@media (max-width: 640px) {
+  button {
+    font-size: 0.875rem;
+  }
+
+  button.text-sm {
+    font-size: 0.75rem;
+  }
+}
+
+/* Modal responsiveness */
+@media (max-width: 640px) {
+  .login-modal,
+  [class*="modal"] {
+    max-width: 95vw !important;
+    margin: 1rem;
+  }
+
+  .login-modal h2,
+  [class*="modal"] h2 {
+    font-size: 1.125rem;
+  }
+
+  .login-modal p,
+  [class*="modal"] p {
+    font-size: 0.75rem;
+  }
+
+  .login-modal form,
+  [class*="modal"] form {
+    padding: 1rem !important;
+  }
+
+  .login-modal input,
+  .login-modal select,
+  .login-modal textarea,
+  [class*="modal"] input,
+  [class*="modal"] select,
+  [class*="modal"] textarea {
+    font-size: 0.875rem;
+    padding: 0.625rem;
+  }
+}
+
+/* Form field improvements */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 1rem;
+  }
+
+  label {
+    font-size: 0.875rem;
+  }
+}
+
+/* Dashboard container adjustments */
+@media (max-width: 1023px) {
+  .dashboard-container {
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .content-area {
+    border-radius: 8px;
   }
 }
 
