@@ -12,6 +12,8 @@ import InscricaoLayout from './components/InscricaoLayout';
 import ParticipantesPage from './pages/inscricao/ParticipantesPage';
 import ImovelPage from './pages/inscricao/ImovelPage';
 import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
+import FormularioPage from './pages/inscricao/FormularioPage';
+import DocumentacaoPage from './pages/inscricao/DocumentacaoPage';
 import RevisaoPage from './pages/inscricao/RevisaoPage';
 
 function App() {
@@ -41,6 +43,8 @@ function App() {
             <Route path="participantes" element={<ParticipantesPage />} />
             <Route path="imovel" element={<ImovelPage />} />
             <Route path="empreendimento" element={<EmpreendimentoPage />} />
+            <Route path="formulario" element={<FormularioPage />} />
+            <Route path="documentacao" element={<DocumentacaoPage />} />
             <Route path="revisao" element={<RevisaoPage />} />
           </Route>
           
