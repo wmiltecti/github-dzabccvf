@@ -92,6 +92,8 @@ export default function ImovelPage() {
     // Mapeia o imóvel selecionado para o formato do store
     const propertyData = {
       kind: selectedImovel.kind,
+      nome: selectedImovel.nome || '',
+      areatotal: selectedImovel.areatotal || 0,
       municipio_sede: selectedImovel.municipio_sede || '',
       roteiro_acesso: '',
       utm_lat: selectedImovel.utm_lat || '',
@@ -216,6 +218,18 @@ export default function ImovelPage() {
                       {property.address.logradouro && `${property.address.logradouro}`}
                       {property.address.numero && `, ${property.address.numero}`}
                       {property.address.bairro && ` - ${property.address.bairro}`}
+                    </p>
+                  )}
+                  
+                  {property.nome && (
+                    <p className="text-sm text-gray-700 mt-1">
+                      <span className="font-medium">Nome:</span> {property.nome}
+                    </p>
+                  )}
+                  
+                  {property.areatotal && (
+                    <p className="text-sm text-gray-700">
+                      <span className="font-medium">Área Total:</span> {property.areatotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha
                     </p>
                   )}
                   
@@ -359,6 +373,8 @@ export default function ImovelPage() {
                           <thead className="bg-gray-50">
                             <tr>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Tipo</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nome</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Área Total (ha)</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">CAR/Matrícula</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Localização</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Ação</th>
@@ -371,6 +387,12 @@ export default function ImovelPage() {
                                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getKindBadgeColor(imovel.kind)}`}>
                                     {getKindLabel(imovel.kind)}
                                   </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {imovel.nome || '-'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {imovel.areatotal ? imovel.areatotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}
                                 </td>
                                 <td className="px-4 py-3 text-sm text-gray-900">
                                   {imovel.car_codigo || imovel.matricula || '-'}
@@ -444,6 +466,18 @@ export default function ImovelPage() {
                           <p className="text-sm text-gray-600 mb-2">
                             {formatAddress(selectedImovel)}
                           </p>
+
+                          {selectedImovel.nome && (
+                            <p className="text-sm text-gray-700 mb-1">
+                              <span className="font-medium">Nome:</span> {selectedImovel.nome}
+                            </p>
+                          )}
+
+                          {selectedImovel.areatotal && (
+                            <p className="text-sm text-gray-700 mb-1">
+                              <span className="font-medium">Área Total:</span> {selectedImovel.areatotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ha
+                            </p>
+                          )}
 
                           {selectedImovel.cep && (
                             <p className="text-sm text-gray-500">
