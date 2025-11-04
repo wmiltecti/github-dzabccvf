@@ -300,15 +300,6 @@ export default function Dashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
         <div className="flex space-x-2 sm:space-x-3">
           <button
-            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => setShowNewProcessModal(true)}
-            title="Criar novo processo"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Novo Processo</span>
-            <span className="xs:hidden">Processo</span>
-          </button>
-          <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
             onClick={() => navigate('/inscricao/participantes')}
             title="Iniciar nova solicitação"
