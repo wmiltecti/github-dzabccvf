@@ -110,22 +110,24 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
             
             return (
               <li key={step.id} className="relative flex-1">
-                {/* Connector Line */}
+                {/* Connector Arrow */}
                 {stepIdx !== steps.length - 1 && (
-                  <div className="absolute top-4 left-1/2 w-full h-0.5 bg-gray-200 -translate-y-1/2 ml-4">
-                    <div 
-                      className={`h-full transition-all duration-300 ${
-                        getStepStatus(step.id + 1) === 'completed' || 
-                        getStepStatus(step.id + 1) === 'current' 
-                          ? 'bg-green-600' 
-                          : 'bg-gray-200'
+                  <div className="absolute top-4 left-1/2 -translate-y-1/2 ml-4">
+                    <span
+                      className={`text-2xl transition-colors duration-300 ${
+                        getStepStatus(step.id + 1) === 'completed' ||
+                        getStepStatus(step.id + 1) === 'current'
+                          ? 'text-green-600'
+                          : 'text-gray-300'
                       }`}
-                    />
+                    >
+                      ➤
+                    </span>
                   </div>
                 )}
-                
+
                 {/* Step Content */}
-                <div 
+                <div
                   className={`relative flex flex-col items-center text-center ${styles.container}`}
                   onClick={() => {
                     if (status !== 'disabled' && onStepClick) {
@@ -146,7 +148,7 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
                       <span className="text-sm font-medium">{step.id}</span>
                     )}
                   </div>
-                  
+
                   {/* Step Text */}
                   <div className="min-w-0">
                     <p className={`text-sm font-medium ${styles.text}`}>
