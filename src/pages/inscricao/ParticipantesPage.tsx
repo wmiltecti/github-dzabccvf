@@ -116,6 +116,7 @@ export default function ParticipantesPage() {
 
   const handleSelectPessoa = (pessoa: SearchPessoaResult) => {
     setSelectedPessoa(pessoa);
+    setSelectedPapel('Requerente'); // Pré-seleciona "Requerente"
     setModalStep('select-role');
     setSearchResults([]);
     setSearchTerm('');
