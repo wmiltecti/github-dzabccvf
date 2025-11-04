@@ -80,6 +80,8 @@ export async function listTitles(propertyId: ID) {
 export interface SearchImovelResult {
   id: number;
   kind: 'URBANO' | 'RURAL' | 'LINEAR';
+  nome?: string;
+  areatotal?: number;
   car_codigo?: string;
   matricula?: string;
   municipio_sede?: string;

@@ -51,6 +51,8 @@ export interface PropertyTitle {
 export interface Property {
   id?: number;
   kind: 'URBANO' | 'RURAL' | 'LINEAR';
+  nome?: string;
+  areatotal?: number;
   municipio_sede?: string;
   roteiro_acesso?: string;
   utm_lat?: string;

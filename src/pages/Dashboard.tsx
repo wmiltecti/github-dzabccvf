@@ -7,6 +7,7 @@ import ProcessDetailsModal from '../components/ProcessDetailsModal';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { APP_VERSION, APP_NAME } from '../config/version';
 import {
   FileText,
   TrendingUp,
@@ -787,10 +788,13 @@ export default function Dashboard() {
         }`}>
           <div className="flex flex-col h-full">
             <div className="flex items-center px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center">
+              <div className="flex items-center justify-between w-full">
                 <div className="ml-3">
-                  <p className="text-xs text-gray-500">Licenciamento Ambiental - Integracao</p>
+                  <p className="text-xs text-gray-500">{APP_NAME}</p>
                 </div>
+                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                  {APP_VERSION}
+                </span>
               </div>
             </div>
 
