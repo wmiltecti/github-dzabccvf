@@ -261,7 +261,7 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'inscricoes', name: 'Inscrições', icon: FileCheck }
+    { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck }
   ];
 
   const geralSubSections = [
