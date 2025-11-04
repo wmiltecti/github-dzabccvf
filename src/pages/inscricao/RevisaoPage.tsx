@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { FileCheck, ArrowLeft, Send, Users, Home, Building, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -11,8 +12,8 @@ import { linkProperty, getParticipants, linkActivity } from '../../lib/api/proce
 
 export default function RevisaoPage() {
   const navigate = useNavigate();
+  const { processoId } = useInscricaoContext(); // ✅ Usa Context
   const {
-    processId,
     propertyId,
     participants,
     property,
@@ -24,7 +25,7 @@ export default function RevisaoPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!processId) {
+    if (!processoId) {
       alert('Erro: Processo não encontrado');
       return;
     }
@@ -37,12 +38,12 @@ export default function RevisaoPage() {
 
       // 1) Vincula imóvel ao processo (id bigint)
       if (propertyId) {
-        const { error: linkError } = await linkProperty(processId, propertyId);
+        const { error: linkError } = await linkProperty(Number(processoId), propertyId);
         if (linkError) throw new Error('Erro ao vincular imóvel: ' + linkError.message);
       }
 
       // 2) Valida participantes no BD
-      const partsRes = await getParticipants(processId);
+      const partsRes = await getParticipants(Number(processoId));
       if (partsRes.error) throw new Error(partsRes.error.message);
       const parts = partsRes.data || [];
       const hasReq = parts.some((p: any) => (p.role ?? '').toUpperCase() === 'REQUERENTE');
@@ -56,7 +57,7 @@ export default function RevisaoPage() {
       let { data: proc, error: gErr } = await supabase
         .from('license_processes')
         .select('id, user_id, company_id, activity, status')
-        .eq('id', processId)
+        .eq('id', processoId)
         .single();
       if (gErr) throw new Error(gErr.message);
 
@@ -67,14 +68,14 @@ export default function RevisaoPage() {
 
       // 4) Se a atividade está no store mas ainda não foi gravada no BD, grava agora
       if (!proc.activity && atividadeId) {
-        const { error: linkActErr } = await linkActivity(processId, atividadeId);
+        const { error: linkActErr } = await linkActivity(Number(processoId), atividadeId);
         if (linkActErr) throw new Error('Erro ao vincular atividade: ' + linkActErr.message);
 
         // recarrega o processo após gravar a atividade
         const refetch = await supabase
           .from('license_processes')
           .select('id, user_id, company_id, activity, status')
-          .eq('id', processId)
+          .eq('id', processoId)
           .single();
         if (refetch.error) throw new Error(refetch.error.message);
         proc = refetch.data;
@@ -89,22 +90,22 @@ export default function RevisaoPage() {
           status: 'submitted',
           progress: 25,
         })
-        .eq('id', processId);
-      if (updErr) throw new Error('Erro ao finalizar inscrição: ' + updErr.message);
+        .eq('id', processoId);
+      if (updErr) throw new Error('Erro ao finalizar solicitação: ' + updErr.message);
 
-      alert('Inscrição submetida com sucesso!');
+      alert('Solicitação submetida com sucesso!');
       reset();
       navigate('/');
     } catch (error) {
       console.error('Error submitting inscription:', error);
-      alert('Erro ao submeter inscrição: ' + (error as Error).message);
+      alert('Erro ao submeter solicitação: ' + (error as Error).message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/empreendimento');
+    navigate('/inscricao/documentacao');
   };
 
   const mockActivity = atividadeId
@@ -152,7 +153,7 @@ export default function RevisaoPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-blue-800">Processo ID:</span>
-              <span className="ml-2 text-blue-700">#{processId}</span>
+              <span className="ml-2 text-blue-700">#{processoId}</span>
             </div>
             <div>
               <span className="font-medium text-blue-800">Status:</span>
@@ -269,7 +270,7 @@ export default function RevisaoPage() {
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Building className="w-5 h-5" />
-            Atividade do Empreendimento
+            Atividade
           </h3>
 
           {mockActivity ? (
@@ -310,15 +311,15 @@ export default function RevisaoPage() {
             <div>
               {allStepsComplete ? (
                 <>
-                  <h4 className="font-medium text-green-900">Inscrição pronta para submissão</h4>
+                  <h4 className="font-medium text-green-900">Solicitação pronta para submissão</h4>
                   <p className="text-sm mt-1 text-green-800">
-                    Todas as informações obrigatórias foram preenchidas. Você pode submeter a inscrição para análise.
+                    Todas as informações obrigatórias foram preenchidas. Você pode submeter a solicitação para análise.
                   </p>
                 </>
               ) : (
                 <>
-                  <h4 className="font-medium text-red-900">Inscrição incompleta</h4>
-                  <p className="text-sm mt-1 text-red-800">Complete todas as etapas antes de submeter a inscrição.</p>
+                  <h4 className="font-medium text-red-900">Solicitação incompleta</h4>
+                  <p className="text-sm mt-1 text-red-800">Complete todas as etapas antes de submeter a solicitação.</p>
                 </>
               )}
             </div>
@@ -333,7 +334,7 @@ export default function RevisaoPage() {
           className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar: Empreendimento
+          Voltar: Documentação
         </button>
 
         <button
@@ -344,12 +345,12 @@ export default function RevisaoPage() {
           {submitting ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Submetendo Inscrição...
+              Submetendo Solicitação...
             </>
           ) : (
             <>
               <Send className="w-5 h-5" />
-              Submeter Inscrição
+              Submeter Solicitação
             </>
           )}
         </button>
