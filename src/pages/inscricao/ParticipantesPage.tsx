@@ -11,6 +11,7 @@ import {
 } from '../../lib/api/processos';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 type ModalStep = 'search' | 'select-role';
 type PapelType = 'Requerente' | 'Procurador' | 'Responsável Técnico';
@@ -30,6 +31,8 @@ export default function ParticipantesPage() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [participanteToDelete, setParticipanteToDelete] = useState<ParticipanteProcessoResponse | null>(null);
 
   // Função simples sem useCallback para evitar loops
   const loadParticipantes = async () => {
@@ -206,14 +209,16 @@ export default function ParticipantesPage() {
     }
   };
 
-  const handleRemoveParticipante = async (participante: ParticipanteProcessoResponse) => {
-    if (!processoId) return;
+  const handleRemoveParticipante = (participante: ParticipanteProcessoResponse) => {
+    setParticipanteToDelete(participante);
+    setShowConfirmDelete(true);
+  };
 
-    const nome = participante.pessoa_nome;
-    if (!confirm(`Deseja remover ${nome}?`)) return;
+  const confirmRemoveParticipante = async () => {
+    if (!processoId || !participanteToDelete) return;
 
     try {
-      await removeParticipanteProcesso(processoId, participante.id);
+      await removeParticipanteProcesso(processoId, participanteToDelete.id);
       await loadParticipantes();
 
       console.log('🔔 Exibindo toast: Participante removido');
@@ -227,6 +232,9 @@ export default function ParticipantesPage() {
         position: "top-right",
         autoClose: 3000,
       });
+    } finally {
+      setShowConfirmDelete(false);
+      setParticipanteToDelete(null);
     }
   };
 
@@ -586,6 +594,20 @@ export default function ParticipantesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setParticipanteToDelete(null);
+        }}
+        onConfirm={confirmRemoveParticipante}
+        title="Remover Participante"
+        message={`Deseja realmente remover ${participanteToDelete?.pessoa_nome || 'este participante'}?`}
+        confirmText="Remover"
+        cancelText="Cancelar"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 }
