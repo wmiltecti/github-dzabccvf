@@ -112,12 +112,12 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
               <li key={step.id} className="relative flex-1">
                 {/* Connector Arrow */}
                 {stepIdx !== steps.length - 1 && (
-                  <div className="absolute top-4 left-1/2 -translate-y-1/2 ml-4">
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 ml-4">
                     <span
-                      className={`text-2xl transition-colors duration-300 ${
+                      className={`text-2xl leading-none transition-colors duration-300 ${
                         getStepStatus(step.id + 1) === 'completed' ||
                         getStepStatus(step.id + 1) === 'current'
-                          ? 'text-green-600'
+                          ? 'text-green-800'
                           : 'text-gray-300'
                       }`}
                     >
