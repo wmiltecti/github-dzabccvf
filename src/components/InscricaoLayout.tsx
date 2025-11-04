@@ -26,14 +26,18 @@ export default function InscricaoLayout() {
     '/inscricao/participantes': 1,
     '/inscricao/imovel': 2,
     '/inscricao/empreendimento': 3,
-    '/inscricao/revisao': 4
+    '/inscricao/formulario': 4,
+    '/inscricao/documentacao': 5,
+    '/inscricao/revisao': 6
   };
 
   const stepToRoute = {
     1: '/inscricao/participantes',
     2: '/inscricao/imovel',
     3: '/inscricao/empreendimento',
-    4: '/inscricao/revisao'
+    4: '/inscricao/formulario',
+    5: '/inscricao/documentacao',
+    6: '/inscricao/revisao'
   };
 
   // Update current step based on route
