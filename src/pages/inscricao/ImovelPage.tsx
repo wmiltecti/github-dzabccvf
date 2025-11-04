@@ -225,7 +225,7 @@ export default function ImovelPage() {
                   
                   {property.nome && (
                     <p className="text-sm text-gray-700 mt-1">
-                      <span className="font-medium">Nome:</span> {property.nome}
+                      <span className="font-medium">Nome do Imóvel:</span> {property.nome}
                     </p>
                   )}
                   
@@ -471,7 +471,7 @@ export default function ImovelPage() {
 
                           {selectedImovel.nome && (
                             <p className="text-sm text-gray-700 mb-1">
-                              <span className="font-medium">Nome:</span> {selectedImovel.nome}
+                              <span className="font-medium">Nome do Imóvel:</span> {selectedImovel.nome}
                             </p>
                           )}
 
