@@ -280,12 +280,12 @@ export default function Dashboard() {
     // { id: 'geo', name: 'Visualização Geo', icon: MapPin }
   ];
 
-  const adminDirectSections = [
+  const generalSubSections = [
     { id: 'pessoas-fisicas', name: 'Pessoas Físicas' },
     { id: 'pessoas-juridicas', name: 'Pessoas Jurídicas' }
   ];
 
-  const generalSubSections = [
+  const adminDirectSections = [
     { id: 'property-types', name: 'Tipos de Imóvel' },
     { id: 'process-types', name: 'Tipos de Processo' },
     { id: 'license-types', name: 'Tipos de Licença' },
@@ -879,33 +879,11 @@ export default function Dashboard() {
 
                 {adminExpanded && (
                   <div className="mt-1 space-y-1 pl-6 sm:pl-8">
-                    {adminDirectSections.map((subItem) => (
-                      <button
-                        key={subItem.id}
-                        onClick={() => {
-                          setActiveTab(`admin-${subItem.id}`);
-                          setSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                          activeTab === `admin-${subItem.id}`
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <img
-                          src={submenuIcon}
-                          alt=""
-                          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
-                        />
-                        <span className="truncate">{subItem.name}</span>
-                      </button>
-                    ))}
-
                     <div>
                       <button
                         onClick={() => setGeneralExpanded(!generalExpanded)}
                         className={`w-full flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                          activeTab.startsWith('admin-') && !activeTab.match(/admin-(pessoas-fisicas|pessoas-juridicas)/)
+                          activeTab.match(/admin-(pessoas-fisicas|pessoas-juridicas)/)
                             ? 'bg-gray-100 text-gray-900'
                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
@@ -923,7 +901,7 @@ export default function Dashboard() {
                       </button>
 
                       {generalExpanded && (
-                        <div className="mt-1 space-y-1 pl-6 sm:pl-8 max-h-64 overflow-y-auto">
+                        <div className="mt-1 space-y-1 pl-6 sm:pl-8">
                           {generalSubSections.map((subItem) => (
                             <button
                               key={subItem.id}
@@ -948,6 +926,28 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
+
+                    {adminDirectSections.map((subItem) => (
+                      <button
+                        key={subItem.id}
+                        onClick={() => {
+                          setActiveTab(`admin-${subItem.id}`);
+                          setSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                          activeTab === `admin-${subItem.id}`
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                      >
+                        <img
+                          src={submenuIcon}
+                          alt=""
+                          className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mr-2 sm:mr-3"
+                        />
+                        <span className="truncate">{subItem.name}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
