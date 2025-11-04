@@ -213,12 +213,14 @@ export default function ImovelPage() {
                     </span>
                   </div>
                   
-                  {property.address && (
+                  {property.address && (property.address.logradouro || property.address.municipio) ? (
                     <p className="text-sm text-gray-600">
                       {property.address.logradouro && `${property.address.logradouro}`}
                       {property.address.numero && `, ${property.address.numero}`}
                       {property.address.bairro && ` - ${property.address.bairro}`}
                     </p>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">Endereço não cadastrado</p>
                   )}
                   
                   {property.nome && (
