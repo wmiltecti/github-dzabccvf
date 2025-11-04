@@ -44,9 +44,10 @@ export default function EmpreendimentoPage() {
   };
 
   const handleNext = () => {
-    // TODO: Validação temporariamente desabilitada para aprovação de design
-    // Reativar validação: if (canProceedToStep(4))
-    navigate('/inscricao/revisao');
+    // TODO: Re-habilitar validação após aprovação de design
+    // if (canProceedToStep(4)) {
+      navigate('/inscricao/formulario');
+    // }
   };
 
   const handleBack = () => {
@@ -56,9 +57,9 @@ export default function EmpreendimentoPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Atividade do Empreendimento</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Atividade</h2>
         <p className="text-gray-600">
-          Selecione a atividade principal que será desenvolvida no empreendimento.
+          Selecione a atividade principal que será desenvolvida.
         </p>
       </div>
 
@@ -178,7 +179,7 @@ export default function EmpreendimentoPage() {
           onClick={handleNext}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
-          Próximo: Revisão
+          Próximo: Formulário
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
