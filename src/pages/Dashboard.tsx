@@ -261,7 +261,7 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'inscricoes', name: 'Inscrições', icon: FileCheck }
+    { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck }
   ];
 
   const geralSubSections = [
@@ -299,15 +299,6 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
         <div className="flex space-x-2 sm:space-x-3">
-          <button
-            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => setShowNewProcessModal(true)}
-            title="Criar novo processo"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Novo Processo</span>
-            <span className="xs:hidden">Processo</span>
-          </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
             onClick={() => navigate('/inscricao/participantes')}
