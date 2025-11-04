@@ -182,10 +182,22 @@ export default function ParticipantesPage() {
       });
 
       console.log('🔷 handleAddParticipante - Sucesso! Recarregando lista...');
+
+      const nomeParticipante = selectedPessoa.nome || selectedPessoa.razaosocial;
+      const mensagem = `${nomeParticipante} adicionado como ${trimmedPapel}`;
+
+      console.log('🔔 Exibindo toast:', mensagem);
+      toast.success(mensagem, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
       await loadParticipantes();
       handleCloseModal();
-
-      toast.success(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${trimmedPapel}`);
     } catch (err: any) {
       console.error('🔷 handleAddParticipante - Erro:', err);
       setError(err.message || 'Erro ao adicionar participante');
@@ -203,9 +215,18 @@ export default function ParticipantesPage() {
     try {
       await removeParticipanteProcesso(processoId, participante.id);
       await loadParticipantes();
-      toast.success('Participante removido com sucesso');
+
+      console.log('🔔 Exibindo toast: Participante removido');
+      toast.success('Participante removido com sucesso', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao remover participante');
+      console.log('🔔 Exibindo toast de erro:', err.message);
+      toast.error(err.message || 'Erro ao remover participante', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
