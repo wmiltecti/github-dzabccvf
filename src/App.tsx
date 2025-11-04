@@ -21,6 +21,29 @@ import RevisaoPage from './pages/inscricao/RevisaoPage';
 function AppRoutes() {
   // Processa auto-login via URL
   useAutoLogin();
+  
+  // Verifica se está em processo de auto-login
+  const urlParams = new URLSearchParams(window.location.search);
+  const isAutoLoginInProgress = urlParams.has('token') && urlParams.has('userId');
+  
+  // Durante auto-login, mostra loading ao invés de redirecionar
+  if (isAutoLoginInProgress) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only">Processando login...</span>
+        </div>
+        <p>Processando autenticação automática...</p>
+      </div>
+    );
+  }
 
   return (
     <Routes>

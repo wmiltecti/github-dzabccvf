@@ -19,6 +19,17 @@ export function useAutoLogin() {
   useEffect(() => {
     const processAutoLogin = () => {
       try {
+        // Só executa se não foi processado antes (evita loop)
+        const alreadyProcessed = sessionStorage.getItem('auto_login_processed');
+        if (alreadyProcessed) {
+          console.log('[Auto-Login] Já processado anteriormente, pulando...');
+          return;
+        }
+
+        // Log da URL completa para debug
+        console.log('[Auto-Login] URL completa:', window.location.href);
+        console.log('[Auto-Login] Query string:', window.location.search);
+        
         // Captura parâmetros da URL
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
@@ -26,13 +37,23 @@ export function useAutoLogin() {
         const userId = urlParams.get('userId');
         const email = urlParams.get('email');
 
+        // Log dos parâmetros capturados
+        console.log('[Auto-Login] Parâmetros capturados:', {
+          token: token ? `${token.substring(0, 20)}...` : 'null',
+          userId: userId || 'null',
+          nome: nome || 'null',
+          email: email || 'null'
+        });
+
         // Verifica se tem os parâmetros mínimos necessários
         if (!token || !userId) {
-          console.log('[Auto-Login] Parâmetros insuficientes na URL');
+          console.warn('[Auto-Login] ❌ Parâmetros insuficientes na URL');
+          console.warn('[Auto-Login] Token presente:', !!token);
+          console.warn('[Auto-Login] UserId presente:', !!userId);
           return;
         }
 
-        console.log('[Auto-Login] Detectados parâmetros de login automático');
+        console.log('[Auto-Login] ✅ Detectados parâmetros de login automático');
         console.log('[Auto-Login] UserId:', userId);
         console.log('[Auto-Login] Nome:', nome);
         console.log('[Auto-Login] Email:', email);
@@ -84,10 +105,8 @@ export function useAutoLogin() {
         // 7. Força atualização da página para carregar com autenticação
         console.log('[Auto-Login] ✓ Recarregando aplicação autenticada...');
         
-        // Aguarda um pequeno delay para garantir que tudo foi salvo
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100);
+        // Redireciona imediatamente para a raiz sem delay
+        window.location.replace('/');
 
       } catch (error) {
         console.error('[Auto-Login] Erro ao processar auto-login:', error);
@@ -99,11 +118,8 @@ export function useAutoLogin() {
       }
     };
 
-    // Só executa se não foi processado antes (evita loop)
-    const alreadyProcessed = sessionStorage.getItem('auto_login_processed');
-    if (!alreadyProcessed) {
-      processAutoLogin();
-    }
+    // Executa o processamento
+    processAutoLogin();
   }, [navigate]);
 }
 
