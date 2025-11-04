@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Trash2, User, Building, FileText, ArrowRight, AlertTriangle, X, Search, Globe } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { searchPessoas, SearchPessoaResult } from '../../lib/api/people';
 import {
   addParticipanteProcesso,
@@ -184,7 +185,7 @@ export default function ParticipantesPage() {
       await loadParticipantes();
       handleCloseModal();
 
-      alert(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${trimmedPapel}`);
+      toast.success(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${trimmedPapel}`);
     } catch (err: any) {
       console.error('🔷 handleAddParticipante - Erro:', err);
       setError(err.message || 'Erro ao adicionar participante');
@@ -202,9 +203,9 @@ export default function ParticipantesPage() {
     try {
       await removeParticipanteProcesso(processoId, participante.id);
       await loadParticipantes();
-      alert('Participante removido com sucesso');
+      toast.success('Participante removido com sucesso');
     } catch (err: any) {
-      alert(err.message || 'Erro ao remover participante');
+      toast.error(err.message || 'Erro ao remover participante');
     }
   };
 
