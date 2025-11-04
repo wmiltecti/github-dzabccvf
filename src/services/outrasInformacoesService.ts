@@ -110,7 +110,7 @@ export async function saveOutrasInformacoes(
   console.log('📤 Payload a ser enviado para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}processos/${processoId}/outras-informacoes`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/processos/${processoId}/outras-informacoes`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {
@@ -146,7 +146,7 @@ export async function loadOutrasInformacoes(processoId: string): Promise<any | n
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}processos/${processoId}/outras-informacoes`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/processos/${processoId}/outras-informacoes`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetch(apiUrl, {

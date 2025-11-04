@@ -184,7 +184,7 @@ export async function saveResiduoGrupoA(processoId: string, formData: any): Prom
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-a`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-a`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -217,7 +217,7 @@ export async function loadResiduosGrupoA(processoId: string): Promise<any[]> {
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-a?processo_id=${processoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-a?processo_id=${processoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -267,7 +267,7 @@ export async function updateResiduoGrupoA(residuoId: string, formData: any, proc
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-a/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-a/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -299,7 +299,7 @@ export async function deleteResiduoGrupoA(residuoId: string): Promise<void> {
   console.log('🆔 Resíduo ID:', residuoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-a/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-a/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -390,7 +390,7 @@ export async function saveResiduoGrupoB(processoId: string, formData: any): Prom
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-b`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-b`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -423,7 +423,7 @@ export async function loadResiduosGrupoB(processoId: string): Promise<any[]> {
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-b?processo_id=${processoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-b?processo_id=${processoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -473,7 +473,7 @@ export async function updateResiduoGrupoB(residuoId: string, formData: any, proc
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-b/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-b/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -505,7 +505,7 @@ export async function deleteResiduoGrupoB(residuoId: string): Promise<void> {
   console.log('🆔 Resíduo ID:', residuoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/grupo-b/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/grupo-b/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -606,7 +606,7 @@ export async function saveResiduoGeral(processoId: string, formData: any): Promi
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/gerais`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/gerais`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -639,7 +639,7 @@ export async function loadResiduosGerais(processoId: string): Promise<any[]> {
   console.log('📝 Processo ID:', processoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/gerais?processo_id=${processoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/gerais?processo_id=${processoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -689,7 +689,7 @@ export async function updateResiduoGeral(residuoId: string, formData: any, proce
   console.log('📤 Payload para API:', payload);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/gerais/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/gerais/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
@@ -721,7 +721,7 @@ export async function deleteResiduoGeral(residuoId: string): Promise<void> {
   console.log('🆔 Resíduo ID:', residuoId);
 
   try {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}residuos/gerais/${residuoId}`;
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/residuos/gerais/${residuoId}`;
     console.log('🌐 URL da API:', apiUrl);
 
     const response = await fetchWithRetry(apiUrl, {
