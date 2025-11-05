@@ -886,7 +886,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <header className="dark-header flex-shrink-0">
         <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -940,7 +940,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden p-3 sm:p-6">
+      <div className="flex-1 flex p-3 sm:p-6">
         <div className="dashboard-container flex gap-4 lg:gap-6 w-full mx-auto px-2 sm:px-4 lg:px-8">
         {sidebarOpen && (
           <div
@@ -1112,9 +1112,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <main className="flex-1 overflow-auto">
-            <div className="content-area p-3 sm:p-4 lg:p-6 h-full rounded-lg">
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1">
+            <div className="content-area p-3 sm:p-4 lg:p-6 rounded-lg">
               {renderContent()}
             </div>
           </main>
