@@ -952,7 +952,7 @@ export default function Dashboard() {
         <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 ${
           sidebarOpen ? 'sidebar-open' : ''
         }`}>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-[calc(100vh-80px)] sticky top-4">
             <div className="flex items-center px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between w-full">
                 <div className="ml-3">
@@ -964,7 +964,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <nav className="flex-1 px-4 py-6 space-y-1">
+            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {navigation.map((item) => {
                 return (
                   <button
