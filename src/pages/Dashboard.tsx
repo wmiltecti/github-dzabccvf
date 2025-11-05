@@ -492,17 +492,17 @@ export default function Dashboard() {
                   >
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
-                        ${proc.status === '2' ? 'bg-blue-100' : ''}
-                        ${proc.status === '3' ? 'bg-green-100' : ''}
-                        ${proc.status === '4' ? 'bg-red-100' : ''}
-                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                        ${proc.status === '1' ? 'bg-yellow-50/50' : ''}
+                        ${proc.status === '2' ? 'bg-blue-50/50' : ''}
+                        ${proc.status === '3' ? 'bg-green-50/50' : ''}
+                        ${proc.status === '4' ? 'bg-red-50/50' : ''}
+                        ${proc.status === undefined ? 'bg-blue-50/50' : ''}
                       `}>
-                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
-                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
-                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-400/60" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-400/60" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-400/60" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-400/60" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-blue-400/60" />}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -536,17 +536,17 @@ export default function Dashboard() {
                   >
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
-                        ${proc.status === '2' ? 'bg-blue-100' : ''}
-                        ${proc.status === '3' ? 'bg-green-100' : ''}
-                        ${proc.status === '4' ? 'bg-red-100' : ''}
-                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                        ${proc.status === '1' ? 'bg-yellow-50/50' : ''}
+                        ${proc.status === '2' ? 'bg-blue-50/50' : ''}
+                        ${proc.status === '3' ? 'bg-green-50/50' : ''}
+                        ${proc.status === '4' ? 'bg-red-50/50' : ''}
+                        ${proc.status === undefined ? 'bg-blue-50/50' : ''}
                       `}>
-                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
-                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
-                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-400/60" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-400/60" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-400/60" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-400/60" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-blue-400/60" />}
                       </div>
                     </div>
                     <div className="flex-1">
