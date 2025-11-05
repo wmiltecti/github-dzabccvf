@@ -46,6 +46,7 @@ export default function Dashboard() {
   const handleFilterStatus = (status: string | undefined) => {
     setFilterStatus(status);
     setSearchState({ results: [], loading: false, error: null, active: false });
+    setLoadingProcesses(true);
   };
   // Estados para busca de processos por protocolo
   const [searchProtocol, setSearchProtocol] = useState('');
