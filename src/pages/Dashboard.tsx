@@ -80,7 +80,7 @@ export default function Dashboard() {
   const [generalExpanded, setGeneralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
-  const [loadingProcesses, setLoadingProcesses] = useState(false);
+  const [loadingProcesses, setLoadingProcesses] = useState(true);
   const [showNewProcessModal, setShowNewProcessModal] = useState(false);
   const [showProcessDetails, setShowProcessDetails] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
