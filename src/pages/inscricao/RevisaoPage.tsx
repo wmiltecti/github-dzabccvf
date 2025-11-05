@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { FileCheck, ArrowLeft, Send, Users, Home, Building, CheckCircle, AlertTriangle } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 // use o mesmo client do restante do app
 import { supabase } from '../../lib/supabase';
 
 // Services centralizados
 import { linkProperty, getParticipants, linkActivity } from '../../lib/api/process';
+
+// Blockchain
+import { sendToBlockchain } from '../../lib/utils/BlockchainUtils';
 
 export default function RevisaoPage() {
   const navigate = useNavigate();
@@ -93,12 +97,46 @@ export default function RevisaoPage() {
         .eq('id', processoId);
       if (updErr) throw new Error('Erro ao finalizar solicitação: ' + updErr.message);
 
-      alert('Solicitação submetida com sucesso!');
+      // 6) Registra no blockchain
+      try {
+        const blockchainData = {
+          processId,
+          propertyId,
+          participants: participants.map(p => ({
+            type: p.type,
+            role: p.role,
+            identifier: p.type === 'PF' ? p.cpf : p.cnpj,
+            name: p.type === 'PF' ? p.nome : p.razao_social,
+          })),
+          atividadeId,
+          property: property ? {
+            kind: property.kind,
+            address: property.address,
+          } : null,
+          timestamp: new Date().toISOString(),
+          status: 'submitted',
+        };
+
+        const jsonString = JSON.stringify(blockchainData);
+        const blockchainResult = await sendToBlockchain(jsonString, String(processId));
+
+        if (blockchainResult.success) {
+          console.log('Registrado no blockchain:', blockchainResult.hashBlock);
+          toast.success('Inscrição submetida e registrada no blockchain com sucesso!');
+        } else {
+          console.warn('Falha ao registrar no blockchain:', blockchainResult.error);
+          toast.warning('Inscrição submetida, mas houve um problema ao registrar no blockchain.');
+        }
+      } catch (blockchainError) {
+        console.error('Erro ao registrar no blockchain:', blockchainError);
+        toast.warning('Inscrição submetida, mas não foi possível registrar no blockchain.');
+      }
+
       reset();
       navigate('/');
     } catch (error) {
       console.error('Error submitting inscription:', error);
-      alert('Erro ao submeter solicitação: ' + (error as Error).message);
+      toast.error('Erro ao submeter inscrição: ' + (error as Error).message);
     } finally {
       setSubmitting(false);
     }

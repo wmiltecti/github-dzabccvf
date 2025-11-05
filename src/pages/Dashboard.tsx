@@ -75,7 +75,7 @@ export default function Dashboard() {
   const { user, userMetadata, signOut, loading, isConfigured, isSupabaseReady } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminExpanded, setAdminExpanded] = useState(false);
-  const [geralExpanded, setGeralExpanded] = useState(false);
+  const [generalExpanded, setGeneralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
@@ -317,21 +317,21 @@ export default function Dashboard() {
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck }
   ];
 
-  const geralSubSections = [
+  const otherNavigation = [
+    // { id: 'processes', name: 'Processos', icon: FileText },
+    // { id: 'form-wizard', name: 'Formulário', icon: FileText },
+    // { id: 'companies', name: 'Empresas', icon: Building2 },
+    // { id: 'reports', name: 'Relatórios', icon: BarChart3 },
+    // { id: 'compliance', name: 'Conformidade', icon: Shield },
+    // { id: 'geo', name: 'Visualização Geo', icon: MapPin }
+  ];
+
+  const generalSubSections = [
     { id: 'pessoas-fisicas', name: 'Pessoas Físicas' },
     { id: 'pessoas-juridicas', name: 'Pessoas Jurídicas' }
   ];
 
-  const otherNavigation = [
-    // { id: 'processes', name: 'Processos', icon: FileText }, // Oculto temporariamente para refinamento com analista
-    { id: 'form-wizard', name: 'Formulário', icon: FileText },
-    { id: 'companies', name: 'Empresas', icon: Building2 },
-    { id: 'reports', name: 'Relatórios', icon: BarChart3 },
-    { id: 'compliance', name: 'Conformidade', icon: Shield },
-    { id: 'geo', name: 'Visualização Geo', icon: MapPin }
-  ];
-
-  const adminSubSections = [
+  const adminDirectSections = [
     { id: 'property-types', name: 'Tipos de Imóvel' },
     { id: 'process-types', name: 'Tipos de Processo' },
     { id: 'license-types', name: 'Tipos de Licença' },
@@ -834,41 +834,45 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
-      case 'processes': return renderProcesses();
+      // case 'processes': return renderProcesses();
       case 'inscricoes': return renderInscricoes();
-      case 'form-wizard': return <FormWizard />;
-      case 'companies': return (
-        <div className="text-center py-8 sm:py-12 px-4">
-          <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Cadastro de Empresas</h2>
-          <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
-        </div>
-      );
-      case 'reports': return (
-        <div className="text-center py-8 sm:py-12 px-4">
-          <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Relatórios Gerenciais</h2>
-          <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
-        </div>
-      );
-      case 'compliance': return (
-        <div className="text-center py-8 sm:py-12 px-4">
-          <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Monitoramento de Conformidade</h2>
-          <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
-        </div>
-      );
-      case 'geo': return (
-        <GeoVisualization
-          processes={processes}
-          companies={[]}
-        />
-      );
-      case 'geral-pessoas-fisicas': return <PessoasFisicas />;
-      case 'geral-pessoas-juridicas': return <PessoasJuridicas />;
+      // case 'form-wizard': return <FormWizard />;
+      // case 'companies': return (
+      //   <div className="text-center py-8 sm:py-12 px-4">
+      //     <Building2 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+      //     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Cadastro de Empresas</h2>
+      //     <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
+      //   </div>
+      // );
+      // case 'reports': return (
+      //   <div className="text-center py-8 sm:py-12 px-4">
+      //     <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+      //     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Relatórios Gerenciais</h2>
+      //     <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
+      //   </div>
+      // );
+      // case 'compliance': return (
+      //   <div className="text-center py-8 sm:py-12 px-4">
+      //     <Shield className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+      //     <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">Monitoramento de Conformidade</h2>
+      //     <p className="text-sm sm:text-base text-gray-600">Módulo em desenvolvimento</p>
+      //   </div>
+      // );
+      // case 'geo': return (
+      //   <GeoVisualization
+      //     processes={processes}
+      //     companies={[]}
+      //   />
+      // );
       default:
         if (activeTab.startsWith('admin-')) {
           const adminSection = activeTab.replace('admin-', '');
+          if (adminSection === 'pessoas-fisicas') {
+            return <PessoasFisicas />;
+          }
+          if (adminSection === 'pessoas-juridicas') {
+            return <PessoasJuridicas />;
+          }
           return <AdminDashboard initialSection={adminSection} />;
         }
         return renderDashboard();
@@ -1076,8 +1080,56 @@ export default function Dashboard() {
                 </button>
 
                 {adminExpanded && (
-                  <div className="mt-1 space-y-1 pl-8 max-h-64 overflow-y-auto">
-                    {adminSubSections.map((subItem) => (
+                  <div className="mt-1 space-y-1 pl-6 sm:pl-8">
+                    <div>
+                      <button
+                        onClick={() => setGeneralExpanded(!generalExpanded)}
+                        className={`w-full flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                          activeTab.match(/admin-(pessoas-fisicas|pessoas-juridicas)/)
+                            ? 'bg-gray-100 text-gray-900'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={arrowIcon}
+                            alt="Geral"
+                            className={`w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mr-2 sm:mr-3 transition-transform duration-200 ${
+                              generalExpanded ? 'rotate-90' : ''
+                            }`}
+                          />
+                          <span className="truncate">Geral</span>
+                        </div>
+                      </button>
+
+                      {generalExpanded && (
+                        <div className="mt-1 space-y-1 pl-6 sm:pl-8">
+                          {generalSubSections.map((subItem) => (
+                            <button
+                              key={subItem.id}
+                              onClick={() => {
+                                setActiveTab(`admin-${subItem.id}`);
+                                setSidebarOpen(false);
+                              }}
+                              className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                                activeTab === `admin-${subItem.id}`
+                                  ? 'bg-green-100 text-green-700 border border-green-200'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              }`}
+                            >
+                              <img
+                                src={submenuIcon}
+                                alt=""
+                                className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mr-2 sm:mr-3"
+                              />
+                              <span className="truncate">{subItem.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {adminDirectSections.map((subItem) => (
                       <button
                         key={subItem.id}
                         onClick={() => {
@@ -1126,18 +1178,6 @@ export default function Dashboard() {
         onClose={() => setShowProcessDetails(false)}
         process={selectedProcess}
         onUpdateProcess={handleUpdateProcess}
-      />
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
       />
     </div>
   );

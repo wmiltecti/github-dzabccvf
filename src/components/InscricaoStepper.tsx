@@ -116,62 +116,61 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <nav aria-label="Progress">
-        <ol className="flex items-center justify-between max-w-4xl mx-auto">
+        <ol className="flex items-center justify-center gap-2 max-w-4xl mx-auto">
           {steps.map((step, stepIdx) => {
             const status = getStepStatus(step.id);
             const styles = getStepStyles(status);
             const Icon = step.icon;
-            
+
             return (
-              <li key={step.id} className="relative flex-1">
-                {/* Connector Line */}
-                {stepIdx !== steps.length - 1 && (
-                  <div className="absolute top-4 left-1/2 w-full h-0.5 bg-gray-200 -translate-y-1/2 ml-4">
-                    <div 
-                      className={`h-full transition-all duration-300 ${
-                        getStepStatus(step.id + 1) === 'completed' || 
-                        getStepStatus(step.id + 1) === 'current' 
-                          ? 'bg-green-600' 
-                          : 'bg-gray-200'
-                      }`}
-                    />
-                  </div>
-                )}
-                
-                {/* Step Content */}
-                <div 
-                  className={`relative flex flex-col items-center text-center ${styles.container}`}
-                  onClick={() => {
-                    if (status !== 'disabled' && onStepClick) {
-                      onStepClick(step.id);
-                    }
-                  }}
-                >
-                  {/* Step Circle */}
-                  <div className={`
-                    w-8 h-8 rounded-full border-2 flex items-center justify-center mb-2 transition-all duration-200
-                    ${styles.circle}
-                  `}>
-                    {status === 'completed' ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : status === 'current' ? (
-                      <Icon className="w-4 h-4" />
-                    ) : (
-                      <span className="text-sm font-medium">{step.id}</span>
-                    )}
-                  </div>
-                  
-                  {/* Step Text */}
-                  <div className="min-w-0">
-                    <p className={`text-sm font-medium ${styles.text}`}>
+              <React.Fragment key={step.id}>
+                <li className="flex items-center gap-2">
+                  {/* Step Content */}
+                  <div
+                    className={`flex items-center gap-2 ${styles.container}`}
+                    onClick={() => {
+                      if (status !== 'disabled' && onStepClick) {
+                        onStepClick(step.id);
+                      }
+                    }}
+                  >
+                    {/* Step Circle */}
+                    <div className={`
+                      w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200
+                      ${styles.circle}
+                    `}>
+                      {status === 'completed' ? (
+                        <CheckCircle className="w-5 h-5" />
+                      ) : status === 'current' ? (
+                        <Icon className="w-4 h-4" />
+                      ) : (
+                        <span className="text-sm font-medium">{step.id}</span>
+                      )}
+                    </div>
+
+                    {/* Step Text */}
+                    <p className={`text-sm font-medium whitespace-nowrap ${styles.text}`}>
                       {step.name}
                     </p>
-                    <p className={`text-xs mt-1 ${styles.description} hidden sm:block`}>
-                      {step.description}
-                    </p>
                   </div>
-                </div>
-              </li>
+                </li>
+
+                {/* Connector Arrow */}
+                {stepIdx !== steps.length - 1 && (
+                  <li>
+                    <span
+                      className={`text-xl leading-none transition-colors duration-300 ${
+                        getStepStatus(step.id + 1) === 'completed' ||
+                        getStepStatus(step.id + 1) === 'current'
+                          ? 'text-green-800'
+                          : 'text-gray-300'
+                      }`}
+                    >
+                      ➤
+                    </span>
+                  </li>
+                )}
+              </React.Fragment>
             );
           })}
         </ol>
