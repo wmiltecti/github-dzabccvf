@@ -32,7 +32,7 @@ export interface DashboardProcessosResponse {
   limit: number;
 }
 
-const BASE_URL = 'http://localhost:8000/api/v1/processos';
+const BASE_URL = '/processos';
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
