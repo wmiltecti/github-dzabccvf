@@ -138,6 +138,9 @@ export default function StepRevisao({
       } catch (error) {
         console.warn('Erro ao atualizar status:', error);
       }
+
+      console.log('✅ [StepRevisao] Save completo, navegando para Documentação...');
+      onFinish();
     } else if (savedCount > 0 && failedCount > 0) {
       toast.warning(`${savedCount} etapa(s) salva(s), mas ${failedCount} falharam.`);
       console.error('Erros:', errors);

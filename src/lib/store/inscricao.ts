@@ -3,8 +3,12 @@ import { persist } from 'zustand/middleware';
 import type { InscricaoState, Participant, Property, PropertyTitle } from '../../types/inscription';
 
 interface InscricaoStore extends InscricaoState {
+  // User info (para auditoria)
+  userId: string | null;
+  
   // Actions
-  setProcessId: (id: number) => void;
+  setProcessId: (id: string) => void;
+  setUserId: (id: string) => void;
   setPropertyId: (id: number) => void;
   setParticipants: (participants: Participant[]) => void;
   addParticipant: (participant: Participant) => void;
@@ -18,6 +22,8 @@ interface InscricaoStore extends InscricaoState {
   setCurrentStep: (step: number) => void;
   setProcessInitializing: (initializing: boolean) => void;
   reset: () => void;
+  startNewInscricao: () => void; // Limpa tudo para nova solicitação
+  loadInscricao: (processId: string) => void; // Carrega solicitação existente
 
   // Computed
   isStepComplete: (step: number) => boolean;
@@ -37,6 +43,7 @@ const initialState: InscricaoState = {
 
 const initialStoreState = {
   ...initialState,
+  userId: null,
   isProcessInitializing: false
 };
 
@@ -46,7 +53,15 @@ export const useInscricaoStore = create<InscricaoStore>()(
       ...initialStoreState,
 
       // Actions
-      setProcessId: (id: number) => set({ processId: id, isProcessInitializing: false }),
+      setProcessId: (id: string) => {
+        console.log('📝 [Store] Setting processId:', id);
+        set({ processId: id, isProcessInitializing: false });
+      },
+
+      setUserId: (id: string) => {
+        console.log('👤 [Store] Setting userId:', id);
+        set({ userId: id });
+      },
 
       setPropertyId: (id: number) => set({ propertyId: id }),
 
@@ -83,7 +98,33 @@ export const useInscricaoStore = create<InscricaoStore>()(
 
       setProcessInitializing: (initializing: boolean) => set({ isProcessInitializing: initializing }),
 
-      reset: () => set(initialStoreState),
+      reset: () => {
+        console.log('🔄 [Store] Resetting all state');
+        set(initialStoreState);
+      },
+
+      // Nova inscrição: limpa tudo exceto userId
+      startNewInscricao: () => {
+        const currentUserId = get().userId;
+        console.log('🆕 [Store] Starting new inscription, keeping userId:', currentUserId);
+        set({
+          ...initialStoreState,
+          userId: currentUserId, // Mantém o userId para auditoria
+          processId: null,
+          isProcessInitializing: false
+        });
+      },
+
+      // Carregar inscrição existente
+      loadInscricao: (processId: string) => {
+        console.log('📂 [Store] Loading existing inscription:', processId);
+        set({ 
+          processId,
+          currentStep: 1,
+          isProcessInitializing: false
+        });
+        // Aqui você pode adicionar lógica para carregar dados do backend
+      },
 
       // Computed
       isStepComplete: (step: number) => {
@@ -94,9 +135,15 @@ export const useInscricaoStore = create<InscricaoStore>()(
                    state.participants.some(p => p.role === 'REQUERENTE');
           case 2: // Imóvel
             return !!state.property && !!state.propertyId;
-          case 3: // Empreendimento
+          case 3: // Atividade
             return !!state.atividadeId;
-          case 4: // Revisão
+          case 4: // Formulário
+            // TODO: Adicionar validação se formulário foi preenchido
+            return true; // Por enquanto sempre true
+          case 5: // Documentação
+            // TODO: Adicionar validação se docs foram enviados
+            return true; // Por enquanto sempre true
+          case 6: // Revisão
             return true; // Always complete if reached
           default:
             return false;
@@ -118,6 +165,7 @@ export const useInscricaoStore = create<InscricaoStore>()(
       name: 'inscricao-storage',
       partialize: (state) => ({
         processId: state.processId,
+        userId: state.userId, // Persiste userId para auditoria
         propertyId: state.propertyId,
         participants: state.participants,
         property: state.property,

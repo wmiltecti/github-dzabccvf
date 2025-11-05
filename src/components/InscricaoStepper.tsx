@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Home, Building, FileCheck, CheckCircle, Circle } from 'lucide-react';
+import { Users, Home, Building, FileText, Upload, FileCheck, CheckCircle, Circle } from 'lucide-react';
 import { useInscricaoStore } from '../lib/store/inscricao';
 
 interface Step {
@@ -27,13 +27,27 @@ const steps: Step[] = [
   },
   {
     id: 3,
-    name: 'Empreendimento',
+    name: 'Atividade',
     description: 'Atividade e detalhes do projeto',
     icon: Building,
     path: '/inscricao/empreendimento'
   },
   {
     id: 4,
+    name: 'Formulário',
+    description: 'Informações técnicas detalhadas',
+    icon: FileText,
+    path: '/inscricao/formulario'
+  },
+  {
+    id: 5,
+    name: 'Documentação',
+    description: 'Upload de documentos necessários',
+    icon: Upload,
+    path: '/inscricao/documentacao'
+  },
+  {
+    id: 6,
     name: 'Revisão',
     description: 'Conferir dados e finalizar',
     icon: FileCheck,

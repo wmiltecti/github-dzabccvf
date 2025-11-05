@@ -63,13 +63,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
         if (mounted) {
           if (error) {
             console.warn('Auth session error:', error.message);
           }
           setSession(session);
-          setUser(session?.user ?? null);
+          if (session?.user) {
+            setUser(session.user);
+          } else {
+            // Tenta buscar usuário do localStorage se não houver sessão ativa
+            const localUserRaw = localStorage.getItem('auth_user');
+            if (localUserRaw) {
+              try {
+                const localUser = JSON.parse(localUserRaw);
+                // Cria um objeto mínimo para user
+                setUser({
+                  id: localUser.id || localUser.userId,
+                  email: localUser.email || '',
+                  user_metadata: { nome: localUser.nome },
+                  aud: '',
+                  created_at: '',
+                } as any);
+              } catch (e) {
+                setUser(null);
+              }
+            } else {
+              setUser(null);
+            }
+          }
           setLoading(false);
         }
       } catch (err) {

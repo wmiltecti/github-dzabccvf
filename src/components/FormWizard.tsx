@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import http from '../lib/api/http';
 import {
   FileText,
   Zap,
@@ -90,11 +91,16 @@ const steps: Step[] = [
   }
 ];
 
-export default function FormWizard() {
+interface FormWizardProps {
+  processoId?: string; // Processo ID passado externamente (opcional para retrocompatibilidade)
+  onComplete?: () => void; // Callback quando formulário é completado
+}
+
+export default function FormWizard({ processoId: externalProcessoId, onComplete }: FormWizardProps = {}) {
   // React state local (sem persistência)
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<any>({});
-  const [processoId, setProcessoId] = useState<string | null>(null);
+  const [processoId, setProcessoId] = useState<string | null>(externalProcessoId || null);
   
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
@@ -126,8 +132,15 @@ export default function FormWizard() {
     }));
   };
 
-  // Criar processo ao montar o componente
+  // Criar processo ao montar o componente (apenas se não foi passado externamente)
   useEffect(() => {
+    // Se processoId foi passado como prop, usa ele e não cria novo
+    if (externalProcessoId) {
+      console.log('📥 [FormWizard] Usando processoId externo:', externalProcessoId);
+      setProcessoId(externalProcessoId);
+      return;
+    }
+
     const initializeProcesso = async () => {
       if (processoId) return; // se já tem, sai
       
@@ -159,7 +172,7 @@ export default function FormWizard() {
     };
 
     initializeProcesso();
-  }, []); // Executa apenas uma vez ao montar
+  }, [externalProcessoId]); // Re-executa se processoId externo mudar
 
 // Carregar dados existentes quando o processo já existe
 useEffect(() => {
@@ -547,24 +560,9 @@ const saveStep2ToAPI = async () => {
 
     console.log("🔎 Payload da Aba 2 - Uso de Recursos e Energia:", payload);
 
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}uso-recursos-energia`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      }
-    );
+    const response = await http.post('/uso-recursos-energia', payload);
 
-    if (!response.ok) {
-      const erro = await response.json();
-      throw new Error(erro.detail || 'Erro ao salvar dados da Aba 2');
-    }
-
-    const resultado = await response.json();
-    console.log('✅ Aba 2 salva com sucesso:', resultado);
+    console.log('✅ Aba 2 salva com sucesso:', response.data);
     
     toast.success("Dados de Recursos e Energia salvos com sucesso!");
   } catch (error: any) {
@@ -851,7 +849,16 @@ const saveStep2ToAPI = async () => {
               formData={formData}
               processoId={processoId}
               onNavigateToStep={setCurrentStep}
-              onFinish={() => setCurrentStep(1)}
+              onFinish={() => {
+                console.log('✅ [FormWizard] Formulário completado');
+                // Se há callback onComplete, chama ele
+                if (onComplete) {
+                  onComplete();
+                } else {
+                  // Comportamento padrão: volta para step 1
+                  setCurrentStep(1);
+                }
+              }}
               saveStepToAPI={saveStepToAPI}
               saveStep2ToAPI={saveStep2ToAPI}
               saveStep3ToAPI={saveStep3ToAPI}

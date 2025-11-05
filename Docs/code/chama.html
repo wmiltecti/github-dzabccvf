@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Automático</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0078D4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+
+  <form id="loginForm">
+    <h2>Login com CPF</h2>
+    <label for="cpf">CPF:</label>
+    <input type="text" id="cpf" name="cpf" required placeholder="Digite seu CPF">
+
+    <label for="senha">Senha:</label>
+    <input type="password" id="senha" name="senha" required placeholder="Digite sua senha">
+
+    <button type="submit">Entrar</button>
+  </form>
+
+  <script>
+    async function fazerLogin(cpf, senha) {
+      try {
+        // Remove formatação do CPF
+        const cpfLimpo = cpf.replace(/\D/g, '');
+        
+        // Detecta a URL base (localhost ou produção)
+        const apiBase = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+          ? 'http://localhost:8000'
+          : 'https://fastapi-sandbox-ee3p.onrender.com';
+        
+        // URL de redirecionamento (bolt.host)
+        const boltHostUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+          ? 'http://localhost:5173'  // URL local do bolt.host em desenvolvimento
+          : 'https://wmiltecti-github-dza-lbqp.bolt.host';  // URL produção do bolt.host
+        
+        // Primeiro faz login no endpoint padrão para pegar o token
+        const loginResponse = await fetch(`${apiBase}/api/v1/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            login: cpfLimpo,
+            senha: senha,
+            tipoDeIdentificacao: 'CPF'
+          })
+        });
+
+        if (!loginResponse.ok) {
+          const error = await loginResponse.json();
+          alert(error.detail?.message || 'Login falhou. Verifique suas credenciais.');
+          return;
+        }
+
+        const data = await loginResponse.json();
+        
+        // Debug: mostra os dados antes de redirecionar
+        console.log('Login bem-sucedido:', data);
+        
+        // Redireciona com os dados recebidos usando a variável boltHostUrl
+        const redirectUrl = `${boltHostUrl}?token=${data.token}&nome=${encodeURIComponent(data.nome)}&userId=${data.userId}`;
+        console.log('Redirecionando para:', redirectUrl);
+        
+        // Abre em nova aba
+        window.open(redirectUrl);
+        
+      } catch (error) {
+        console.error('Erro ao fazer login:', error);
+        alert('Erro na requisição. Verifique suas credenciais e tente novamente.');
+      }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const cpf = document.getElementById('cpf').value;
+      const senha = document.getElementById('senha').value;
+      fazerLogin(cpf, senha);
+    });
+  </script>
+
+</body>
+</html>
