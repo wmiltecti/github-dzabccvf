@@ -97,6 +97,7 @@ export default function Dashboard() {
     aprovados: 0,
     rejeitados: 0
   });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -162,6 +163,7 @@ export default function Dashboard() {
   }, [filterStatus, page, limit]);
 
   const loadStats = React.useCallback(async () => {
+    setLoadingStats(true);
     try {
       const statsData = await getDashboardStats();
       setStats(statsData);
@@ -174,6 +176,8 @@ export default function Dashboard() {
         aprovados: 0,
         rejeitados: 0
       });
+    } finally {
+      setLoadingStats(false);
     }
   }, []);
 
@@ -350,6 +354,10 @@ export default function Dashboard() {
     { id: 'billing-configurations', name: 'Configuração de Cobrança' }
   ];
 
+  const Spinner = () => (
+    <div className="w-5 h-5 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
+  );
+
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* ============================================ */}
@@ -383,7 +391,14 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+              {loadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm text-gray-500">Carregando...</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+              )}
             </div>
           </div>
         </div>
@@ -398,7 +413,14 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+              {loadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm text-gray-500">Carregando...</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+              )}
             </div>
           </div>
         </div>
@@ -413,7 +435,14 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+              {loadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm text-gray-500">Carregando...</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+              )}
             </div>
           </div>
         </div>
@@ -428,7 +457,14 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+              {loadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm text-gray-500">Carregando...</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+              )}
             </div>
           </div>
         </div>
@@ -443,7 +479,14 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+              {loadingStats ? (
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm text-gray-500">Carregando...</span>
+                </div>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+              )}
             </div>
           </div>
         </div>
@@ -478,7 +521,10 @@ export default function Dashboard() {
             {/* Renderização condicional: pesquisa ativa tem prioridade */}
             {searchState.active ? (
               searchState.loading ? (
-                <div className="text-green-600 text-sm">Buscando processos...</div>
+                <div className="flex items-center justify-center gap-3 py-8">
+                  <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-green-600 text-sm font-medium">Buscando processos...</span>
+                </div>
               ) : searchState.error ? (
                 <div className="text-red-600 text-sm">{searchState.error}</div>
               ) : searchState.results.length === 0 ? (
@@ -524,6 +570,11 @@ export default function Dashboard() {
                   </div>
                 ))
               )
+            ) : loadingProcesses ? (
+              <div className="flex items-center justify-center gap-3 py-8">
+                <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-gray-600 text-sm font-medium">Carregando atividades...</span>
+              </div>
             ) : (
               processes.length === 0 ? (
                 <div className="text-gray-500 text-sm">Nenhuma atividade recente encontrada.</div>
