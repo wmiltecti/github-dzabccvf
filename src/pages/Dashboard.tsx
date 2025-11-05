@@ -372,17 +372,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
+  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => handleFilterStatus(undefined)}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total de Processos</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
           </div>
@@ -392,12 +392,12 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
           onClick={() => handleFilterStatus('1')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
               <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Pendentes</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
             </div>
           </div>
@@ -407,12 +407,12 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
           onClick={() => handleFilterStatus('2')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
               <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Em Análise</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
             </div>
           </div>
@@ -422,12 +422,12 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => handleFilterStatus('3')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
               <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Aprovadas</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
             </div>
           </div>
@@ -437,12 +437,12 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
           onClick={() => handleFilterStatus('4')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
               <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Rejeitadas</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
             </div>
           </div>
