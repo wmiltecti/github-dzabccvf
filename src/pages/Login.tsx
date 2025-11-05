@@ -63,8 +63,9 @@ export default function Login() {
           nome: result.nome,
           userId: result.userId
         });
-      }
-      navigate('/');
+  }
+  // Força reload para garantir que o dashboard leia os dados do localStorage e inicialize filtros/contexto
+  window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
     } finally {
