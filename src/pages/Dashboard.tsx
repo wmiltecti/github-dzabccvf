@@ -76,7 +76,6 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [generalExpanded, setGeneralExpanded] = useState(false);
-  const [geralExpanded, setGeralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
@@ -986,54 +985,6 @@ export default function Dashboard() {
                   </button>
                 );
               })}
-
-              <div>
-                <button
-                  onClick={() => setGeralExpanded(!geralExpanded)}
-                  className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium nav-item ${
-                    activeTab.startsWith('geral')
-                      ? 'active text-green-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <img
-                      src={arrowIcon}
-                      alt="Geral"
-                      className={`w-5 h-5 flex-shrink-0 mr-3 transition-transform duration-200 ${
-                        geralExpanded ? 'rotate-90' : ''
-                      }`}
-                    />
-                    Geral
-                  </div>
-                </button>
-
-                {geralExpanded && (
-                  <div className="mt-1 space-y-1 pl-8 max-h-64 overflow-y-auto">
-                    {geralSubSections.map((subItem) => (
-                      <button
-                        key={subItem.id}
-                        onClick={() => {
-                          setActiveTab(`geral-${subItem.id}`);
-                          setSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          activeTab === `geral-${subItem.id}`
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <img
-                          src={submenuIcon}
-                          alt=""
-                          className="w-5 h-5 flex-shrink-0 mr-3"
-                        />
-                        {subItem.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               {otherNavigation.map((item) => {
                 return (
