@@ -392,10 +392,7 @@ export default function Dashboard() {
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
               {loadingStats ? (
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span className="text-sm text-gray-500">Carregando...</span>
-                </div>
+                <Spinner />
               ) : (
                 <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
               )}
@@ -414,10 +411,7 @@ export default function Dashboard() {
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
               {loadingStats ? (
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span className="text-sm text-gray-500">Carregando...</span>
-                </div>
+                <Spinner />
               ) : (
                 <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
               )}
@@ -436,10 +430,7 @@ export default function Dashboard() {
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
               {loadingStats ? (
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span className="text-sm text-gray-500">Carregando...</span>
-                </div>
+                <Spinner />
               ) : (
                 <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
               )}
@@ -458,10 +449,7 @@ export default function Dashboard() {
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
               {loadingStats ? (
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span className="text-sm text-gray-500">Carregando...</span>
-                </div>
+                <Spinner />
               ) : (
                 <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
               )}
@@ -480,10 +468,7 @@ export default function Dashboard() {
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
               {loadingStats ? (
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span className="text-sm text-gray-500">Carregando...</span>
-                </div>
+                <Spinner />
               ) : (
                 <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
               )}
@@ -521,9 +506,8 @@ export default function Dashboard() {
             {/* Renderização condicional: pesquisa ativa tem prioridade */}
             {searchState.active ? (
               searchState.loading ? (
-                <div className="flex items-center justify-center gap-3 py-8">
+                <div className="flex items-center justify-center py-8">
                   <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-green-600 text-sm font-medium">Buscando processos...</span>
                 </div>
               ) : searchState.error ? (
                 <div className="text-red-600 text-sm">{searchState.error}</div>
@@ -571,9 +555,8 @@ export default function Dashboard() {
                 ))
               )
             ) : loadingProcesses ? (
-              <div className="flex items-center justify-center gap-3 py-8">
+              <div className="flex items-center justify-center py-8">
                 <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-gray-600 text-sm font-medium">Carregando atividades...</span>
               </div>
             ) : (
               processes.length === 0 ? (
