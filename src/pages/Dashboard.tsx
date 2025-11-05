@@ -44,9 +44,11 @@ import homeIcon from '/src/assets/icon_home.svg';
 export default function Dashboard() {
   // Limpa resultados da pesquisa ao clicar em filtro
   const handleFilterStatus = (status: string | undefined) => {
+    console.log('🎯 handleFilterStatus chamado - status:', status);
     setFilterStatus(status);
     setSearchState({ results: [], loading: false, error: null, active: false });
     setLoadingProcesses(true);
+    console.log('🎯 setLoadingProcesses(true) chamado em handleFilterStatus');
   };
   // Estados para busca de processos por protocolo
   const [searchProtocol, setSearchProtocol] = useState('');
@@ -146,6 +148,7 @@ export default function Dashboard() {
   };
 
   const loadProcesses = React.useCallback(async () => {
+    console.log('🔄 loadProcesses iniciado - setLoadingProcesses(true)');
     setLoadingProcesses(true);
     try {
       // Adapta para paginação
@@ -159,6 +162,7 @@ export default function Dashboard() {
       console.error('Error loading processes:', error);
       setProcesses([]);
     } finally {
+      console.log('✅ loadProcesses finalizado - setLoadingProcesses(false)');
       setLoadingProcesses(false);
     }
   }, [filterStatus, page, limit]);
@@ -505,6 +509,7 @@ export default function Dashboard() {
         <div className="p-4 sm:p-6">
           <div className="space-y-3 sm:space-y-4">
             {/* Renderização condicional: pesquisa ativa tem prioridade */}
+            {console.log('🎨 Renderizando Atividade Recente - loadingProcesses:', loadingProcesses, 'searchState.active:', searchState.active)}
             {searchState.active ? (
               searchState.loading ? (
                 <div className="flex items-center justify-center py-8">
