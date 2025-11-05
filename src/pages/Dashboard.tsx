@@ -378,8 +378,8 @@ export default function Dashboard() {
           onClick={() => handleFilterStatus(undefined)}
         >
           <div className="flex items-center min-w-0">
-            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
@@ -393,8 +393,8 @@ export default function Dashboard() {
           onClick={() => handleFilterStatus('1')}
         >
           <div className="flex items-center min-w-0">
-            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <div className="p-2 bg-yellow-50/50 rounded-lg flex-shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400/60" />
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
@@ -408,8 +408,8 @@ export default function Dashboard() {
           onClick={() => handleFilterStatus('2')}
         >
           <div className="flex items-center min-w-0">
-            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
@@ -423,8 +423,8 @@ export default function Dashboard() {
           onClick={() => handleFilterStatus('3')}
         >
           <div className="flex items-center min-w-0">
-            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <div className="p-2 bg-green-50/50 rounded-lg flex-shrink-0">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400/60" />
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
@@ -438,8 +438,8 @@ export default function Dashboard() {
           onClick={() => handleFilterStatus('4')}
         >
           <div className="flex items-center min-w-0">
-            <div className="p-2 bg-gray-100 rounded-lg flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <div className="p-2 bg-red-50/50 rounded-lg flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400/60" />
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
