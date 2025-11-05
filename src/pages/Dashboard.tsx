@@ -372,7 +372,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => handleFilterStatus(undefined)}
