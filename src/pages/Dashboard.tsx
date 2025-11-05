@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getDashboardStats, getProcessos, DashboardStats, DashboardProcessosResponse, ProcessoItem } from '../services/dashboardService';
@@ -40,6 +41,36 @@ import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1
 import homeIcon from '/src/assets/icon_home.svg';
 
 export default function Dashboard() {
+  // Limpa resultados da pesquisa ao clicar em filtro
+  const handleFilterStatus = (status: string | undefined) => {
+    setFilterStatus(status);
+    setSearchState({ results: [], loading: false, error: null, active: false });
+  };
+  // Estados para busca de processos por protocolo
+  const [searchProtocol, setSearchProtocol] = useState('');
+  const [searchState, setSearchState] = useState<{ results: ProcessoItem[]; loading: boolean; error: string | null; active: boolean }>({ results: [], loading: false, error: null, active: false });
+  // Filtro inicial: tipo 2 em análise
+  React.useEffect(() => {
+    setFilterStatus('2');
+  }, []);
+  // Função para buscar processos por protocolo
+  async function searchProcessByProtocol(protocolo: string) {
+  console.log('[Dashboard] searchProcessByProtocol chamada:', protocolo);
+    setSearchState({ results: [], loading: true, error: null, active: true });
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await axios.get(
+        `/api/v1/license_processes/search?protocolo=${encodeURIComponent(protocolo)}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      console.log('[Dashboard] response da API searchProcessByProtocol:', res);
+      setSearchState({ results: res.data && Array.isArray(res.data.items) ? res.data.items : [], loading: false, error: null, active: true });
+    } catch (err: any) {
+      setSearchState({ results: [], loading: false, error: err?.response?.data?.message || err?.message || 'Erro ao buscar processos', active: true });
+    }
+  }
   const navigate = useNavigate();
   const { user, userMetadata, signOut, loading, isConfigured, isSupabaseReady } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -156,7 +187,7 @@ export default function Dashboard() {
 
   const handleNewProcess = async (processData: any) => {
     try {
-      await ProcessService.createProcess(processData);
+      // Aqui seria chamada de criação de processo, se existir
       loadProcesses();
       loadStats();
     } catch (error) {
@@ -180,7 +211,7 @@ export default function Dashboard() {
 
   const handleUpdateProcess = async (processId: string, updates: any) => {
     try {
-      await ProcessService.updateProcess(processId, updates);
+      // Aqui seria chamada de atualização de processo, se existir
       loadProcesses();
       loadStats();
       if (selectedProcess && selectedProcess.id === processId) {
@@ -338,7 +369,7 @@ export default function Dashboard() {
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => setFilterStatus(undefined)}
+          onClick={() => handleFilterStatus(undefined)}
         >
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -353,7 +384,7 @@ export default function Dashboard() {
 
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
-          onClick={() => setFilterStatus('1')}
+          onClick={() => handleFilterStatus('1')}
         >
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
@@ -368,7 +399,7 @@ export default function Dashboard() {
 
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
-          onClick={() => setFilterStatus('2')}
+          onClick={() => handleFilterStatus('2')}
         >
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -383,7 +414,7 @@ export default function Dashboard() {
 
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => setFilterStatus('3')}
+          onClick={() => handleFilterStatus('3')}
         >
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
@@ -398,7 +429,7 @@ export default function Dashboard() {
 
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
-          onClick={() => setFilterStatus('4')}
+          onClick={() => handleFilterStatus('4')}
         >
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg">
@@ -413,53 +444,124 @@ export default function Dashboard() {
       </div>
 
       <div className="glass-effect rounded-lg">
-        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
+        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Atividade Recente</h2>
+          <form
+            className="w-full sm:w-72"
+            onSubmit={e => {
+              e.preventDefault();
+              if (searchProtocol.trim()) searchProcessByProtocol(searchProtocol.trim());
+            }}
+          >
+            <div className="relative">
+              <input
+                type="text"
+                className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                placeholder="Buscar por protocolo..."
+                value={searchProtocol}
+                onChange={e => setSearchProtocol(e.target.value)}
+              />
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <Search className="w-4 h-4" />
+              </span>
+            </div>
+          </form>
         </div>
         <div className="p-4 sm:p-6">
           <div className="space-y-3 sm:space-y-4">
-            {processes.length === 0 ? (
-              <div className="text-gray-500 text-sm">Nenhuma atividade recente encontrada.</div>
-            ) : (
-              processes.map((proc) => (
-                <div
-                  key={proc.id}
-                  className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
-                  onClick={() => handleProcessClick(proc)}
-                >
-                  <div className="flex-shrink-0">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                      ${proc.status === '1' ? 'bg-yellow-100' : ''}
-                      ${proc.status === '2' ? 'bg-blue-100' : ''}
-                      ${proc.status === '3' ? 'bg-green-100' : ''}
-                      ${proc.status === '4' ? 'bg-red-100' : ''}
-                      ${proc.status === undefined ? 'bg-gray-100' : ''}
-                    `}>
-                      {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
-                      {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
-                      {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                      {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-                      {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+            {/* Renderização condicional: pesquisa ativa tem prioridade */}
+            {searchState.active ? (
+              searchState.loading ? (
+                <div className="text-green-600 text-sm">Buscando processos...</div>
+              ) : searchState.error ? (
+                <div className="text-red-600 text-sm">{searchState.error}</div>
+              ) : searchState.results.length === 0 ? (
+                <div className="text-gray-500 text-sm">Nenhum processo encontrado.</div>
+              ) : (
+                searchState.results.map((proc) => (
+                  <div
+                    key={proc.id}
+                    className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
+                    onClick={() => handleProcessClick(proc)}
+                  >
+                    <div className="flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
+                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
+                        ${proc.status === '2' ? 'bg-blue-100' : ''}
+                        ${proc.status === '3' ? 'bg-green-100' : ''}
+                        ${proc.status === '4' ? 'bg-red-100' : ''}
+                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                      `}>
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        <span className="font-bold">Protocolo:</span> {proc.protocolo_interno || '-'}<br />
+                        <span className="font-bold">Nome/Razão Social:</span> {proc.razao_social || proc.nome_fantasia || proc.cpf || proc.cnpj || <span className="text-gray-400 italic">(não informado)</span>}<br />
+                        <span className="font-bold">Tipo:</span> {proc.tipo_pessoa || <span className="text-gray-400 italic">(não informado)</span>}<br />
+                        <span className="font-bold">Potencial Poluidor:</span> {proc.potencial_poluidor || <span className="text-gray-400 italic">(não informado)</span>}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-bold">Criado em:</span> {proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : <span className="text-gray-400 italic">(não informado)</span>}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                        {getStatusText(proc.status)}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      <span className="font-bold">Protocolo:</span> {proc.protocolo_interno || '-'}<br />
-                      <span className="font-bold">Nome/Razão Social:</span> {proc.razao_social || proc.nome_fantasia || proc.cpf || proc.cnpj || '-'}<br />
-                      <span className="font-bold">Tipo:</span> {proc.tipo_pessoa || '-'}<br />
-                      <span className="font-bold">Potencial Poluidor:</span> {proc.potencial_poluidor || '-'}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      <span className="font-bold">Criado em:</span> {proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : '-'}
-                    </p>
+                ))
+              )
+            ) : (
+              processes.length === 0 ? (
+                <div className="text-gray-500 text-sm">Nenhuma atividade recente encontrada.</div>
+              ) : (
+                processes.map((proc) => (
+                  <div
+                    key={proc.id}
+                    className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
+                    onClick={() => handleProcessClick(proc)}
+                  >
+                    <div className="flex-shrink-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center
+                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
+                        ${proc.status === '2' ? 'bg-blue-100' : ''}
+                        ${proc.status === '3' ? 'bg-green-100' : ''}
+                        ${proc.status === '4' ? 'bg-red-100' : ''}
+                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                      `}>
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        <span className="font-bold">Protocolo:</span> {proc.protocolo_interno || '-'}<br />
+                        <span className="font-bold">Nome/Razão Social:</span> {proc.razao_social || proc.nome_fantasia || proc.cpf || proc.cnpj || '-'}<br />
+                        <span className="font-bold">Tipo:</span> {proc.tipo_pessoa || '-'}<br />
+                        <span className="font-bold">Potencial Poluidor:</span> {proc.potencial_poluidor || '-'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-bold">Criado em:</span> {proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : '-'}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                        {getStatusText(proc.status)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-shrink-0">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
-                      {getStatusText(proc.status)}
-                    </span>
-                  </div>
-                </div>
-              ))
+                ))
+              )
             )}
           </div>
           {/* Barra de navegação/paginação */}

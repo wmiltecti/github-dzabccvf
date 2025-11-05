@@ -17,4 +17,13 @@ export default defineConfig({
     // turf modular pré-empacotado p/ dev
     include: ['@turf/buffer', '@turf/helpers', '@turf/difference', '@turf/area', '@turf/length'],
   },
+    server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })
