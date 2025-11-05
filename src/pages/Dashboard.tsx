@@ -76,6 +76,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [generalExpanded, setGeneralExpanded] = useState(false);
+  const [geralExpanded, setGeralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [loadingProcesses, setLoadingProcesses] = useState(false);
