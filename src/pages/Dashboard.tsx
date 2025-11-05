@@ -949,8 +949,8 @@ export default function Dashboard() {
           />
         )}
 
-        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 z-50 ${
-          sidebarOpen ? '' : 'lg:block hidden'
+        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 ${
+          sidebarOpen ? 'sidebar-open' : ''
         }`}>
           <div className="flex flex-col h-full">
             <div className="flex items-center px-6 py-4 border-b border-gray-200">
