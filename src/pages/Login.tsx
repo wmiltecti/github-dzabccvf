@@ -50,10 +50,20 @@ export default function Login() {
       };
 
       const result = await login(pessoaTipo, credenciais);
-      console.log('✅ Login OK - Resultado:', result);
-      console.log('📦 Verificando localStorage após login:');
-      console.log('  - auth_token:', localStorage.getItem('auth_token'));
-      console.log('  - auth_user:', localStorage.getItem('auth_user'));
+      // Garante que userId está presente e salvo corretamente
+      if (result && result.token && result.userId) {
+        localStorage.setItem('auth_token', result.token);
+        localStorage.setItem('auth_user', JSON.stringify({
+          token: result.token,
+          nome: result.nome,
+          userId: result.userId
+        }));
+        console.log('✅ Dados de login manual salvos:', {
+          token: result.token,
+          nome: result.nome,
+          userId: result.userId
+        });
+      }
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
