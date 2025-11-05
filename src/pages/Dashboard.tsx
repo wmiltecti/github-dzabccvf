@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ProcessService } from '../services/processService';
+import { getDashboardStats, getProcessos, DashboardStats, DashboardProcessosResponse, ProcessoItem } from '../services/dashboardService';
 import NewProcessModal from '../components/NewProcessModal';
 import ProcessDetailsModal from '../components/ProcessDetailsModal';
 import AdminDashboard from '../components/admin/AdminDashboard';
@@ -46,19 +46,24 @@ export default function Dashboard() {
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [geralExpanded, setGeralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
+  const [loadingProcesses, setLoadingProcesses] = useState(false);
   const [showNewProcessModal, setShowNewProcessModal] = useState(false);
   const [showProcessDetails, setShowProcessDetails] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
-  const [processes, setProcesses] = useState<any[]>([]);
+  const [processes, setProcesses] = useState<ProcessoItem[]>([]);
+  // Estados para paginação do painel de atividade recente
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10); // quantidade por página
+  const [total, setTotal] = useState(0); // total de registros
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [externalUserName, setExternalUserName] = useState<string | null>(null);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     total: 0,
-    pending: 0,
-    analysis: 0,
-    approved: 0,
-    rejected: 0
+    pendentes: 0,
+    em_analise: 0,
+    aprovados: 0,
+    rejeitados: 0
   });
 
   React.useEffect(() => {
@@ -102,40 +107,52 @@ export default function Dashboard() {
   }, [externalUserName]);
 
   const loadProcesses = React.useCallback(async () => {
+    setLoadingProcesses(true);
     try {
-      const data = await ProcessService.getProcesses({
-        status: filterStatus,
-        search: searchTerm
-      });
-      setProcesses(data);
+      // Adapta para paginação
+  const skip = (page - 1) * limit;
+  const data: DashboardProcessosResponse = await getProcessos(filterStatus, skip, limit);
+      console.log('Response completa da API:', JSON.stringify(data, null, 2));
+      console.log('Processos recebidos da API:', data.items);
+      setProcesses(data.items);
+      setTotal(data.total || 0); // espera que a API retorne total
     } catch (error) {
       console.error('Error loading processes:', error);
       setProcesses([]);
+    } finally {
+      setLoadingProcesses(false);
     }
-  }, [filterStatus, searchTerm]);
+  }, [filterStatus, page, limit]);
 
   const loadStats = React.useCallback(async () => {
     try {
-      const statsData = await ProcessService.getProcessStats();
+      const statsData = await getDashboardStats();
       setStats(statsData);
     } catch (error) {
       console.error('Error loading stats:', error);
       setStats({
         total: 0,
-        pending: 0,
-        analysis: 0,
-        approved: 0,
-        rejected: 0
+        pendentes: 0,
+        em_analise: 0,
+        aprovados: 0,
+        rejeitados: 0
       });
     }
   }, []);
 
   React.useEffect(() => {
     if (user && isConfigured && isSupabaseReady) {
-      loadProcesses();
       loadStats();
     }
-  }, [user, isConfigured, isSupabaseReady, loadProcesses, loadStats]);
+  }, [user, isConfigured, isSupabaseReady, loadStats]);
+
+  React.useEffect(() => {
+    console.log('[Dashboard] useEffect disparado:', { user, isConfigured, isSupabaseReady, filterStatus, page, limit });
+    if (user && isConfigured && isSupabaseReady) {
+      console.log('[Dashboard] Chamando loadProcesses por filtro/página:', filterStatus, page, limit);
+      loadProcesses();
+    }
+  }, [user, isConfigured, isSupabaseReady, filterStatus, page, limit, loadProcesses]);
 
   const handleNewProcess = async (processData: any) => {
     try {
@@ -252,11 +269,16 @@ export default function Dashboard() {
     }
   };
 
-  const filteredLicenses = processes.filter(license => {
-    const matchesSearch = license.companies?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         license.activity.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || license.status === filterStatus;
-    return matchesSearch && matchesFilter;
+  const filteredProcessos = processes.filter((proc) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      proc.razao_social?.toLowerCase().includes(searchLower) ||
+      proc.nome_fantasia?.toLowerCase().includes(searchLower) ||
+      proc.cpf?.toLowerCase().includes(searchLower) ||
+      proc.cnpj?.toLowerCase().includes(searchLower) ||
+      proc.potencial_poluidor?.toLowerCase().includes(searchLower)
+    );
   });
 
   const navigation = [
@@ -294,25 +316,30 @@ export default function Dashboard() {
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* ============================================ */}
-      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+      {/* CABEÇALHO COM AÇÕES FIXO ACIMA DAS ESTATÍSTICAS */}
       {/* ============================================ */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
-        <div className="flex space-x-2 sm:space-x-3">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => navigate('/inscricao/participantes')}
-            title="Iniciar nova solicitação"
-          >
-            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Nova Solicitação</span>
-            <span className="xs:hidden">Solicitação</span>
-          </button>
+      <div className="sticky top-0 z-30 bg-white pb-2 pt-2 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
+          <div className="flex space-x-2 sm:space-x-3">
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => navigate('/inscricao/participantes')}
+              title="Iniciar nova solicitação"
+            >
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Nova Solicitação</span>
+              <span className="xs:hidden">Solicitação</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
+        <div
+          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
+          onClick={() => setFilterStatus(undefined)}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
               <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -324,50 +351,62 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div
+          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
+          onClick={() => setFilterStatus('1')}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
             </div>
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600">Pendentes</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pending}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div
+          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
+          onClick={() => setFilterStatus('2')}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
               <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600">Em Análise</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.analysis}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div
+          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
+          onClick={() => setFilterStatus('3')}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
               <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             </div>
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600">Aprovadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.approved}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
             </div>
           </div>
         </div>
 
-        <div className="stat-card p-4 sm:p-6 rounded-lg">
+        <div
+          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
+          onClick={() => setFilterStatus('4')}
+        >
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg">
               <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             </div>
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600">Rejeitadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejected}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
             </div>
           </div>
         </div>
@@ -379,28 +418,75 @@ export default function Dashboard() {
         </div>
         <div className="p-4 sm:p-6">
           <div className="space-y-3 sm:space-y-4">
-            {processes.slice(0, 3).map((license) => (
-              <div
-                key={license.id}
-                className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
-                onClick={() => handleProcessClick(license)}
-              >
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-green-600" />
+            {processes.length === 0 ? (
+              <div className="text-gray-500 text-sm">Nenhuma atividade recente encontrada.</div>
+            ) : (
+              processes.map((proc) => (
+                <div
+                  key={proc.id}
+                  className="flex items-center space-x-4 p-4 bg-white bg-opacity-60 rounded-lg hover:bg-opacity-80 cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.02]"
+                  onClick={() => handleProcessClick(proc)}
+                >
+                  <div className="flex-shrink-0">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center
+                      ${proc.status === '1' ? 'bg-yellow-100' : ''}
+                      ${proc.status === '2' ? 'bg-blue-100' : ''}
+                      ${proc.status === '3' ? 'bg-green-100' : ''}
+                      ${proc.status === '4' ? 'bg-red-100' : ''}
+                      ${proc.status === undefined ? 'bg-gray-100' : ''}
+                    `}>
+                      {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
+                      {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
+                      {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                      {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
+                      {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      <span className="font-bold">Protocolo:</span> {proc.protocolo_interno || '-'}<br />
+                      <span className="font-bold">Nome/Razão Social:</span> {proc.razao_social || proc.nome_fantasia || proc.cpf || proc.cnpj || '-'}<br />
+                      <span className="font-bold">Tipo:</span> {proc.tipo_pessoa || '-'}<br />
+                      <span className="font-bold">Potencial Poluidor:</span> {proc.potencial_poluidor || '-'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      <span className="font-bold">Criado em:</span> {proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : '-'}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                      {getStatusText(proc.status)}
+                    </span>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{license.companies?.name}</p>
-                  <p className="text-sm text-gray-500">{getLicenseTypeName(license.license_type)} - {license.activity}</p>
-                </div>
-                <div className="flex-shrink-0">
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(license.status)}`}>
-                    {getStatusText(license.status)}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
+          </div>
+          {/* Barra de navegação/paginação */}
+          <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
+            <span className="text-xs text-gray-500">Mostrando {processes.length} de {total} registros</span>
+            <div className="flex gap-2">
+              <button
+                className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs"
+                disabled={page === 1}
+                onClick={() => setPage(1)}
+              >&#171; Primeira</button>
+              <button
+                className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs"
+                disabled={page === 1}
+                onClick={() => setPage(page - 1)}
+              >&#8249; Anterior</button>
+              <button
+                className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs"
+                disabled={page * limit >= total}
+                onClick={() => setPage(page + 1)}
+              >Próxima &#8250;</button>
+              <button
+                className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs"
+                disabled={page * limit >= total}
+                onClick={() => setPage(Math.ceil(total / limit))}
+              >Última &#187;</button>
+            </div>
           </div>
         </div>
       </div>
@@ -471,61 +557,47 @@ export default function Dashboard() {
       <div className="glass-effect rounded-lg">
         <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Processos</h2>
+          {loadingProcesses && (
+            <div className="text-green-600 text-sm mt-2">Carregando processos...</div>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protocolo Interno</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número do Processo</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome/Razão Social</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF/CNPJ</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Potencial Poluidor</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Analista</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prazo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Criação</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredLicenses.map((license) => (
+              {filteredProcessos.map((proc) => (
                 <tr
-                  key={license.id}
+                  key={proc.id}
                   className="hover:bg-green-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
-                  onClick={() => handleProcessClick(license)}
+                  onClick={() => handleProcessClick(proc)}
                 >
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.protocolo_interno || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.numero_processo_externo || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.tipo_pessoa || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.razao_social || proc.nome_fantasia || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.cpf || proc.cnpj || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.potencial_poluidor || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{license.protocol_number}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{license.companies?.name}</div>
-                    <div className="text-sm text-gray-500">{license.activity}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {getLicenseTypeName(license.license_type)}
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                      {getStatusText(proc.status)}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(license.status)}`}>
-                      {getStatusText(license.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${license.progress || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-500">{license.progress || 0}%</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {license.analyst_name || 'Não atribuído'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{license.expected_date ? new Date(license.expected_date).toLocaleDateString('pt-BR') : 'N/A'}</div>
-                    <div className="text-xs text-gray-500">
-                      {license.expected_date ? Math.ceil((new Date(license.expected_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0} dias
-                    </div>
+                    <button className="text-blue-600 hover:underline mr-2" onClick={(e) => { e.stopPropagation(); handleProcessClick(proc); }}>Ver Detalhes</button>
+                    <button className="text-green-600 hover:underline" onClick={(e) => { e.stopPropagation(); /* handleEditProcess(proc); */ }}>Editar</button>
                   </td>
                 </tr>
               ))}
@@ -603,44 +675,38 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {processes.filter(license => license.created_via === 'inscription').map((license) => (
-                <tr
-                  key={license.id}
-                  className="hover:bg-blue-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
-                  onClick={() => handleProcessClick(license)}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{license.protocol_number}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{license.companies?.name}</div>
-                    <div className="text-sm text-gray-500">{license.activity}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {getLicenseTypeName(license.license_type)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(license.status)}`}>
-                      {getStatusText(license.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${license.progress || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-500">{license.progress || 0}%</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{license.submit_date ? new Date(license.submit_date).toLocaleDateString('pt-BR') : 'N/A'}</div>
-                  </td>
-                </tr>
-              ))}
-              {processes.filter(license => license.created_via === 'inscription').length === 0 && (
+              {processes.length > 0 ? (
+                processes.map((proc) => (
+                  <tr
+                    key={proc.id}
+                    className="hover:bg-blue-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
+                    onClick={() => handleProcessClick(proc)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{proc.protocolo_interno || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{proc.razao_social || proc.nome_fantasia || proc.cpf || proc.cnpj || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {proc.tipo_pessoa || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                        {getStatusText(proc.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-xs text-gray-500">-</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{proc.created_at ? new Date(proc.created_at).toLocaleDateString('pt-BR') : '-'}</div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <FileCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -795,11 +861,7 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      if (item.isRoute) {
-                        navigate('/inscricao/participantes');
-                      } else {
-                        setActiveTab(item.id);
-                      }
+                      setActiveTab(item.id);
                       setSidebarOpen(false);
                     }}
                     className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
