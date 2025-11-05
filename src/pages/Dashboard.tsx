@@ -29,7 +29,8 @@ import {
   Menu,
   X,
   FilePlus,
-  FileCheck
+  FileCheck,
+  User
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
@@ -136,6 +137,11 @@ export default function Dashboard() {
   React.useEffect(() => {
     console.log('🎨 RENDERIZANDO DASHBOARD - externalUserName atual:', externalUserName);
   }, [externalUserName]);
+
+  const getFirstName = (fullName: string | null) => {
+    if (!fullName) return 'Carregando...';
+    return fullName.split(' ')[0];
+  };
 
   const loadProcesses = React.useCallback(async () => {
     setLoadingProcesses(true);
@@ -924,14 +930,11 @@ export default function Dashboard() {
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
-            <div className="flex items-center gap-3 bg-gray-700 px-4 py-2.5 rounded-lg border border-gray-600">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-400">Usuário:</span>
-                <span className="text-base font-bold text-white">
-                  {externalUserName || 'Carregando...'}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-gray-300">
+              <User className="w-5 h-5" />
+              <span className="text-sm font-medium">
+                {getFirstName(externalUserName)}
+              </span>
             </div>
           </div>
         </div>
