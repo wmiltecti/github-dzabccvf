@@ -30,7 +30,8 @@ import {
   X,
   FilePlus,
   FileCheck,
-  User
+  User,
+  ArrowLeft
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
@@ -101,6 +102,7 @@ export default function Dashboard() {
     rejeitados: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [showWizardInInscricoes, setShowWizardInInscricoes] = useState(false);
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -374,7 +376,10 @@ export default function Dashboard() {
           <div className="flex space-x-2 sm:space-x-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => navigate('/inscricao/participantes')}
+              onClick={() => {
+                setActiveTab('inscricoes');
+                setShowWizardInInscricoes(true);
+              }}
               title="Iniciar nova solicitação"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -660,7 +665,10 @@ export default function Dashboard() {
           </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => navigate('/inscricao/participantes')}
+            onClick={() => {
+              setActiveTab('inscricoes');
+              setShowWizardInInscricoes(true);
+            }}
             title="Iniciar nova solicitação"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -756,7 +764,29 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderInscricoes = () => (
+  const renderInscricoes = () => {
+    // Se o wizard está aberto, renderiza apenas ele
+    if (showWizardInInscricoes) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+            <button
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardInInscricoes(false)}
+              title="Voltar para lista de solicitações"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Voltar</span>
+            </button>
+          </div>
+          <FormWizard />
+        </div>
+      );
+    }
+
+    // Lista de solicitações normal
+    return (
     <div className="space-y-6">
       {/* ============================================ */}
       {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
@@ -765,7 +795,7 @@ export default function Dashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-          onClick={() => navigate('/inscricao/participantes')}
+          onClick={() => setShowWizardInInscricoes(true)}
           title="Criar nova solicitação"
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -862,7 +892,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mb-4">Não há solicitações que correspondam aos filtros selecionados.</p>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                      onClick={() => navigate('/inscricao/participantes')}
+                      onClick={() => setShowWizardInInscricoes(true)}
                     >
                       <Plus className="w-4 h-4" />
                       Criar Nova Solicitação
@@ -875,7 +905,8 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
