@@ -2,19 +2,29 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
+import { useInscricaoStore } from '../../lib/store/inscricao';
 import FormWizard from '../../components/FormWizard';
 
 export default function FormularioPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
+  const { setCurrentStep } = useInscricaoStore();
 
   const handleComplete = () => {
     console.log('📝 Formulário completado, navegando para Documentação');
-    navigate('/inscricao/documentacao');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/documentacao');
+    } else {
+      setCurrentStep(5);
+    }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/empreendimento');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/empreendimento');
+    } else {
+      setCurrentStep(3);
+    }
   };
 
   // Mostra loading enquanto aguarda processoId

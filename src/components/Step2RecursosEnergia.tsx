@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Flame, Trash2, Edit2, Plus, Info, AlertCircle, Zap } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface Step2RecursosEnergiaProps {
   data: any;
@@ -47,7 +48,7 @@ export default function Step2RecursosEnergia({ data, onChange }: Step2RecursosEn
 
   const handleAddCombustivel = () => {
     if (!currentCombustivel.tipoFonte || !currentCombustivel.equipamento || !currentCombustivel.quantidade) {
-      alert('Preencha todos os campos obrigatórios');
+      toast.warning('Preencha todos os campos obrigatórios');
       return;
     }
 

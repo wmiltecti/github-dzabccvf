@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import PolygonLayer from './PolygonLayer';
 import MapClickHandler from './MapClickHandler';
 import L from 'leaflet';
+import { toast } from 'react-toastify';
 import GeoUpload from './GeoUpload';
 import GeoSettings from './GeoSettings';
 import GeoExport from './GeoExport';
@@ -347,7 +348,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   const handleDeleteLayer = (layerId: string) => {
-    if (confirm('Tem certeza que deseja remover esta camada?')) {
+    if (window.confirm('Tem certeza que deseja remover esta camada?')) {
       setLayers(prev => prev.filter(layer => layer.id !== layerId));
     }
   };
@@ -737,7 +738,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   const handleCalcularMetricasCamada = (layerId: string) => {
     const layer = layers.find(l => l.id === layerId);
     if (!layer) {
-      alert('Erro: Camada não encontrada');
+      toast.error('Erro: Camada não encontrada');
       return;
     }
 
@@ -754,7 +755,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       console.log(`✅ Métricas calculadas: ${metrics.totalAreaHa.toFixed(2)} ha`);
     } catch (error) {
       console.error('❌ Erro ao calcular métricas:', error);
-      alert(`Erro ao calcular métricas:\n\n${(error as Error).message}`);
+      toast.error(`Erro ao calcular métricas: ${(error as Error).message}`);
     }
   };
 
@@ -765,7 +766,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       console.log('✅ GeoJSON exportado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao exportar GeoJSON:', error);
-      alert(`Erro ao exportar GeoJSON:\n\n${(error as Error).message}`);
+      toast.error(`Erro ao exportar GeoJSON: ${(error as Error).message}`);
     }
   };
 
@@ -785,7 +786,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       console.log('✅ KML exportado com sucesso');
     } catch (error) {
       console.error('❌ Erro ao exportar KML:', error);
-      alert(`Erro ao exportar KML:\n\n${(error as Error).message}`);
+      toast.error(`Erro ao exportar KML: ${(error as Error).message}`);
     }
   };
 

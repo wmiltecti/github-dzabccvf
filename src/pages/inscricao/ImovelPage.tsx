@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
@@ -11,12 +12,13 @@ type ModalStep = 'search' | 'confirm';
 export default function ImovelPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
-  const { 
-    property, 
-    setProperty, 
+  const {
+    property,
+    setProperty,
     setPropertyId,
     isStepComplete,
-    canProceedToStep
+    canProceedToStep,
+    setCurrentStep
   } = useInscricaoStore();
   
   const [showModal, setShowModal] = useState(false);
@@ -119,11 +121,11 @@ export default function ImovelPage() {
     setProperty(propertyData);
     setPropertyId(selectedImovel.id);
     handleCloseModal();
-    alert('Imóvel selecionado com sucesso!');
+    toast.success('Imóvel selecionado com sucesso!');
   };
 
   const handleRemoveProperty = () => {
-    if (!confirm('Deseja remover o imóvel selecionado?')) return;
+    if (!window.confirm('Deseja remover o imóvel selecionado?')) return;
     
     setProperty(undefined);
     setPropertyId(undefined);
@@ -132,11 +134,19 @@ export default function ImovelPage() {
   const handleNext = () => {
     // TODO: Validação temporariamente desabilitada para aprovação de design
     // Reativar validação: if (canProceedToStep(3))
-    navigate('/inscricao/empreendimento');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/empreendimento');
+    } else {
+      setCurrentStep(3);
+    }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/participantes');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/participantes');
+    } else {
+      setCurrentStep(1);
+    }
   };
 
   const getKindLabel = (kind: string) => {

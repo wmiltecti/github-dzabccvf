@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Layers, Circle, Ruler } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface GeoLayer {
   id: string;
@@ -39,19 +40,19 @@ export default function BufferZoneSelector({
 
   const handleConfirm = () => {
     if (!selectedBaseLayer) {
-      alert('Por favor, selecione a camada base');
+      toast.warning('Por favor, selecione a camada base');
       return;
     }
     if (!selectedReferenceLayer) {
-      alert('Por favor, selecione a camada de referência');
+      toast.warning('Por favor, selecione a camada de referência');
       return;
     }
     if (selectedBaseLayer === selectedReferenceLayer) {
-      alert('As camadas base e de referência devem ser diferentes');
+      toast.warning('As camadas base e de referência devem ser diferentes');
       return;
     }
     if (distanciaMetros <= 0) {
-      alert('A distância do buffer deve ser maior que zero');
+      toast.warning('A distância do buffer deve ser maior que zero');
       return;
     }
     onConfirm(selectedBaseLayer, selectedReferenceLayer, distanciaMetros);

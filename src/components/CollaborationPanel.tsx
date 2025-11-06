@@ -61,7 +61,7 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
   };
 
   const handleRemoveCollaborator = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja remover este colaborador?')) return;
+    if (!window.confirm('Tem certeza que deseja remover este colaborador?')) return;
 
     try {
       await CollaborationService.removeCollaborator(processId, userId);

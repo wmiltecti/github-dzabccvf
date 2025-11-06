@@ -15,11 +15,12 @@ const mockActivities = [
 
 export default function EmpreendimentoPage() {
   const navigate = useNavigate();
-  const { 
-    atividadeId, 
+  const {
+    atividadeId,
     setAtividadeId,
     isStepComplete,
-    canProceedToStep
+    canProceedToStep,
+    setCurrentStep
   } = useInscricaoStore();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,12 +47,20 @@ export default function EmpreendimentoPage() {
   const handleNext = () => {
     // TODO: Re-habilitar validação após aprovação de design
     // if (canProceedToStep(4)) {
+    if (window.location.pathname.includes('/inscricao/')) {
       navigate('/inscricao/formulario');
+    } else {
+      setCurrentStep(4);
+    }
     // }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/imovel');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/imovel');
+    } else {
+      setCurrentStep(2);
+    }
   };
 
   return (

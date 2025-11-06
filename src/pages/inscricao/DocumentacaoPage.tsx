@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import {
@@ -64,8 +65,8 @@ const REQUIRED_DOCUMENTS: Document[] = [
 export default function DocumentacaoPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
-  const { isStepComplete } = useInscricaoStore();
-  
+  const { isStepComplete, setCurrentStep } = useInscricaoStore();
+
   const [documents, setDocuments] = useState<Document[]>(REQUIRED_DOCUMENTS);
   const [uploading, setUploading] = useState(false);
 
@@ -94,20 +95,28 @@ export default function DocumentacaoPage() {
     try {
       // TODO: Implementar upload real para Supabase Storage ou API
       await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('Documentos enviados com sucesso!');
+      toast.success('Documentos enviados com sucesso!');
     } catch (error) {
-      alert('Erro ao enviar documentos');
+      toast.error('Erro ao enviar documentos');
     } finally {
       setUploading(false);
     }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/formulario');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/formulario');
+    } else {
+      setCurrentStep(4);
+    }
   };
 
   const handleNext = () => {
-    navigate('/inscricao/revisao');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/revisao');
+    } else {
+      setCurrentStep(6);
+    }
   };
 
   const requiredDocsComplete = documents

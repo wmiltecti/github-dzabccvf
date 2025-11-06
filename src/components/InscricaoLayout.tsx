@@ -111,23 +111,25 @@ export default function InscricaoLayout() {
 
   const handleSaveDraft = () => {
     // TODO: Implement save draft functionality
-    alert('Rascunho salvo com sucesso!');
+    toast.success('Rascunho salvo com sucesso!');
   };
 
   const handleReset = () => {
-    if (confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
+    if (window.confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
       reset();
       setProcessoId(null);
       navigate('/inscricao/participantes');
+      toast.info('Processo reiniciado');
       window.location.reload(); // Força reload para criar novo processo
     }
   };
 
   const handleNewInscricao = () => {
-    if (confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
+    if (window.confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
       startNewInscricao();
       setProcessoId(null);
       navigate('/inscricao/participantes');
+      toast.info('Nova inscrição iniciada');
       window.location.reload(); // Força reload para criar novo processo
     }
   };

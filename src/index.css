@@ -246,6 +246,11 @@ body::before {
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.5);
 }
 
+/* Header icon color - darkgreen */
+.icon-darkgreen {
+  color: #006400;
+}
+
 /* Responsive table wrapper */
 @media (max-width: 768px) {
   .overflow-x-auto {
