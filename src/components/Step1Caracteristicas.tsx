@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import ImovelGeoPanel from './ImovelGeoPanel';
+import { Eye } from 'lucide-react';
+import GeoVisualization from './geo/GeoVisualization';
+import Modal from './Modal';
 import { Search, Clock, Users, Building2, AlertCircle, FileText } from 'lucide-react';
 
 interface Step1CaracteristicasProps {
@@ -29,6 +33,7 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
   const [cnaeSearch, setCnaeSearch] = useState(data?.cnaeDescricao || '');
   const [showCnaeDropdown, setShowCnaeDropdown] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showGeoModal, setShowGeoModal] = useState(false);
 
   const handleChange = (field: string, value: any) => {
     onChange({ ...data, [field]: value });
@@ -78,9 +83,31 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
     setErrors(newErrors);
   };
 
+  const [showGeo, setShowGeo] = useState(false);
+
   return (
     <div className="space-y-6">
-      {/* Cabeçalho */}
+      {/* Painel Visualização Geo - agora fullscreen */}
+      <div className="my-6">
+        <div className="flex items-center gap-3 mb-2">
+          <Eye className="w-5 h-5 text-blue-600" />
+          <span className="font-semibold text-gray-800">Visualização Geo</span>
+          <button
+            className="ml-4 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onClick={() => setShowGeoModal(true)}
+          >
+            Abrir Mapa
+          </button>
+        </div>
+        {showGeoModal && (
+          <Modal isOpen={showGeoModal} onClose={() => setShowGeoModal(false)} title="Visualização Geo" size="xl" fullscreen>
+            <div style={{ height: '100vh', width: '100vw', maxWidth: '100vw', maxHeight: '100vh', margin: 0, padding: 0 }}>
+              <GeoVisualization />
+            </div>
+          </Modal>
+        )}
+      </div>
+  {/* Cabeçalho */}
       <div className="flex items-start gap-3 mb-2">
         <div className="flex-shrink-0">
           <FileText className="w-6 h-6 text-blue-600 mt-1" />
