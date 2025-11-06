@@ -61,6 +61,7 @@ export interface Property {
   dms_lat?: string;
   dms_long?: string;
   car_codigo?: string;
+  arquivogeorreferenciamento?: string;
   address?: Address;
 }
 
