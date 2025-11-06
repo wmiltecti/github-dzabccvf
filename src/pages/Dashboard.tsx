@@ -6,9 +6,6 @@ import { getDashboardStats, getProcessos, DashboardStats, DashboardProcessosResp
 import NewProcessModal from '../components/NewProcessModal';
 import ProcessDetailsModal from '../components/ProcessDetailsModal';
 import AdminDashboard from '../components/admin/AdminDashboard';
-import { criarProcesso } from '../services/processosService';
-import { getUserId } from '../utils/authToken';
-import http from '../lib/api/http';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { APP_VERSION, APP_NAME } from '../config/version';
@@ -39,8 +36,6 @@ import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
-import ParticipantesPage from './inscricao/ParticipantesPage';
-import { InscricaoProvider } from '../contexts/InscricaoContext';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -106,8 +101,6 @@ export default function Dashboard() {
     rejeitados: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
-  const [showInscricaoForm, setShowInscricaoForm] = useState(false);
-  const [inscricaoProcessoId, setInscricaoProcessoId] = useState<string | null>(null);
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -381,10 +374,7 @@ export default function Dashboard() {
           <div className="flex space-x-2 sm:space-x-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => {
-                setActiveTab('inscricoes');
-                handleStartInscricao();
-              }}
+              onClick={() => navigate('/inscricao/participantes')}
               title="Iniciar nova solicitação"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -670,10 +660,7 @@ export default function Dashboard() {
           </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => {
-              setActiveTab('inscricoes');
-              handleStartInscricao();
-            }}
+            onClick={() => navigate('/inscricao/participantes')}
             title="Iniciar nova solicitação"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -769,56 +756,7 @@ export default function Dashboard() {
     </div>
   );
 
-  const handleStartInscricao = async () => {
-    try {
-      const userId = getUserId();
-      if (!userId) {
-        toast.error('Usuário não autenticado');
-        return;
-      }
-
-      const newProcessoId = await criarProcesso(userId);
-      console.log('✅ Processo criado na API (id remoto):', newProcessoId);
-
-      await http.put(`/processos/${newProcessoId}/dados-gerais`, {
-        processo_id: newProcessoId
-      });
-      console.log('✅ Dados gerais criados');
-
-      setInscricaoProcessoId(newProcessoId);
-      setShowInscricaoForm(true);
-    } catch (error: any) {
-      console.error('Erro ao criar processo:', error);
-      toast.error(error?.message || 'Erro ao inicializar processo');
-    }
-  };
-
-  const renderInscricoes = () => {
-    if (showInscricaoForm) {
-      return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between mb-4 px-6 pt-6">
-            <h2 className="text-2xl font-bold text-gray-900">Nova Solicitação - Participantes</h2>
-            <button
-              onClick={() => {
-                setShowInscricaoForm(false);
-                setInscricaoProcessoId(null);
-              }}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Voltar à Lista
-            </button>
-          </div>
-          <div className="px-6 pb-6">
-            <InscricaoProvider processoId={inscricaoProcessoId}>
-              <ParticipantesPage />
-            </InscricaoProvider>
-          </div>
-        </div>
-      );
-    }
-
-    return (
+  const renderInscricoes = () => (
     <div className="space-y-6">
       {/* ============================================ */}
       {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
@@ -827,7 +765,7 @@ export default function Dashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-          onClick={handleStartInscricao}
+          onClick={() => navigate('/inscricao/participantes')}
           title="Criar nova solicitação"
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -924,7 +862,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mb-4">Não há solicitações que correspondam aos filtros selecionados.</p>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                      onClick={handleStartInscricao}
+                      onClick={() => navigate('/inscricao/participantes')}
                     >
                       <Plus className="w-4 h-4" />
                       Criar Nova Solicitação
@@ -937,8 +875,7 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-    );
-  };
+  );
 
   const renderContent = () => {
     switch (activeTab) {
