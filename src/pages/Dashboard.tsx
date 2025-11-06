@@ -964,14 +964,14 @@ export default function Dashboard() {
               className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-300 hover:text-white transition-colors rounded-lg hover:bg-gray-700"
               title="Sair"
             >
-              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 text-darkgreen" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 icon-darkgreen" />
               <span className="text-xs sm:text-sm font-medium hidden sm:inline">Sair</span>
             </button>
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
             <div className="flex items-center gap-2 text-gray-300">
-              <User className="w-5 h-5 text-darkgreen" />
+              <User className="w-5 h-5 icon-darkgreen" />
               <span className="text-sm font-medium">
                 {getFirstName(externalUserName)}
               </span>
