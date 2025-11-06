@@ -29,7 +29,8 @@ import {
   Menu,
   X,
   FilePlus,
-  FileCheck
+  FileCheck,
+  User
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
@@ -43,8 +44,11 @@ import homeIcon from '/src/assets/icon_home.svg';
 export default function Dashboard() {
   // Limpa resultados da pesquisa ao clicar em filtro
   const handleFilterStatus = (status: string | undefined) => {
+    console.log('🎯 handleFilterStatus chamado - status:', status);
     setFilterStatus(status);
     setSearchState({ results: [], loading: false, error: null, active: false });
+    setLoadingProcesses(true);
+    console.log('🎯 setLoadingProcesses(true) chamado em handleFilterStatus');
   };
   // Estados para busca de processos por protocolo
   const [searchProtocol, setSearchProtocol] = useState('');
@@ -78,7 +82,7 @@ export default function Dashboard() {
   const [generalExpanded, setGeneralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
-  const [loadingProcesses, setLoadingProcesses] = useState(false);
+  const [loadingProcesses, setLoadingProcesses] = useState(true);
   const [showNewProcessModal, setShowNewProcessModal] = useState(false);
   const [showProcessDetails, setShowProcessDetails] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
@@ -96,6 +100,7 @@ export default function Dashboard() {
     aprovados: 0,
     rejeitados: 0
   });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -137,7 +142,13 @@ export default function Dashboard() {
     console.log('🎨 RENDERIZANDO DASHBOARD - externalUserName atual:', externalUserName);
   }, [externalUserName]);
 
+  const getFirstName = (fullName: string | null) => {
+    if (!fullName) return 'Carregando...';
+    return fullName.split(' ')[0];
+  };
+
   const loadProcesses = React.useCallback(async () => {
+    console.log('🔄 loadProcesses iniciado - setLoadingProcesses(true)');
     setLoadingProcesses(true);
     try {
       // Adapta para paginação
@@ -151,11 +162,13 @@ export default function Dashboard() {
       console.error('Error loading processes:', error);
       setProcesses([]);
     } finally {
+      console.log('✅ loadProcesses finalizado - setLoadingProcesses(false)');
       setLoadingProcesses(false);
     }
   }, [filterStatus, page, limit]);
 
   const loadStats = React.useCallback(async () => {
+    setLoadingStats(true);
     try {
       const statsData = await getDashboardStats();
       setStats(statsData);
@@ -168,6 +181,8 @@ export default function Dashboard() {
         aprovados: 0,
         rejeitados: 0
       });
+    } finally {
+      setLoadingStats(false);
     }
   }, []);
 
@@ -344,6 +359,10 @@ export default function Dashboard() {
     { id: 'billing-configurations', name: 'Configuração de Cobrança' }
   ];
 
+  const Spinner = () => (
+    <div className="w-5 h-5 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
+  );
+
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* ============================================ */}
@@ -366,18 +385,22 @@ export default function Dashboard() {
         </div>
       </div>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
+  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
         <div
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => handleFilterStatus(undefined)}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total de Processos</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
+              {loadingStats ? (
+                <Spinner />
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+              )}
             </div>
           </div>
         </div>
@@ -386,13 +409,17 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
           onClick={() => handleFilterStatus('1')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-yellow-50/50 rounded-lg flex-shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400/60" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Pendentes</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
+              {loadingStats ? (
+                <Spinner />
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+              )}
             </div>
           </div>
         </div>
@@ -401,13 +428,17 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
           onClick={() => handleFilterStatus('2')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Em Análise</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
+              {loadingStats ? (
+                <Spinner />
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+              )}
             </div>
           </div>
         </div>
@@ -416,13 +447,17 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => handleFilterStatus('3')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-green-50/50 rounded-lg flex-shrink-0">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400/60" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Aprovadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
+              {loadingStats ? (
+                <Spinner />
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+              )}
             </div>
           </div>
         </div>
@@ -431,13 +466,17 @@ export default function Dashboard() {
           className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
           onClick={() => handleFilterStatus('4')}
         >
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+          <div className="flex items-center min-w-0">
+            <div className="p-2 bg-red-50/50 rounded-lg flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400/60" />
             </div>
-            <div className="ml-3 sm:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Rejeitadas</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
+              {loadingStats ? (
+                <Spinner />
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+              )}
             </div>
           </div>
         </div>
@@ -470,9 +509,12 @@ export default function Dashboard() {
         <div className="p-4 sm:p-6">
           <div className="space-y-3 sm:space-y-4">
             {/* Renderização condicional: pesquisa ativa tem prioridade */}
+            {console.log('🎨 Renderizando Atividade Recente - loadingProcesses:', loadingProcesses, 'searchState.active:', searchState.active)}
             {searchState.active ? (
               searchState.loading ? (
-                <div className="text-green-600 text-sm">Buscando processos...</div>
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
               ) : searchState.error ? (
                 <div className="text-red-600 text-sm">{searchState.error}</div>
               ) : searchState.results.length === 0 ? (
@@ -486,17 +528,17 @@ export default function Dashboard() {
                   >
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
-                        ${proc.status === '2' ? 'bg-blue-100' : ''}
-                        ${proc.status === '3' ? 'bg-green-100' : ''}
-                        ${proc.status === '4' ? 'bg-red-100' : ''}
-                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                        ${proc.status === '1' ? 'bg-yellow-50/50' : ''}
+                        ${proc.status === '2' ? 'bg-blue-50/50' : ''}
+                        ${proc.status === '3' ? 'bg-green-50/50' : ''}
+                        ${proc.status === '4' ? 'bg-red-50/50' : ''}
+                        ${proc.status === undefined ? 'bg-blue-50/50' : ''}
                       `}>
-                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
-                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
-                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-400/60" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-400/60" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-400/60" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-400/60" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-blue-400/60" />}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -518,6 +560,10 @@ export default function Dashboard() {
                   </div>
                 ))
               )
+            ) : loadingProcesses ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-8 h-8 border-3 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
             ) : (
               processes.length === 0 ? (
                 <div className="text-gray-500 text-sm">Nenhuma atividade recente encontrada.</div>
@@ -530,17 +576,17 @@ export default function Dashboard() {
                   >
                     <div className="flex-shrink-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center
-                        ${proc.status === '1' ? 'bg-yellow-100' : ''}
-                        ${proc.status === '2' ? 'bg-blue-100' : ''}
-                        ${proc.status === '3' ? 'bg-green-100' : ''}
-                        ${proc.status === '4' ? 'bg-red-100' : ''}
-                        ${proc.status === undefined ? 'bg-gray-100' : ''}
+                        ${proc.status === '1' ? 'bg-yellow-50/50' : ''}
+                        ${proc.status === '2' ? 'bg-blue-50/50' : ''}
+                        ${proc.status === '3' ? 'bg-green-50/50' : ''}
+                        ${proc.status === '4' ? 'bg-red-50/50' : ''}
+                        ${proc.status === undefined ? 'bg-blue-50/50' : ''}
                       `}>
-                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-600" />}
-                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-600" />}
-                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-600" />}
-                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-gray-600" />}
+                        {proc.status === '1' && <Clock className="w-5 h-5 text-yellow-400/60" />}
+                        {proc.status === '2' && <TrendingUp className="w-5 h-5 text-blue-400/60" />}
+                        {proc.status === '3' && <CheckCircle className="w-5 h-5 text-green-400/60" />}
+                        {proc.status === '4' && <AlertTriangle className="w-5 h-5 text-red-400/60" />}
+                        {(proc.status === undefined || proc.status === null || proc.status === '') && <FileText className="w-5 h-5 text-blue-400/60" />}
                       </div>
                     </div>
                     <div className="flex-1">
@@ -880,7 +926,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col">
       <header className="dark-header flex-shrink-0">
         <div className="px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -924,20 +970,17 @@ export default function Dashboard() {
 
             <div className="hidden sm:block h-8 w-px bg-gray-600"></div>
 
-            <div className="flex items-center gap-3 bg-gray-700 px-4 py-2.5 rounded-lg border border-gray-600">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-400">Usuário:</span>
-                <span className="text-base font-bold text-white">
-                  {externalUserName || 'Carregando...'}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-gray-300">
+              <User className="w-5 h-5" />
+              <span className="text-sm font-medium">
+                {getFirstName(externalUserName)}
+              </span>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden p-3 sm:p-6">
+      <div className="flex-1 flex p-3 sm:p-6">
         <div className="dashboard-container flex gap-4 lg:gap-6 w-full mx-auto px-2 sm:px-4 lg:px-8">
         {sidebarOpen && (
           <div
@@ -946,10 +989,10 @@ export default function Dashboard() {
           />
         )}
 
-        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 z-50 ${
-          sidebarOpen ? '' : 'lg:block hidden'
+        <div className={`sidebar-nav shadow-lg flex-shrink-0 w-72 sm:w-80 ${
+          sidebarOpen ? 'sidebar-open' : ''
         }`}>
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-[calc(100vh-80px)] sticky top-4">
             <div className="flex items-center px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between w-full">
                 <div className="ml-3">
@@ -961,7 +1004,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <nav className="flex-1 px-4 py-6 space-y-1">
+            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {navigation.map((item) => {
                 return (
                   <button
@@ -1109,9 +1152,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <main className="flex-1 overflow-auto">
-            <div className="content-area p-3 sm:p-4 lg:p-6 h-full rounded-lg">
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1">
+            <div className="content-area p-3 sm:p-4 lg:p-6 rounded-lg">
               {renderContent()}
             </div>
           </main>

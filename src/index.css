@@ -68,9 +68,9 @@ body::before {
 @media (max-width: 1023px) {
   .sidebar-nav {
     position: fixed;
-    top: 72px;
+    top: 0;
     left: 0;
-    bottom: 0;
+    height: 100vh;
     max-width: 85vw;
     z-index: 50;
     transform: translateX(-100%);
