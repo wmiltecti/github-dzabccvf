@@ -8,6 +8,14 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// ✅ ADICIONAR ESTES IMPORTS
+import InscricaoLayout from './components/InscricaoLayout';
+import ParticipantesPage from './pages/inscricao/ParticipantesPage';
+import ImovelPage from './pages/inscricao/ImovelPage';
+import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
+import FormularioPage from './pages/inscricao/FormularioPage';
+import DocumentacaoPage from './pages/inscricao/DocumentacaoPage';
+import RevisaoPage from './pages/inscricao/RevisaoPage';
 
 // Componente interno que usa o hook
 function AppRoutes() {
@@ -49,8 +57,22 @@ function AppRoutes() {
         }
       />
       
-      {/* Redirecionar rotas de inscrição para o Dashboard */}
-      <Route path="/inscricao/*" element={<Navigate to="/" replace />} />
+      {/* ✅ ADICIONAR AS ROTAS DE INSCRIÇÃO */}
+      <Route 
+        path="/inscricao/*" 
+        element={
+          <ProtectedRoute>
+            <InscricaoLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="participantes" element={<ParticipantesPage />} />
+        <Route path="imovel" element={<ImovelPage />} />
+        <Route path="empreendimento" element={<EmpreendimentoPage />} />
+        <Route path="formulario" element={<FormularioPage />} />
+        <Route path="documentacao" element={<DocumentacaoPage />} />
+        <Route path="revisao" element={<RevisaoPage />} />
+      </Route>
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
