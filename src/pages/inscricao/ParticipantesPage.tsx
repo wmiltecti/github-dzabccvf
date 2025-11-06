@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Trash2, User, Building, FileText, ArrowRight, AlertTriangle, X, Search, Globe } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { searchPessoas, SearchPessoaResult } from '../../lib/api/people';
 import {
   addParticipanteProcesso,
@@ -10,6 +11,7 @@ import {
 } from '../../lib/api/processos';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 type ModalStep = 'search' | 'select-role';
 type PapelType = 'Requerente' | 'Procurador' | 'Responsável Técnico';
@@ -29,6 +31,8 @@ export default function ParticipantesPage() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [participanteToDelete, setParticipanteToDelete] = useState<ParticipanteProcessoResponse | null>(null);
 
   // Função simples sem useCallback para evitar loops
   const loadParticipantes = async () => {
@@ -182,10 +186,22 @@ export default function ParticipantesPage() {
       });
 
       console.log('🔷 handleAddParticipante - Sucesso! Recarregando lista...');
+
+      const nomeParticipante = selectedPessoa.nome || selectedPessoa.razaosocial;
+      const mensagem = `${nomeParticipante} adicionado como ${trimmedPapel}`;
+
+      console.log('🔔 Exibindo toast:', mensagem);
+      toast.success(mensagem, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
       await loadParticipantes();
       handleCloseModal();
-
-      alert(`${selectedPessoa.nome || selectedPessoa.razaosocial} adicionado como ${trimmedPapel}`);
     } catch (err: any) {
       console.error('🔷 handleAddParticipante - Erro:', err);
       setError(err.message || 'Erro ao adicionar participante');
@@ -194,18 +210,32 @@ export default function ParticipantesPage() {
     }
   };
 
-  const handleRemoveParticipante = async (participante: ParticipanteProcessoResponse) => {
-    if (!processoId) return;
+  const handleRemoveParticipante = (participante: ParticipanteProcessoResponse) => {
+    setParticipanteToDelete(participante);
+    setShowConfirmDelete(true);
+  };
 
-    const nome = participante.pessoa_nome;
-    if (!confirm(`Deseja remover ${nome}?`)) return;
+  const confirmRemoveParticipante = async () => {
+    if (!processoId || !participanteToDelete) return;
 
     try {
-      await removeParticipanteProcesso(processoId, participante.id);
+      await removeParticipanteProcesso(processoId, participanteToDelete.id);
       await loadParticipantes();
-      alert('Participante removido com sucesso');
+
+      console.log('🔔 Exibindo toast: Participante removido');
+      toast.success('Participante removido com sucesso', {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } catch (err: any) {
-      alert(err.message || 'Erro ao remover participante');
+      console.log('🔔 Exibindo toast de erro:', err.message);
+      toast.error(err.message || 'Erro ao remover participante', {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    } finally {
+      setShowConfirmDelete(false);
+      setParticipanteToDelete(null);
     }
   };
 
@@ -565,6 +595,20 @@ export default function ParticipantesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setParticipanteToDelete(null);
+        }}
+        onConfirm={confirmRemoveParticipante}
+        title="Remover Participante"
+        message={`Deseja realmente remover ${participanteToDelete?.pessoa_nome || 'este participante'}?`}
+        confirmText="Remover"
+        cancelText="Cancelar"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 }
