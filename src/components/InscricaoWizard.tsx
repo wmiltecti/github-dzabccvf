@@ -67,21 +67,23 @@ export default function InscricaoWizard() {
   };
 
   const handleSaveDraft = () => {
-    alert('Rascunho salvo com sucesso!');
+    toast.success('Rascunho salvo com sucesso!');
   };
 
   const handleReset = () => {
-    if (confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
+    if (window.confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
       reset();
       setProcessoId(null);
+      toast.info('Processo reiniciado');
       window.location.reload();
     }
   };
 
   const handleNewInscricao = () => {
-    if (confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
+    if (window.confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
       startNewInscricao();
       setProcessoId(null);
+      toast.info('Nova inscrição iniciada');
       window.location.reload();
     }
   };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, LogOut, Mail, Shield, ChevronUp, ChevronDown } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function UserPanel() {
@@ -12,13 +13,13 @@ export default function UserPanel() {
   const handleSignOut = async () => {
     if (isLoggingOut) return;
 
-    if (confirm('Deseja realmente sair?')) {
+    if (window.confirm('Deseja realmente sair?')) {
       setIsLoggingOut(true);
       try {
         await signOut();
       } catch (error) {
         console.error('Erro ao sair:', error);
-        alert('Erro ao fazer logout. Tente novamente.');
+        toast.error('Erro ao fazer logout. Tente novamente.');
         setIsLoggingOut(false);
       }
     }

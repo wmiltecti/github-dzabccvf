@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
@@ -118,11 +119,11 @@ export default function ImovelPage() {
     setProperty(propertyData);
     setPropertyId(selectedImovel.id);
     handleCloseModal();
-    alert('Imóvel selecionado com sucesso!');
+    toast.success('Imóvel selecionado com sucesso!');
   };
 
   const handleRemoveProperty = () => {
-    if (!confirm('Deseja remover o imóvel selecionado?')) return;
+    if (!window.confirm('Deseja remover o imóvel selecionado?')) return;
     
     setProperty(undefined);
     setPropertyId(undefined);

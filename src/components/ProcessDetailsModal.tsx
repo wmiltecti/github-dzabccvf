@@ -278,7 +278,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este comentário?')) return;
+    if (!window.confirm('Tem certeza que deseja excluir este comentário?')) return;
     
     try {
       await CommentService.deleteComment(commentId);

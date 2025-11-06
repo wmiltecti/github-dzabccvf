@@ -146,7 +146,7 @@ export default function Step3UsoAgua({ data, onChange, onValidation, processoId 
 
   const handleAddOutorga = () => {
     if (!currentOutorga.tipo || !currentOutorga.numero || !currentOutorga.validade || !currentOutorga.vazao) {
-      alert('Preencha todos os campos da outorga');
+      toast.warning('Preencha todos os campos da outorga');
       return;
     }
 

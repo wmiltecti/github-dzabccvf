@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import {
@@ -94,9 +95,9 @@ export default function DocumentacaoPage() {
     try {
       // TODO: Implementar upload real para Supabase Storage ou API
       await new Promise(resolve => setTimeout(resolve, 2000));
-      alert('Documentos enviados com sucesso!');
+      toast.success('Documentos enviados com sucesso!');
     } catch (error) {
-      alert('Erro ao enviar documentos');
+      toast.error('Erro ao enviar documentos');
     } finally {
       setUploading(false);
     }

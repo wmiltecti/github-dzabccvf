@@ -31,7 +31,7 @@ export default function RevisaoPage() {
 
   const handleSubmit = async () => {
     if (!processoId) {
-      alert('Erro: Processo não encontrado');
+      toast.error('Erro: Processo não encontrado');
       return;
     }
 
