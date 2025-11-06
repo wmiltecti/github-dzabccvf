@@ -98,9 +98,10 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       }
     },
     importGeoFileFromServer: async (filename: string) => {
+      console.log('[Geo] importGeoFileFromServer chamado', filename);
       if (!filename) return;
       try {
-  const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
+        const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
         const geoData = await loadGeoFileFromServer(filename);
         // handleUploadData espera (features, fileName)
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
@@ -108,7 +109,13 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
           features = geoData.features;
         }
         if (!features || features.length === 0) throw new Error('Arquivo vazio ou inválido');
-        handleUploadData(features, filename);
+        // Padroniza: type = geometry.type
+        const adaptedFeatures = features.map((f: any) => ({
+          ...f,
+          type: f.geometry?.type || f.type,
+          coordinates: f.geometry?.coordinates
+        }));
+        handleUploadData(adaptedFeatures, filename);
       } catch (err) {
         alert('Erro ao importar arquivo: ' + (err as Error).message);
       }
@@ -187,7 +194,8 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   useEffect(() => {
-    // Create system layers from processes and companies
+  console.log('[Geo] useEffect system layers disparado', { processes, companies });
+  // Create system layers from processes and companies
     const systemLayers: GeoLayer[] = [];
 
     if (processes.length > 0) {
@@ -260,27 +268,56 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       }
     }
 
-    setLayers(prev => {
-      // Keep imported layers, update system layers
-      const importedLayers = prev.filter(l => l.source === 'imported');
-      return [...systemLayers, ...importedLayers];
-    });
-  }, [processes, companies]);
+  setLayers(prev => {
+    // Keep imported layers, update system layers
+    const importedLayers = prev.filter(l => l.source === 'imported');
+    const result = [...systemLayers, ...importedLayers];
+    // Checagem superficial: compara ids e quantidade
+    const prevIds = prev.map(l => l.id).join(',');
+    const resultIds = result.map(l => l.id).join(',');
+    if (prev.length === result.length && prevIds === resultIds) {
+      // Não há mudança real, não atualiza
+      return prev;
+    }
+    console.log('[Geo] setLayers (system layers)', result);
+    return result;
+  });
+}, [processes, companies]);
 
-  const handleUploadData = (uploadedData: any[], fileName: string) => {
+  const safeGetCoordinates = (geometry: any) => {
+    if (!geometry) return undefined;
+    if (geometry.type === 'GeometryCollection') return undefined;
+    return geometry.coordinates;
+  };
+
+  const handleUploadData = (...args: any[]) => {
+    let uploadedData: any[] = [];
+    let fileName = 'Camada Importada';
+    if (Array.isArray(args[0]) && typeof args[1] === 'string') {
+      uploadedData = args[0];
+      fileName = args[1];
+    } else if (Array.isArray(args[0])) {
+      uploadedData = args[0];
+    }
     console.log('🎯 Creating layer from uploaded data:', uploadedData.length, 'features');
-    
+    uploadedData.forEach((item, idx) => {
+      console.log(`[handleUploadData] Feature[${idx}] type:`, item.type);
+      console.log(`[handleUploadData] Feature[${idx}] coordinates:`, item.coordinates);
+      if (item.geometry) {
+        console.log(`[handleUploadData] Feature[${idx}] geometry.type:`, item.geometry.type);
+        console.log(`[handleUploadData] Feature[${idx}] geometry.coordinates:`, item.geometry.coordinates);
+      }
+    });
     const newFeatures: GeoFeature[] = uploadedData.map((item, index) => ({
       id: item.id || `uploaded-${Date.now()}-${index}`,
       name: item.name,
       type: item.type,
-      coordinates: item.coordinates,
+      coordinates: item.coordinates !== undefined ? item.coordinates : (item.geometry?.coordinates),
       properties: item.properties || item.data || {},
       layerId: `layer-${Date.now()}`
     }));
-    
+    console.log('[handleUploadData] newFeatures:', newFeatures);
     const layerName = fileName.replace(/\.[^/.]+$/, ""); // Remove extension
-    
     const newLayer: GeoLayer = {
       id: `layer-${Date.now()}`,
       name: layerName,
@@ -292,16 +329,13 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       uploadedAt: new Date().toISOString(),
       featureCount: newFeatures.length
     };
-
     console.log('✅ New layer created:', newLayer.name, 'with', newLayer.featureCount, 'features');
     setLayers(prev => [...prev, newLayer]);
     setShowUpload(false);
-    
-    // Auto zoom to the newly imported layer
     setTimeout(() => {
       console.log('🎯 Auto-zooming to newly imported layer:', newLayer.name);
       setZoomToLayerId(newLayer.id);
-    }, 100); // Small delay to ensure layer is rendered
+    }, 100);
   };
 
   const handleToggleLayer = (layerId: string) => {
@@ -545,14 +579,19 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       const bufferGeoLayer: GeoLayer = {
         id: `${baseLayer.id}-buffer-${Date.now()}`,
         name: `Buffer ${distanciaMetros}m - ${baseLayer.name}`,
-        features: bufferFC.features.map((feat, idx) => ({
-          id: `buffer-feat-${idx}`,
-          name: feat.properties?.name || `Buffer Feature ${idx + 1}`,
-          type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
-          coordinates: feat.geometry.coordinates,
-          properties: feat.properties || {},
-          layerId: `${baseLayer.id}-buffer-${Date.now()}`
-        })),
+        features: bufferFC.features
+          .map((feat, idx) => {
+            if (feat.geometry.type === 'GeometryCollection') return null;
+            return {
+              id: `buffer-feat-${idx}`,
+              name: feat.properties?.name || `Buffer Feature ${idx + 1}`,
+              type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+              coordinates: safeGetCoordinates(feat.geometry),
+              properties: feat.properties || {},
+              layerId: `${baseLayer.id}-buffer-${Date.now()}`
+            };
+          })
+          .filter(Boolean) as GeoFeature[],
         visible: true,
         color: '#3B82F6',
         opacity: 0.3,
@@ -577,25 +616,28 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       const resultGeoLayer: GeoLayer = {
         id: `${baseLayer.id}-result-${Date.now()}`,
         name: `Zona de Amortecimento Final - ${baseLayer.name}`,
-        features: resultFC.features.map((feat, idx) => {
-          const featMetrics = metrics.features[idx];
-          return {
-            id: `result-feat-${idx}`,
-            name: feat.properties?.name || featMetrics?.name || `Resultado Feature ${idx + 1}`,
-            type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
-            coordinates: feat.geometry.coordinates,
-            properties: {
-              ...feat.properties,
-              buffer_distance: distanciaMetros,
-              base_layer: baseLayer.name,
-              reference_layer: referenceLayer.name,
-              area_ha: featMetrics?.areaHa,
-              area_m2: featMetrics?.areaM2,
-              perimeter_km: featMetrics?.perimetroKm
-            },
-            layerId: `${baseLayer.id}-result-${Date.now()}`
-          };
-        }),
+        features: resultFC.features
+          .map((feat, idx) => {
+            if (feat.geometry.type === 'GeometryCollection') return null;
+            const featMetrics = metrics.features[idx];
+            return {
+              id: `result-feat-${idx}`,
+              name: feat.properties?.name || featMetrics?.name || `Resultado Feature ${idx + 1}`,
+              type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+              coordinates: safeGetCoordinates(feat.geometry),
+              properties: {
+                ...feat.properties,
+                buffer_distance: distanciaMetros,
+                base_layer: baseLayer.name,
+                reference_layer: referenceLayer.name,
+                area_ha: featMetrics?.areaHa,
+                area_m2: featMetrics?.areaM2,
+                perimeter_km: featMetrics?.perimetroKm
+              },
+              layerId: `${baseLayer.id}-result-${Date.now()}`
+            };
+          })
+          .filter(Boolean) as GeoFeature[],
         visible: true,
         color: '#EF4444',
         opacity: 0.5,
@@ -613,33 +655,34 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       console.log(`📊 Área subtraída calculada: ${areaSubtraidaFC.features.length} features encontradas`);
 
       let areaSubtraidaGeoLayer: GeoLayer | null = null;
-
       if (areaSubtraidaFC.features.length > 0) {
         const areaSubtraidaMetrics = calcularArea(areaSubtraidaFC);
-
         areaSubtraidaGeoLayer = {
           id: `${baseLayer.id}-subtraida-${Date.now()}`,
           name: `Área Subtraída do Buffer - ${baseLayer.name}`,
-          features: areaSubtraidaFC.features.map((feat, idx) => {
-            const featMetrics = areaSubtraidaMetrics.features[idx];
-            return {
-              id: `subtraida-feat-${idx}`,
-              name: feat.properties?.name || featMetrics?.name || `Área Subtraída ${idx + 1}`,
-              type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
-              coordinates: feat.geometry.coordinates,
-              properties: {
-                ...feat.properties,
-                buffer_distance: distanciaMetros,
-                base_layer: baseLayer.name,
-                reference_layer: referenceLayer.name,
-                area_ha: featMetrics?.areaHa,
-                area_m2: featMetrics?.areaM2,
-                perimeter_km: featMetrics?.perimetroKm,
-                layer_type: 'subtracted_area'
-              },
-              layerId: `${baseLayer.id}-subtraida-${Date.now()}`
-            };
-          }),
+          features: areaSubtraidaFC.features
+            .map((feat, idx) => {
+              if (feat.geometry.type === 'GeometryCollection') return null;
+              const featMetrics = areaSubtraidaMetrics.features[idx];
+              return {
+                id: `subtraida-feat-${idx}`,
+                name: feat.properties?.name || featMetrics?.name || `Área Subtraída ${idx + 1}`,
+                type: feat.geometry.type as 'Polygon' | 'MultiPolygon',
+                coordinates: safeGetCoordinates(feat.geometry),
+                properties: {
+                  ...feat.properties,
+                  buffer_distance: distanciaMetros,
+                  base_layer: baseLayer.name,
+                  reference_layer: referenceLayer.name,
+                  area_ha: featMetrics?.areaHa,
+                  area_m2: featMetrics?.areaM2,
+                  perimeter_km: featMetrics?.perimetroKm,
+                  layer_type: 'subtracted_area'
+                },
+                layerId: `${baseLayer.id}-subtraida-${Date.now()}`
+              };
+            })
+            .filter(Boolean) as GeoFeature[],
           visible: true,
           color: '#F59E0B',
           opacity: 0.4,

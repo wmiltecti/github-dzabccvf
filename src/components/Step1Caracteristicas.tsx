@@ -102,7 +102,8 @@ export default function Step1Caracteristicas({ data, onChange, unidadeMedida = '
         {showGeoModal && (
           <Modal isOpen={showGeoModal} onClose={() => setShowGeoModal(false)} title="Visualização Geo" size="xl" fullscreen>
             <div style={{ height: '100vh', width: '100vw', maxWidth: '100vw', maxHeight: '100vh', margin: 0, padding: 0 }}>
-              <GeoVisualization />
+              {/* Arrays estáveis para evitar re-render desnecessário */}
+              <GeoVisualization processes={React.useMemo(() => [], [])} companies={React.useMemo(() => [], [])} />
             </div>
           </Modal>
         )}

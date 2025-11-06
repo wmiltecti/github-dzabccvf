@@ -103,6 +103,7 @@ export default function ImovelPage() {
       dms_lat: selectedImovel.dms_lat || '',
       dms_long: selectedImovel.dms_long || '',
       car_codigo: selectedImovel.car_codigo || '',
+      arquivogeorreferenciamento: selectedImovel.arquivogeorreferenciamento || '',
       address: {
         cep: selectedImovel.cep || '',
         logradouro: selectedImovel.logradouro || '',

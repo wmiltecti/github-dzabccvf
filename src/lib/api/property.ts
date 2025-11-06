@@ -95,6 +95,7 @@ export interface SearchImovelResult {
   utm_long?: string;
   dms_lat?: string;
   dms_long?: string;
+  arquivogeorreferenciamento?: string;
 }
 
 // Função de busca de imóveis
@@ -146,21 +147,22 @@ export async function searchImoveis(query: string) {
 
       // Transforma os dados do Supabase para o formato esperado
       const formattedData = (data || []).map((imovel: any) => ({
-        id: imovel.id,
-        kind: imovel.kind,
-        car_codigo: imovel.car_codigo,
-        matricula: imovel.titles?.[0]?.matricula,
-        municipio_sede: imovel.municipio_sede,
-        logradouro: imovel.address?.logradouro,
-        numero: imovel.address?.numero,
-        bairro: imovel.address?.bairro,
-        municipio: imovel.address?.municipio,
-        uf: imovel.address?.uf,
-        cep: imovel.address?.cep,
-        utm_lat: imovel.utm_lat,
-        utm_long: imovel.utm_long,
-        dms_lat: imovel.dms_lat,
-        dms_long: imovel.dms_long,
+  id: imovel.id,
+  kind: imovel.kind,
+  car_codigo: imovel.car_codigo,
+  matricula: imovel.titles?.[0]?.matricula,
+  municipio_sede: imovel.municipio_sede,
+  logradouro: imovel.address?.logradouro,
+  numero: imovel.address?.numero,
+  bairro: imovel.address?.bairro,
+  municipio: imovel.address?.municipio,
+  uf: imovel.address?.uf,
+  cep: imovel.address?.cep,
+  utm_lat: imovel.utm_lat,
+  utm_long: imovel.utm_long,
+  dms_lat: imovel.dms_lat,
+  dms_long: imovel.dms_long,
+  arquivogeorreferenciamento: imovel.arquivogeorreferenciamento,
       }));
 
       return { data: formattedData, error: null as ServiceError | null };

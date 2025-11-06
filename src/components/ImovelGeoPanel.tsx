@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Eye } from 'lucide-react';
 import GeoVisualization from './geo/GeoVisualization';
@@ -13,11 +12,27 @@ interface ImovelGeoPanelProps {
 export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
   const [showGeoModal, setShowGeoModal] = useState(false);
   const geoRef = useRef<GeoVisualizationRefApi>(null);
+  // Arrays estáveis para evitar re-render desnecessário
+  const stableProcesses = React.useMemo(() => [], []);
+  const stableCompanies = React.useMemo(() => [], []);
 
-  // When modal opens and carFileName is available, auto-import CAR file (programaticamente)
+
+  // Chama importGeoFileFromServer após o modal abrir e o ref estar disponível
   useEffect(() => {
-    if (showGeoModal && carFileName && geoRef.current) {
-      geoRef.current.importGeoFileFromServer(carFileName);
+    console.log('[Geo] useEffect: Iniciado...', carFileName);
+    if (showGeoModal && carFileName) {
+      // Pequeno delay para garantir que o ref esteja disponível após o modal abrir
+      const timeout = setTimeout(() => {
+        if (geoRef.current) {
+          console.log('[Geo] useEffect: Chamando importGeoFileFromServer com', carFileName);
+          geoRef.current.importGeoFileFromServer(carFileName);
+        } else {
+          console.log('[Geo] useEffect: geoRef.current ainda não disponível');
+        }
+      }, 100);
+      return () => clearTimeout(timeout);
+    } else {
+      console.log('[Geo] useEffect: Condições não atendidas para chamar importGeoFileFromServer');
     }
   }, [showGeoModal, carFileName]);
 
@@ -28,7 +43,10 @@ export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
         <span className="font-semibold text-gray-800">Visualização Geo</span>
         <button
           className="ml-4 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          onClick={() => setShowGeoModal(true)}
+          onClick={() => {
+            console.log('[Geo] Botão Abrir Mapa clicado');
+            setShowGeoModal(true);
+          }}
         >
           Abrir Mapa
         </button>
@@ -36,7 +54,7 @@ export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
       {showGeoModal && (
         <Modal isOpen={showGeoModal} onClose={() => setShowGeoModal(false)} title="Visualização Geo" size="xl" fullscreen>
           <div style={{ height: '100vh', width: '100vw', maxWidth: '100vw', maxHeight: '100vh', margin: 0, padding: 0 }}>
-            <GeoVisualization ref={geoRef} />
+            <GeoVisualization ref={geoRef} processes={stableProcesses} companies={stableCompanies} />
           </div>
         </Modal>
       )}
