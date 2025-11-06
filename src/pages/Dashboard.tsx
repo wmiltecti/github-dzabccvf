@@ -36,6 +36,7 @@ import GeoVisualization from '../components/geo/GeoVisualization';
 import FormWizard from '../components/FormWizard';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
+import ParticipantesPage from './inscricao/ParticipantesPage';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -86,6 +87,7 @@ export default function Dashboard() {
   const [showNewProcessModal, setShowNewProcessModal] = useState(false);
   const [showProcessDetails, setShowProcessDetails] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
+  const [showInscricaoForm, setShowInscricaoForm] = useState(false);
   const [processes, setProcesses] = useState<ProcessoItem[]>([]);
   // Estados para paginação do painel de atividade recente
   const [page, setPage] = useState(1);
@@ -374,7 +376,7 @@ export default function Dashboard() {
           <div className="flex space-x-2 sm:space-x-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => setShowNewProcessModal(true)}
+              onClick={() => setShowInscricaoForm(true)}
               title="Iniciar nova solicitação"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -660,7 +662,7 @@ export default function Dashboard() {
           </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => setShowNewProcessModal(true)}
+            onClick={() => setShowInscricaoForm(true)}
             title="Iniciar nova solicitação"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -756,23 +758,43 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderInscricoes = () => (
-    <div className="space-y-6">
-      {/* ============================================ */}
-      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
-      {/* ============================================ */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-          onClick={() => setShowNewProcessModal(true)}
-          title="Criar nova solicitação"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden xs:inline">Nova Solicitação</span>
-          <span className="xs:hidden">Nova</span>
-        </button>
-      </div>
+  const renderInscricoes = () => {
+    if (showInscricaoForm) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => setShowInscricaoForm(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-600" />
+            </button>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+          </div>
+          <div className="glass-effect rounded-lg">
+            <ParticipantesPage />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* ============================================ */}
+        {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+        {/* ============================================ */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowInscricaoForm(true)}
+            title="Criar nova solicitação"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Nova Solicitação</span>
+            <span className="xs:hidden">Nova</span>
+          </button>
+        </div>
 
       <div className="glass-effect p-3 sm:p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -862,7 +884,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mb-4">Não há solicitações que correspondam aos filtros selecionados.</p>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                      onClick={() => setShowNewProcessModal(true)}
+                      onClick={() => setShowInscricaoForm(true)}
                     >
                       <Plus className="w-4 h-4" />
                       Criar Nova Solicitação
@@ -875,7 +897,8 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
