@@ -102,6 +102,13 @@ export default function Dashboard() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
 
+  // Reset form quando mudar de aba
+  React.useEffect(() => {
+    if (activeTab !== 'inscricoes') {
+      setShowInscricaoForm(false);
+    }
+  }, [activeTab]);
+
   React.useEffect(() => {
     const loadExternalUserData = () => {
       try {
@@ -374,7 +381,10 @@ export default function Dashboard() {
           <div className="flex space-x-2 sm:space-x-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => navigate('/inscricao/participantes')}
+              onClick={() => {
+                setShowInscricaoForm(true);
+                setActiveTab('inscricoes');
+              }}
               title="Iniciar nova solicitação"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -660,7 +670,10 @@ export default function Dashboard() {
           </button>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => navigate('/inscricao/participantes')}
+            onClick={() => {
+              setShowInscricaoForm(true);
+              setActiveTab('inscricoes');
+            }}
             title="Iniciar nova solicitação"
           >
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -756,23 +769,48 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderInscricoes = () => (
-    <div className="space-y-6">
-      {/* ============================================ */}
-      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
-      {/* ============================================ */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-          onClick={() => navigate('/inscricao/participantes')}
-          title="Criar nova solicitação"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="hidden xs:inline">Nova Solicitação</span>
-          <span className="xs:hidden">Nova</span>
-        </button>
-      </div>
+  const renderInscricoes = () => {
+    if (showInscricaoForm) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+            <button
+              onClick={() => setShowInscricaoForm(false)}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar para Lista
+            </button>
+          </div>
+          <FormWizard
+            onComplete={() => {
+              setShowInscricaoForm(false);
+              loadProcesses();
+              loadStats();
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* ============================================ */}
+        {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+        {/* ============================================ */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Solicitações</h1>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowInscricaoForm(true)}
+            title="Criar nova solicitação"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Nova Solicitação</span>
+            <span className="xs:hidden">Nova</span>
+          </button>
+        </div>
 
       <div className="glass-effect p-3 sm:p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -862,7 +900,7 @@ export default function Dashboard() {
                     <p className="text-gray-500 mb-4">Não há solicitações que correspondam aos filtros selecionados.</p>
                     <button
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-                      onClick={() => navigate('/inscricao/participantes')}
+                      onClick={() => setShowInscricaoForm(true)}
                     >
                       <Plus className="w-4 h-4" />
                       Criar Nova Solicitação
@@ -875,7 +913,8 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {
