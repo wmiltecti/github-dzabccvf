@@ -64,8 +64,8 @@ const REQUIRED_DOCUMENTS: Document[] = [
 export default function DocumentacaoPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
-  const { isStepComplete } = useInscricaoStore();
-  
+  const { isStepComplete, setCurrentStep } = useInscricaoStore();
+
   const [documents, setDocuments] = useState<Document[]>(REQUIRED_DOCUMENTS);
   const [uploading, setUploading] = useState(false);
 
@@ -103,11 +103,19 @@ export default function DocumentacaoPage() {
   };
 
   const handleBack = () => {
-    navigate('/inscricao/formulario');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/formulario');
+    } else {
+      setCurrentStep(4);
+    }
   };
 
   const handleNext = () => {
-    navigate('/inscricao/revisao');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/revisao');
+    } else {
+      setCurrentStep(6);
+    }
   };
 
   const requiredDocsComplete = documents

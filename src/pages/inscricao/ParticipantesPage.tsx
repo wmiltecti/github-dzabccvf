@@ -19,7 +19,7 @@ type PapelType = 'Requerente' | 'Procurador' | 'Responsável Técnico';
 export default function ParticipantesPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext(); // ✅ Usa Context ao invés de Zustand
-  const { isStepComplete, setParticipants } = useInscricaoStore();
+  const { isStepComplete, setParticipants, setCurrentStep } = useInscricaoStore();
 
   const [participantes, setParticipantes] = useState<ParticipanteProcessoResponse[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -241,7 +241,12 @@ export default function ParticipantesPage() {
 
   const handleNext = () => {
     if (isStepComplete(1)) {
-      navigate('/inscricao/imovel');
+      // Se estiver em uma rota de inscrição, navega; caso contrário, apenas muda o step
+      if (window.location.pathname.includes('/inscricao/')) {
+        navigate('/inscricao/imovel');
+      } else {
+        setCurrentStep(2);
+      }
     }
   };
 

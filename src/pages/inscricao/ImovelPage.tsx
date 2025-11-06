@@ -10,12 +10,13 @@ type ModalStep = 'search' | 'confirm';
 export default function ImovelPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
-  const { 
-    property, 
-    setProperty, 
+  const {
+    property,
+    setProperty,
     setPropertyId,
     isStepComplete,
-    canProceedToStep
+    canProceedToStep,
+    setCurrentStep
   } = useInscricaoStore();
   
   const [showModal, setShowModal] = useState(false);
@@ -130,11 +131,19 @@ export default function ImovelPage() {
   const handleNext = () => {
     // TODO: Validação temporariamente desabilitada para aprovação de design
     // Reativar validação: if (canProceedToStep(3))
-    navigate('/inscricao/empreendimento');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/empreendimento');
+    } else {
+      setCurrentStep(3);
+    }
   };
 
   const handleBack = () => {
-    navigate('/inscricao/participantes');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/participantes');
+    } else {
+      setCurrentStep(1);
+    }
   };
 
   const getKindLabel = (kind: string) => {

@@ -24,6 +24,7 @@ export default function RevisaoPage() {
     titles,
     atividadeId,
     reset,
+    setCurrentStep,
   } = useInscricaoStore();
 
   const [submitting, setSubmitting] = useState(false);
@@ -143,7 +144,11 @@ export default function RevisaoPage() {
   };
 
   const handleBack = () => {
-    navigate('/inscricao/documentacao');
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/documentacao');
+    } else {
+      setCurrentStep(5);
+    }
   };
 
   const mockActivity = atividadeId

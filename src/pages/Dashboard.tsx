@@ -34,7 +34,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
-import FormWizard from '../components/FormWizard';
+import InscricaoWizard from '../components/InscricaoWizard';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
@@ -780,7 +780,7 @@ export default function Dashboard() {
               <span className="hidden xs:inline">Voltar</span>
             </button>
           </div>
-          <FormWizard />
+          <InscricaoWizard />
         </div>
       );
     }
