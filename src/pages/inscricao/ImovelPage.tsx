@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
-import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search } from 'lucide-react';
+import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search, Eye } from 'lucide-react';
+import ImovelGeoPanel from '../../components/ImovelGeoPanel';
 
 type ModalStep = 'search' | 'confirm';
 
@@ -257,6 +258,8 @@ export default function ImovelPage() {
               </button>
             </div>
           </div>
+          {/* Painel Visualização Geo */}
+          <ImovelGeoPanel />
         </div>
       ) : (
         <div className="mb-6">
