@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { GeoVisualizationRefApi } from './GeoVisualizationRefApi';
 import { MapPin, Layers, Search, Filter, Download, Upload, Eye, Settings, Maximize2, Plus, Trash2, ToggleLeft, ToggleRight, FileText, X, Palette, GripVertical, GripHorizontal, Circle, Calculator } from 'lucide-react';
-import { MapContainer, TileLayer, Polygon, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import PolygonLayer from './PolygonLayer';
+import MapClickHandler from './MapClickHandler';
 import L from 'leaflet';
 import GeoUpload from './GeoUpload';
 import GeoSettings from './GeoSettings';
@@ -49,209 +52,68 @@ interface GeoVisualizationProps {
   companies?: any[];
 }
 
-// Component for handling map clicks
-function MapClickHandler({ 
-  onRightClick, 
-  onMapReady,
-  zoomToLayerId,
-  layers,
-  onZoomComplete
-}: { 
-  onRightClick: (feature: GeoFeature, latlng: L.LatLng) => void;
-  onMapReady: (map: L.Map) => void;
-  zoomToLayerId: string | null;
-  layers: GeoLayer[];
-  onZoomComplete: () => void;
-}) {
-  const map = useMapEvents({
-    ready: () => {
-      console.log('🗺️ Map is ready');
-      onMapReady(map);
-    },
-    contextmenu: (e) => {
-      // For now, we'll handle right-click on the map itself
-      // In a real implementation, we'd need to detect which feature was clicked
-      console.log('Right click at:', e.latlng);
-    }
-  });
 
-  // Handle zoom to layer when zoomToLayerId changes
-  React.useEffect(() => {
-    if (zoomToLayerId && map) {
-      const layer = layers.find(l => l.id === zoomToLayerId);
-      if (!layer || layer.features.length === 0) {
-        onZoomComplete();
-        return;
-      }
+// Interface agora está em GeoVisualizationRefApi.ts
 
-      console.log('🎯 Zooming to layer:', layer.name, 'with', layer.features.length, 'features');
-      
-      // Calculate bounds for all features in the layer
-      const allLatLngs: L.LatLngExpression[] = [];
-      
-      layer.features.forEach(feature => {
-        if (feature.type === 'Point') {
-          const [lng, lat] = feature.coordinates;
-          if (!isNaN(lat) && !isNaN(lng)) {
-            allLatLngs.push([lat, lng]);
-          }
-        } else if (feature.type === 'Polygon') {
-          const coords = feature.coordinates[0]; // First ring (outer boundary)
-          coords.forEach((coord: number[]) => {
-            if (!isNaN(coord[1]) && !isNaN(coord[0])) {
-              allLatLngs.push([coord[1], coord[0]]); // [lat, lng]
-            }
-          });
-        } else if (feature.type === 'MultiPolygon') {
-          feature.coordinates.forEach((polygon: any) => {
-            const coords = polygon[0]; // First ring of each polygon
-            coords.forEach((coord: number[]) => {
-              if (!isNaN(coord[1]) && !isNaN(coord[0])) {
-                allLatLngs.push([coord[1], coord[0]]); // [lat, lng]
-              }
-            });
-          });
-        }
-      });
-      
-      if (allLatLngs.length === 0) {
-        console.warn('❌ No valid coordinates found for layer');
-        onZoomComplete();
-        return;
-      }
-      
-      console.log('🎯 Fitting bounds for', allLatLngs.length, 'coordinates');
-      
-      // Create bounds and fit to view
-      const bounds = L.latLngBounds(allLatLngs);
-      map.fitBounds(bounds, {
-        padding: [50, 50],
-        maxZoom: 12,
-        animate: true,
-        duration: 1.0
-      });
-      
-      console.log('✅ Map centered on layer:', layer.name);
-      onZoomComplete();
-    }
-  }, [zoomToLayerId, map, layers, onZoomComplete]);
-
-  return null;
-}
-
-// Component for rendering polygons with right-click support
-function PolygonLayer({ 
-  feature, 
-  color, 
-  opacity,
-  onRightClick 
-}: { 
-  feature: GeoFeature; 
-  color: string; 
-  opacity: number;
-  onRightClick: (feature: GeoFeature, latlng: L.LatLng) => void;
-}) {
-  const convertCoordinates = (coords: any): L.LatLngExpression[][] => {
-    if (feature.type === 'MultiPolygon') {
-      // MultiPolygon: [[[lng, lat], [lng, lat], ...]]
-      // First polygon of the MultiPolygon, with all its rings (outer + holes)
-      return coords[0].map((ring: any) =>
-        ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
-      );
-    } else if (feature.type === 'Polygon') {
-      // Polygon with holes: [outer_ring, hole1, hole2, ...]
-      // coords[0] = outer ring (clockwise)
-      // coords[1..n] = holes (counter-clockwise)
-      return coords.map((ring: any) =>
-        ring.map((coord: any) => [coord[1], coord[0]] as L.LatLngExpression)
-      );
-    }
-    return [];
-  };
-
-  const positions = convertCoordinates(feature.coordinates);
-
-  // Debug log for polygons with holes
-  if (feature.type === 'Polygon' && feature.coordinates.length > 1) {
-    console.log(`🍩 Polígono com buraco detectado: ${feature.name}`, {
-      rings: feature.coordinates.length,
-      outerRingPoints: feature.coordinates[0].length,
-      holes: feature.coordinates.length - 1
-    });
-  }
-
-  return (
-    <Polygon
-      positions={positions}
-      pathOptions={{
-        color: color,
-        weight: 2,
-        opacity: 1.0, // Keep border always visible
-        fillColor: color,
-        fillOpacity: opacity * 0.4
-      }}
-      eventHandlers={{
-        contextmenu: (e) => {
-          e.originalEvent.preventDefault();
-          onRightClick(feature, e.latlng);
-        }
-      }}
-    >
-      <Popup maxWidth={300}>
-        <div className="text-sm">
-          <h4 className="font-semibold text-gray-900 mb-2 text-base">{feature.name}</h4>
-          <div className="space-y-1 mb-2">
-            <p className="text-gray-600 flex items-center justify-between">
-              <span className="font-medium">Tipo:</span>
-              <span className="text-gray-800">{feature.type}</span>
-            </p>
-            {feature.properties?.area_ha && (
-              <p className="text-green-600 flex items-center justify-between">
-                <span className="font-medium">Área:</span>
-                <span className="font-semibold">{Number(feature.properties.area_ha).toFixed(2)} ha</span>
-              </p>
-            )}
-            {feature.properties?.area_m2 && (
-              <p className="text-gray-500 flex items-center justify-between text-xs">
-                <span>Área (m²):</span>
-                <span>{Number(feature.properties.area_m2).toLocaleString('pt-BR')} m²</span>
-              </p>
-            )}
-            {feature.properties?.perimeter_km && (
-              <p className="text-blue-600 flex items-center justify-between">
-                <span className="font-medium">Perímetro:</span>
-                <span className="font-semibold">{Number(feature.properties.perimeter_km).toFixed(2)} km</span>
-              </p>
-            )}
-            {feature.properties?.buffer_distance && (
-              <p className="text-cyan-600 flex items-center justify-between">
-                <span className="font-medium">Buffer:</span>
-                <span className="font-semibold">{feature.properties.buffer_distance} m</span>
-              </p>
-            )}
-          </div>
-          {feature.properties && Object.keys(feature.properties).length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <p className="text-xs text-gray-400 mb-1">Propriedades adicionais:</p>
-              {Object.entries(feature.properties)
-                .filter(([key]) => !['area_ha', 'area_m2', 'perimeter_km', 'buffer_distance', 'base_layer', 'reference_layer'].includes(key))
-                .slice(0, 3)
-                .map(([key, value]) => (
-                  <div key={key} className="text-xs text-gray-500 flex justify-between">
-                    <strong className="text-gray-600">{key}:</strong>
-                    <span className="ml-2 text-right">{String(value).substring(0, 50)}</span>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-      </Popup>
-    </Polygon>
-  );
-}
-
-export default function GeoVisualization({ processes = [], companies = [] }: GeoVisualizationProps) {
+const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProps>(
+  function GeoVisualization({ processes = [], companies = [] }, ref) {
   const [layers, setLayers] = useState<GeoLayer[]>([]);
+  // Expose loadGeoFile method to parent
+  useImperativeHandle(ref, () => ({
+    loadGeoFile: async (filename: string) => {
+      if (!filename) return;
+      try {
+  const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
+        const geoData = await loadGeoFileFromServer(filename);
+        // Accepts both FeatureCollection and array of features
+        let features = Array.isArray(geoData.features) ? geoData.features : geoData;
+        if (!Array.isArray(features) && geoData.type === 'FeatureCollection') {
+          features = geoData.features;
+        }
+        if (!features || features.length === 0) throw new Error('Arquivo vazio ou inválido');
+        // Map to GeoFeature[]
+        const newFeatures: GeoFeature[] = features.map((f: any, idx: number) => ({
+          id: f.id || `car-${Date.now()}-${idx}`,
+          name: f.properties?.name || f.properties?.nome || `CAR Feature ${idx + 1}`,
+          type: f.geometry?.type || 'Polygon',
+          coordinates: f.geometry?.coordinates,
+          properties: f.properties || {},
+          layerId: `car-${filename}`
+        }));
+        const newLayer: GeoLayer = {
+          id: `car-${filename}`,
+          name: `CAR ${filename}`,
+          features: newFeatures,
+          visible: true,
+          color: getNextLayerColor(),
+          opacity: 0.8,
+          source: 'imported',
+          uploadedAt: new Date().toISOString(),
+          featureCount: newFeatures.length
+        };
+        setLayers(prev => [newLayer, ...prev.filter(l => l.id !== newLayer.id)]);
+        setZoomToLayerId(newLayer.id);
+      } catch (err) {
+        alert('Erro ao carregar arquivo CAR: ' + (err as Error).message);
+      }
+    },
+    importGeoFileFromServer: async (filename: string) => {
+      if (!filename) return;
+      try {
+  const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
+        const geoData = await loadGeoFileFromServer(filename);
+        // handleUploadData espera (features, fileName)
+        let features = Array.isArray(geoData.features) ? geoData.features : geoData;
+        if (!Array.isArray(features) && geoData.type === 'FeatureCollection') {
+          features = geoData.features;
+        }
+        if (!features || features.length === 0) throw new Error('Arquivo vazio ou inválido');
+        handleUploadData(features, filename);
+      } catch (err) {
+        alert('Erro ao importar arquivo: ' + (err as Error).message);
+      }
+    }
+  }), []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFeature, setSelectedFeature] = useState<GeoFeature | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -1543,4 +1405,6 @@ export default function GeoVisualization({ processes = [], companies = [] }: Geo
       <UserPanel />
     </div>
   );
-}
+});
+
+export default GeoVisualization;

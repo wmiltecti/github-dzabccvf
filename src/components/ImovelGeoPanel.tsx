@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Eye } from 'lucide-react';
 import GeoVisualization from './geo/GeoVisualization';
-import Modal from './Modal'; // Supondo que você já tenha um componente Modal reutilizável
+import { GeoVisualizationRefApi } from './geo/GeoVisualizationRefApi';
+import Modal from './Modal';
+
 
 interface ImovelGeoPanelProps {
-  // Adapte as props conforme necessário
+  carFileName?: string | null;
 }
 
-export default function ImovelGeoPanel(props: ImovelGeoPanelProps) {
+export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
   const [showGeoModal, setShowGeoModal] = useState(false);
+  const geoRef = useRef<GeoVisualizationRefApi>(null);
+
+  // When modal opens and carFileName is available, auto-import CAR file (programaticamente)
+  useEffect(() => {
+    if (showGeoModal && carFileName && geoRef.current) {
+      geoRef.current.importGeoFileFromServer(carFileName);
+    }
+  }, [showGeoModal, carFileName]);
 
   return (
     <div className="my-6">
@@ -25,10 +36,11 @@ export default function ImovelGeoPanel(props: ImovelGeoPanelProps) {
       {showGeoModal && (
         <Modal isOpen={showGeoModal} onClose={() => setShowGeoModal(false)} title="Visualização Geo" size="xl" fullscreen>
           <div style={{ height: '100vh', width: '100vw', maxWidth: '100vw', maxHeight: '100vh', margin: 0, padding: 0 }}>
-            <GeoVisualization />
+            <GeoVisualization ref={geoRef} />
           </div>
         </Modal>
       )}
     </div>
+
   );
 }

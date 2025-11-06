@@ -259,7 +259,7 @@ export default function ImovelPage() {
             </div>
           </div>
           {/* Painel Visualização Geo */}
-          <ImovelGeoPanel />
+          <ImovelGeoPanel carFileName={property?.arquivogeorreferenciamento ? `CAR_${property.arquivogeorreferenciamento}.geojson` : undefined} />
         </div>
       ) : (
         <div className="mb-6">
