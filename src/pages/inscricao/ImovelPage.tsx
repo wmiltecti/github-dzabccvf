@@ -2161,24 +2161,12 @@ export default function ImovelPage() {
         </div>
       )}
 
-      {/* Painel de Debug - Informações do Processo Ativo */}
+      {/* Painel de Debug - Informações do Imóvel */}
       <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white text-xs py-2 px-4 border-t border-gray-700 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-green-400">🔍 DEBUG:</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Process ID:</span>
-              <span className="font-mono text-yellow-300">
-                {localStorage.getItem('processId') || 'null'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">User ID:</span>
-              <span className="font-mono text-yellow-300">
-                {localStorage.getItem('userId') || 'null'}
-              </span>
+              <span className="font-semibold text-cyan-400">🏠 DEBUG IMÓVEL:</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Property ID:</span>
@@ -2188,16 +2176,69 @@ export default function ImovelPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-400">Property Kind:</span>
-              <span className="font-mono text-purple-300">
+              <span className={`font-mono font-semibold ${
+                property?.kind === 'LINEAR' ? 'text-purple-400' :
+                property?.kind === 'URBANO' ? 'text-cyan-400' :
+                property?.kind === 'RURAL' ? 'text-green-400' :
+                'text-gray-400'
+              }`}>
                 {property?.kind || 'not selected'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-gray-400">Processo ID (Context):</span>
-              <span className="font-mono text-orange-300">
-                {processoId || 'null'}
+              <span className="text-gray-400">CAR File:</span>
+              <span className="font-mono text-green-300">
+                {property?.arquivogeorreferenciamento || 'none'}
               </span>
             </div>
+            {property?.kind === 'LINEAR' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Município Início:</span>
+                  <span className="font-mono text-purple-300">
+                    {property?.municipio_inicio || 'n/a'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Município Final:</span>
+                  <span className="font-mono text-purple-300">
+                    {property?.municipio_final || 'n/a'}
+                  </span>
+                </div>
+              </>
+            )}
+            {property?.kind === 'URBANO' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Município:</span>
+                  <span className="font-mono text-cyan-300">
+                    {property?.municipio || 'n/a'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">CEP:</span>
+                  <span className="font-mono text-cyan-300">
+                    {property?.address?.cep || 'n/a'}
+                  </span>
+                </div>
+              </>
+            )}
+            {property?.kind === 'RURAL' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">CAR Código:</span>
+                  <span className="font-mono text-green-300">
+                    {property?.car_codigo || 'n/a'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Área Total:</span>
+                  <span className="font-mono text-green-300">
+                    {property?.area_total_imovel ? `${property.area_total_imovel} ha` : 'n/a'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-[10px]">
