@@ -13,7 +13,6 @@ import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import CalculationProgress from './CalculationProgress';
-import UserPanel from './UserPanel';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
@@ -1445,8 +1444,6 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         error={calculationError}
         success={calculationSuccess}
       />
-
-      <UserPanel />
     </div>
   );
 });
