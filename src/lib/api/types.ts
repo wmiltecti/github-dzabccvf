@@ -63,6 +63,12 @@ export interface PropertyPayload {
   municipio_final?: string;
   uf_final?: string;
   sistema_referencia?: string;
+  
+  // URBANO específico
+  uf?: string;
+  municipio?: string;
+  roteiro_acesso_detalhado?: string;
+  // Demais campos já existentes: utm_*, dms_*, address, sistema_referencia
 }
 
 export interface PropertyTitlePayload {

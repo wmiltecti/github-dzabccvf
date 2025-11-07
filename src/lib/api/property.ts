@@ -103,6 +103,10 @@ export interface SearchImovelResult {
   municipio_final?: string;
   uf_final?: string;
   sistema_referencia?: string;
+  
+  // URBANO específico
+  roteiro_acesso_detalhado?: string;
+  utm_zona?: string;
 }
 
 // Função de busca de imóveis

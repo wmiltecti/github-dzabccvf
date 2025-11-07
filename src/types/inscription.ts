@@ -70,6 +70,16 @@ export interface Property {
   municipio_final?: string;
   uf_final?: string;
   sistema_referencia?: string;
+  
+  // URBANO específico
+  uf?: string;
+  municipio?: string;
+  roteiro_acesso_detalhado?: string;
+  // Coordenadas UTM já existem: utm_lat, utm_long, utm_zona
+  // Coordenadas DMS já existem: dms_lat, dms_long
+  // Endereço já existe via address (cep, logradouro, numero, bairro, complemento, uf, municipio)
+  // Sistema de referência compartilha com LINEAR
+  // Dados cartoriais (via PropertyTitle): tipo_cartorio, nome_cartorio, comarca, uf, matricula, livro, folha, area_total_ha
 }
 
 export interface InscricaoState {

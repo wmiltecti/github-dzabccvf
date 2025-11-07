@@ -44,6 +44,37 @@ export default function ImovelPage() {
     sistema_referencia: 'SIRGAS 2000'
   });
 
+  // Estados temporários para edição de imóvel URBANO
+  const [editingUrbano, setEditingUrbano] = useState(false);
+  const [urbanoData, setUrbanoData] = useState({
+    uf: '',
+    municipio: '',
+    roteiro_acesso_detalhado: '',
+    utm_lat: '',
+    utm_long: '',
+    utm_zona: 'UTM 22 S',
+    dms_lat: '',
+    dms_long: '',
+    sistema_referencia: 'SIRGAS 2000',
+    // Endereço
+    cep: '',
+    logradouro: '',
+    numero: '',
+    bairro: '',
+    complemento: '',
+    estado: '',
+    municipio_endereco: '',
+    // Dados Cartoriais
+    tipo_cartorio: '',
+    nome_cartorio: '',
+    comarca_uf: '',
+    comarca_municipio: '',
+    matricula: '',
+    livro: '',
+    folha: '',
+    area_total_ha: ''
+  });
+
   // Debounced search
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 3) {
@@ -83,6 +114,38 @@ export default function ImovelPage() {
         municipio_final: property.municipio_final || '',
         uf_final: property.uf_final || '',
         sistema_referencia: property.sistema_referencia || 'SIRGAS 2000'
+      });
+    }
+  }, [property]);
+
+  // Carrega dados URBANO quando o imóvel muda
+  useEffect(() => {
+    if (property && property.kind === 'URBANO') {
+      setUrbanoData({
+        uf: property.uf || '',
+        municipio: property.municipio || '',
+        roteiro_acesso_detalhado: property.roteiro_acesso_detalhado || '',
+        utm_lat: property.utm_lat || '',
+        utm_long: property.utm_long || '',
+        utm_zona: property.utm_zona || 'UTM 22 S',
+        dms_lat: property.dms_lat || '',
+        dms_long: property.dms_long || '',
+        sistema_referencia: property.sistema_referencia || 'SIRGAS 2000',
+        cep: property.address?.cep || '',
+        logradouro: property.address?.logradouro || '',
+        numero: property.address?.numero || '',
+        bairro: property.address?.bairro || '',
+        complemento: property.address?.complemento || '',
+        estado: property.address?.uf || '',
+        municipio_endereco: property.address?.municipio || '',
+        tipo_cartorio: '',
+        nome_cartorio: '',
+        comarca_uf: '',
+        comarca_municipio: '',
+        matricula: '',
+        livro: '',
+        folha: '',
+        area_total_ha: ''
       });
     }
   }, [property]);
@@ -343,6 +406,85 @@ export default function ImovelPage() {
       });
     }
     setEditingLinear(false);
+  };
+
+  // Handlers para URBANO
+  const handleUrbanoFieldChange = (field: string, value: string) => {
+    setUrbanoData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveUrbanoData = () => {
+    if (!property) return;
+    
+    // Validação
+    if (!urbanoData.uf) {
+      toast.error('UF é obrigatória');
+      return;
+    }
+    if (!urbanoData.municipio) {
+      toast.error('Município é obrigatório');
+      return;
+    }
+
+    // Atualiza o property com os novos dados
+    setProperty({
+      ...property,
+      uf: urbanoData.uf,
+      municipio: urbanoData.municipio,
+      roteiro_acesso_detalhado: urbanoData.roteiro_acesso_detalhado,
+      utm_lat: urbanoData.utm_lat,
+      utm_long: urbanoData.utm_long,
+      utm_zona: urbanoData.utm_zona,
+      dms_lat: urbanoData.dms_lat,
+      dms_long: urbanoData.dms_long,
+      sistema_referencia: urbanoData.sistema_referencia,
+      address: {
+        ...property.address,
+        cep: urbanoData.cep,
+        logradouro: urbanoData.logradouro,
+        numero: urbanoData.numero,
+        bairro: urbanoData.bairro,
+        complemento: urbanoData.complemento,
+        uf: urbanoData.estado,
+        municipio: urbanoData.municipio_endereco
+      }
+    });
+    
+    setEditingUrbano(false);
+    toast.success('Dados do imóvel URBANO atualizados!');
+  };
+
+  const handleCancelUrbanoEdit = () => {
+    // Restaura dados originais
+    if (property) {
+      setUrbanoData({
+        uf: property.uf || '',
+        municipio: property.municipio || '',
+        roteiro_acesso_detalhado: property.roteiro_acesso_detalhado || '',
+        utm_lat: property.utm_lat || '',
+        utm_long: property.utm_long || '',
+        utm_zona: property.utm_zona || 'UTM 22 S',
+        dms_lat: property.dms_lat || '',
+        dms_long: property.dms_long || '',
+        sistema_referencia: property.sistema_referencia || 'SIRGAS 2000',
+        cep: property.address?.cep || '',
+        logradouro: property.address?.logradouro || '',
+        numero: property.address?.numero || '',
+        bairro: property.address?.bairro || '',
+        complemento: property.address?.complemento || '',
+        estado: property.address?.uf || '',
+        municipio_endereco: property.address?.municipio || '',
+        tipo_cartorio: '',
+        nome_cartorio: '',
+        comarca_uf: '',
+        comarca_municipio: '',
+        matricula: '',
+        livro: '',
+        folha: '',
+        area_total_ha: ''
+      });
+    }
+    setEditingUrbano(false);
   };
 
   const handleOpenModal = () => {
@@ -1032,6 +1174,509 @@ export default function ImovelPage() {
               </div>
             </div>
           )}
+
+          {/* Dados Específicos para Imóvel URBANO */}
+          {property.kind === 'URBANO' && (
+            <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-cyan-600" />
+                  <h4 className="font-medium text-cyan-900">
+                    Dados do Imóvel em Área Urbana
+                  </h4>
+                </div>
+                {!editingUrbano ? (
+                  <button
+                    onClick={() => setEditingUrbano(true)}
+                    className="px-3 py-1 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors"
+                  >
+                    Editar
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancelUrbanoEdit}
+                      className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveUrbanoData}
+                      className="px-3 py-1 text-sm bg-cyan-600 text-white rounded hover:bg-cyan-700 transition-colors"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-6">
+                {/* Seção 1: Localização */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Localização</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        UF <span className="text-red-500">*</span>
+                      </label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.uf}
+                          onChange={(e) => handleUrbanoFieldChange('uf', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {ufs.map(uf => (
+                            <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.uf || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Município <span className="text-red-500">*</span>
+                      </label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.municipio}
+                          onChange={(e) => handleUrbanoFieldChange('municipio', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {municipios
+                            .filter(m => !urbanoData.uf || m.uf === urbanoData.uf)
+                            .map(m => (
+                              <option key={m.id} value={m.nome}>{m.nome}</option>
+                            ))
+                          }
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.municipio || '-'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 2: Roteiro de Acesso */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Roteiro de Acesso Detalhado</h5>
+                  {editingUrbano ? (
+                    <textarea
+                      value={urbanoData.roteiro_acesso_detalhado}
+                      onChange={(e) => handleUrbanoFieldChange('roteiro_acesso_detalhado', e.target.value)}
+                      className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                      rows={3}
+                      placeholder="Descreva o roteiro de acesso ao imóvel..."
+                    />
+                  ) : (
+                    <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100 whitespace-pre-wrap">
+                      {property.roteiro_acesso_detalhado || '-'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Seção 3: Coordenadas Geográficas */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Coordenadas Geográficas</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* UTM */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-gray-600 uppercase">UTM</p>
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-1">Lat.</label>
+                        {editingUrbano ? (
+                          <input
+                            type="text"
+                            value={urbanoData.utm_lat}
+                            onChange={(e) => handleUrbanoFieldChange('utm_lat', e.target.value)}
+                            className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                            placeholder="ex: 7404431.123"
+                          />
+                        ) : (
+                          <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                            {property.utm_lat || '-'}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-1">Long.</label>
+                        {editingUrbano ? (
+                          <input
+                            type="text"
+                            value={urbanoData.utm_long}
+                            onChange={(e) => handleUrbanoFieldChange('utm_long', e.target.value)}
+                            className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                            placeholder="ex: 7730459.12"
+                          />
+                        ) : (
+                          <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                            {property.utm_long || '-'}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-1">Zona</label>
+                        {editingUrbano ? (
+                          <select
+                            value={urbanoData.utm_zona}
+                            onChange={(e) => handleUrbanoFieldChange('utm_zona', e.target.value)}
+                            className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                          >
+                            <option value="UTM 18 S">UTM 18 S</option>
+                            <option value="UTM 19 S">UTM 19 S</option>
+                            <option value="UTM 20 S">UTM 20 S</option>
+                            <option value="UTM 21 S">UTM 21 S</option>
+                            <option value="UTM 22 S">UTM 22 S</option>
+                            <option value="UTM 23 S">UTM 23 S</option>
+                            <option value="UTM 24 S">UTM 24 S</option>
+                            <option value="UTM 25 S">UTM 25 S</option>
+                          </select>
+                        ) : (
+                          <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                            {property.utm_zona || 'UTM 22 S'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* DMS */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-medium text-gray-600 uppercase">Graus/minutos/segundos</p>
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-1">Latitude</label>
+                        {editingUrbano ? (
+                          <input
+                            type="text"
+                            value={urbanoData.dms_lat}
+                            onChange={(e) => handleUrbanoFieldChange('dms_lat', e.target.value)}
+                            className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                            placeholder="ex: 15°13'51.33&quot;S"
+                          />
+                        ) : (
+                          <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                            {property.dms_lat || '-'}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-700 mb-1">Longitude</label>
+                        {editingUrbano ? (
+                          <input
+                            type="text"
+                            value={urbanoData.dms_long}
+                            onChange={(e) => handleUrbanoFieldChange('dms_long', e.target.value)}
+                            className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                            placeholder="ex: 5°12'21.46&quot;O"
+                          />
+                        ) : (
+                          <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                            {property.dms_long || '-'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 4: Endereço */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Endereço</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.cep}
+                          onChange={(e) => handleUrbanoFieldChange('cep', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                          placeholder="00000-000"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.cep || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Logradouro</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.logradouro}
+                          onChange={(e) => handleUrbanoFieldChange('logradouro', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.logradouro || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.numero}
+                          onChange={(e) => handleUrbanoFieldChange('numero', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.numero || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Bairro/Distrito</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.bairro}
+                          onChange={(e) => handleUrbanoFieldChange('bairro', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.bairro || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.complemento}
+                          onChange={(e) => handleUrbanoFieldChange('complemento', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.complemento || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.estado}
+                          onChange={(e) => handleUrbanoFieldChange('estado', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {ufs.map(uf => (
+                            <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.uf || '-'}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Município</label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.municipio_endereco}
+                          onChange={(e) => handleUrbanoFieldChange('municipio_endereco', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {municipios
+                            .filter(m => !urbanoData.estado || m.uf === urbanoData.estado)
+                            .map(m => (
+                              <option key={m.id} value={m.nome}>{m.nome}</option>
+                            ))
+                          }
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                          {property.address?.municipio || '-'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seção 5: Sistema de Referência */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Sistema de Referência/Projeção</h5>
+                  {editingUrbano ? (
+                    <select
+                      value={urbanoData.sistema_referencia}
+                      onChange={(e) => handleUrbanoFieldChange('sistema_referencia', e.target.value)}
+                      className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                    >
+                      {sistemasReferencia.map(sistema => (
+                        <option key={sistema} value={sistema}>{sistema}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">
+                      {property.sistema_referencia || 'SIRGAS 2000'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Seção 6: Dados Cartoriais */}
+                <div>
+                  <h5 className="text-sm font-semibold text-cyan-800 mb-3 border-b border-cyan-200 pb-1">Dados Cartoriais</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Cartório</label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.tipo_cartorio}
+                          onChange={(e) => handleUrbanoFieldChange('tipo_cartorio', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Registro de Imóveis">Registro de Imóveis</option>
+                          <option value="Notas">Notas</option>
+                          <option value="Títulos e Documentos">Títulos e Documentos</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Cartório</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.nome_cartorio}
+                          onChange={(e) => handleUrbanoFieldChange('nome_cartorio', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Comarca - Estado</label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.comarca_uf}
+                          onChange={(e) => handleUrbanoFieldChange('comarca_uf', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {ufs.map(uf => (
+                            <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Comarca - Município</label>
+                      {editingUrbano ? (
+                        <select
+                          value={urbanoData.comarca_municipio}
+                          onChange={(e) => handleUrbanoFieldChange('comarca_municipio', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        >
+                          <option value="">Selecione</option>
+                          {municipios
+                            .filter(m => !urbanoData.comarca_uf || m.uf === urbanoData.comarca_uf)
+                            .map(m => (
+                              <option key={m.id} value={m.nome}>{m.nome}</option>
+                            ))
+                          }
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula/Registro</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.matricula}
+                          onChange={(e) => handleUrbanoFieldChange('matricula', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Livro</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.livro}
+                          onChange={(e) => handleUrbanoFieldChange('livro', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Folha</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.folha}
+                          onChange={(e) => handleUrbanoFieldChange('folha', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Área Total Matriculada (ha)</label>
+                      {editingUrbano ? (
+                        <input
+                          type="text"
+                          value={urbanoData.area_total_ha}
+                          onChange={(e) => handleUrbanoFieldChange('area_total_ha', e.target.value)}
+                          className="w-full px-3 py-2 border border-cyan-200 rounded focus:ring-2 focus:ring-cyan-500"
+                          placeholder="0.00"
+                        />
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-cyan-100">-</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {editingUrbano && (
+                <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-cyan-100">
+                  <strong>Nota:</strong> Os campos marcados com * são obrigatórios para imóveis urbanos.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="mb-6">
@@ -1331,20 +1976,6 @@ export default function ImovelPage() {
               )}
             </div>
           </div>
-        </div>
-      )}
-      
-      {/* DEBUG: Mostrar tipo do imóvel */}
-      {property && (
-        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded p-3 text-xs">
-          <strong>🔍 DEBUG - Dados do Imóvel:</strong><br />
-          <strong>Tipo:</strong> {property.kind || 'não definido'} | 
-          <strong> Nome:</strong> {property.nome || 'sem nome'} | 
-          <strong> Área Total:</strong> {property.areatotal || '-'} ha<br />
-          <strong>Município Início:</strong> {property.municipio_inicio || 'não definido'} | 
-          <strong> UF Início:</strong> {property.uf_inicio || 'não definido'} | 
-          <strong> Município Final:</strong> {property.municipio_final || 'não definido'} | 
-          <strong> Sistema Ref.:</strong> {property.sistema_referencia || 'não definido'}
         </div>
       )}
     </div>
