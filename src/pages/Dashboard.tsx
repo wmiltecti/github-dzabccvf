@@ -1205,46 +1205,6 @@ export default function Dashboard() {
         process={selectedProcess}
         onUpdateProcess={handleUpdateProcess}
       />
-
-      {/* Painel de Debug - Informações do Processo Ativo */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white text-xs py-2 px-4 border-t border-gray-700 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-green-400">🔍 DEBUG:</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Process ID:</span>
-              <span className="font-mono text-yellow-300">
-                {localStorage.getItem('processId') || 'null'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">User ID:</span>
-              <span className="font-mono text-yellow-300">
-                {localStorage.getItem('userId') || 'null'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Auth Token:</span>
-              <span className="font-mono text-yellow-300">
-                {localStorage.getItem('auth_token') ? '✓ Present' : '✗ Missing'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">User:</span>
-              <span className="font-mono text-blue-300">
-                {user?.email || 'Not logged in'}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-[10px]">
-              {new Date().toLocaleTimeString('pt-BR')}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
