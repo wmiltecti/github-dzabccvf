@@ -627,14 +627,6 @@ export default function ImovelPage() {
       {/* Imóvel Selecionado */}
       {property ? (
         <div className="space-y-4 mb-6">
-          {/* DEBUG: Mostrar tipo do imóvel */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-xs">
-            <strong>DEBUG - Tipo do Imóvel:</strong> {property.kind || 'não definido'} | 
-            <strong> Nome:</strong> {property.nome || 'sem nome'} | 
-            <strong> Município Início:</strong> {property.municipio_inicio || 'não definido'} |
-            <strong> UF Início:</strong> {property.uf_inicio || 'não definido'}
-          </div>
-          
           <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -1339,6 +1331,20 @@ export default function ImovelPage() {
               )}
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* DEBUG: Mostrar tipo do imóvel */}
+      {property && (
+        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded p-3 text-xs">
+          <strong>🔍 DEBUG - Dados do Imóvel:</strong><br />
+          <strong>Tipo:</strong> {property.kind || 'não definido'} | 
+          <strong> Nome:</strong> {property.nome || 'sem nome'} | 
+          <strong> Área Total:</strong> {property.areatotal || '-'} ha<br />
+          <strong>Município Início:</strong> {property.municipio_inicio || 'não definido'} | 
+          <strong> UF Início:</strong> {property.uf_inicio || 'não definido'} | 
+          <strong> Município Final:</strong> {property.municipio_final || 'não definido'} | 
+          <strong> Sistema Ref.:</strong> {property.sistema_referencia || 'não definido'}
         </div>
       )}
     </div>
