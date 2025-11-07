@@ -69,6 +69,15 @@ export interface PropertyPayload {
   municipio?: string;
   roteiro_acesso_detalhado?: string;
   // Demais campos já existentes: utm_*, dms_*, address, sistema_referencia
+  
+  // RURAL específico
+  car_situacao?: string;
+  area_total_imovel?: number;
+  area_uso_consolidado?: number;
+  area_vegetacao_nativa?: number;
+  area_app?: number;
+  area_cursos_agua?: number;
+  area_ocupacao_apos_2008?: number;
 }
 
 export interface PropertyTitlePayload {

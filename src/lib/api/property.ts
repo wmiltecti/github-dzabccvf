@@ -107,6 +107,15 @@ export interface SearchImovelResult {
   // URBANO específico
   roteiro_acesso_detalhado?: string;
   utm_zona?: string;
+  
+  // RURAL específico
+  car_situacao?: string;
+  area_total_imovel?: number;
+  area_uso_consolidado?: number;
+  area_vegetacao_nativa?: number;
+  area_app?: number;
+  area_cursos_agua?: number;
+  area_ocupacao_apos_2008?: number;
 }
 
 // Função de busca de imóveis

@@ -80,6 +80,16 @@ export interface Property {
   // Endereço já existe via address (cep, logradouro, numero, bairro, complemento, uf, municipio)
   // Sistema de referência compartilha com LINEAR
   // Dados cartoriais (via PropertyTitle): tipo_cartorio, nome_cartorio, comarca, uf, matricula, livro, folha, area_total_ha
+  
+  // RURAL específico
+  // car_codigo já existe (campo principal para RURAL)
+  car_situacao?: string; // Ex: "Pendente", "Ativo", "Cancelado"
+  area_total_imovel?: number; // em hectares
+  area_uso_consolidado?: number; // em hectares
+  area_vegetacao_nativa?: number; // em hectares
+  area_app?: number; // Área de Preservação Permanente em hectares
+  area_cursos_agua?: number; // em hectares
+  area_ocupacao_apos_2008?: number; // em hectares
 }
 
 export interface InscricaoState {

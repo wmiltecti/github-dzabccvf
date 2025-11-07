@@ -75,6 +75,19 @@ export default function ImovelPage() {
     area_total_ha: ''
   });
 
+  // Estados temporários para edição de imóvel RURAL
+  const [editingRural, setEditingRural] = useState(false);
+  const [ruralData, setRuralData] = useState({
+    car_codigo: '',
+    car_situacao: 'Pendente',
+    area_total_imovel: '',
+    area_uso_consolidado: '',
+    area_vegetacao_nativa: '',
+    area_app: '',
+    area_cursos_agua: '',
+    area_ocupacao_apos_2008: ''
+  });
+
   // Debounced search
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 3) {
@@ -146,6 +159,22 @@ export default function ImovelPage() {
         livro: '',
         folha: '',
         area_total_ha: ''
+      });
+    }
+  }, [property]);
+
+  // Carrega dados RURAL quando o imóvel muda
+  useEffect(() => {
+    if (property && property.kind === 'RURAL') {
+      setRuralData({
+        car_codigo: property.car_codigo || '',
+        car_situacao: property.car_situacao || 'Pendente',
+        area_total_imovel: property.area_total_imovel?.toString() || '',
+        area_uso_consolidado: property.area_uso_consolidado?.toString() || '',
+        area_vegetacao_nativa: property.area_vegetacao_nativa?.toString() || '',
+        area_app: property.area_app?.toString() || '',
+        area_cursos_agua: property.area_cursos_agua?.toString() || '',
+        area_ocupacao_apos_2008: property.area_ocupacao_apos_2008?.toString() || ''
       });
     }
   }, [property]);
@@ -485,6 +514,54 @@ export default function ImovelPage() {
       });
     }
     setEditingUrbano(false);
+  };
+
+  // Handlers para RURAL
+  const handleRuralFieldChange = (field: string, value: string) => {
+    setRuralData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveRuralData = () => {
+    if (!property) return;
+    
+    // Validação
+    if (!ruralData.car_codigo) {
+      toast.error('Número do CAR é obrigatório');
+      return;
+    }
+
+    // Atualiza o property com os novos dados
+    setProperty({
+      ...property,
+      car_codigo: ruralData.car_codigo,
+      car_situacao: ruralData.car_situacao,
+      area_total_imovel: parseFloat(ruralData.area_total_imovel) || undefined,
+      area_uso_consolidado: parseFloat(ruralData.area_uso_consolidado) || undefined,
+      area_vegetacao_nativa: parseFloat(ruralData.area_vegetacao_nativa) || undefined,
+      area_app: parseFloat(ruralData.area_app) || undefined,
+      area_cursos_agua: parseFloat(ruralData.area_cursos_agua) || undefined,
+      area_ocupacao_apos_2008: parseFloat(ruralData.area_ocupacao_apos_2008) || undefined
+    });
+    
+    setEditingRural(false);
+    toast.success('Dados do imóvel RURAL atualizados!');
+  };
+
+  const handleCancelRuralEdit = () => {
+    // Restaura dados originais
+    if (property) {
+      setRuralData({
+        car_codigo: property.car_codigo || '',
+        car_situacao: property.car_situacao || 'Pendente',
+        area_total_imovel: property.area_total_imovel?.toString() || '',
+        area_uso_consolidado: property.area_uso_consolidado?.toString() || '',
+        area_vegetacao_nativa: property.area_vegetacao_nativa?.toString() || '',
+        area_app: property.area_app?.toString() || '',
+        area_cursos_agua: property.area_cursos_agua?.toString() || '',
+        area_ocupacao_apos_2008: property.area_ocupacao_apos_2008?.toString() || ''
+      });
+    }
+    setEditingRural(false);
   };
 
   const handleOpenModal = () => {
@@ -1673,6 +1750,289 @@ export default function ImovelPage() {
               {editingUrbano && (
                 <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-cyan-100">
                   <strong>Nota:</strong> Os campos marcados com * são obrigatórios para imóveis urbanos.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Dados Específicos para Imóvel RURAL */}
+          {property.kind === 'RURAL' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-green-600" />
+                  <h4 className="font-medium text-green-900">
+                    Dados do Imóvel em Área Rural
+                  </h4>
+                </div>
+                {!editingRural ? (
+                  <button
+                    onClick={() => setEditingRural(true)}
+                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                  >
+                    Editar
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancelRuralEdit}
+                      className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveRuralData}
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-6">
+                {/* Seção 1: Identificação do CAR */}
+                <div>
+                  <h5 className="text-sm font-semibold text-green-800 mb-3 border-b border-green-200 pb-1">Identificação</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Número do CAR <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        {editingRural ? (
+                          <>
+                            <input
+                              type="text"
+                              value={ruralData.car_codigo}
+                              onChange={(e) => handleRuralFieldChange('car_codigo', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                              placeholder="CAR-RO000222"
+                            />
+                            <button
+                              type="button"
+                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              Confirmar
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-between bg-white px-3 py-2 rounded border border-green-100">
+                            <span className="text-gray-900">{property.car_codigo || '-'}</span>
+                            <button
+                              type="button"
+                              className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              Confirmar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Situação do CAR
+                      </label>
+                      {editingRural ? (
+                        <select
+                          value={ruralData.car_situacao}
+                          onChange={(e) => handleRuralFieldChange('car_situacao', e.target.value)}
+                          className="w-full px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="Pendente">Pendente</option>
+                          <option value="Ativo">Ativo</option>
+                          <option value="Cancelado">Cancelado</option>
+                          <option value="Em Análise">Em Análise</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 bg-white px-3 py-2 rounded border border-green-100">
+                          {property.car_situacao || 'Pendente'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Botão Visualizar Mapa */}
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors flex items-center gap-2"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Visualizar Mapa
+                    </button>
+                  </div>
+                </div>
+
+                {/* Seção 2: Quadro de Áreas */}
+                <div>
+                  <h5 className="text-sm font-semibold text-green-800 mb-3 border-b border-green-200 pb-1">Quadro de Áreas</h5>
+                  
+                  {editingRural ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Área Total do Imóvel
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_total_imovel}
+                              onChange={(e) => handleRuralFieldChange('area_total_imovel', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Área de Uso Consolidado
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_uso_consolidado}
+                              onChange={(e) => handleRuralFieldChange('area_uso_consolidado', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Vegetação Nativa
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_vegetacao_nativa}
+                              onChange={(e) => handleRuralFieldChange('area_vegetacao_nativa', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            APP
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_app}
+                              onChange={(e) => handleRuralFieldChange('area_app', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Cursos d&apos;água
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_cursos_agua}
+                              onChange={(e) => handleRuralFieldChange('area_cursos_agua', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Área de Ocupação Após 2008
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={ruralData.area_ocupacao_apos_2008}
+                              onChange={(e) => handleRuralFieldChange('area_ocupacao_apos_2008', e.target.value)}
+                              className="flex-1 px-3 py-2 border border-green-200 rounded focus:ring-2 focus:ring-green-500"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-gray-600">ha</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-green-100">
+                            <th className="text-left px-4 py-2 border border-green-200 text-sm font-medium text-gray-700">
+                              Descrição
+                            </th>
+                            <th className="text-right px-4 py-2 border border-green-200 text-sm font-medium text-gray-700">
+                              Área (ha)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">Área Total do Imóvel</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right font-medium">
+                              {property.area_total_imovel?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">Área de Uso Consolidado</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right">
+                              {property.area_uso_consolidado?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">Vegetação Nativa</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right">
+                              {property.area_vegetacao_nativa?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">APP</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right">
+                              {property.area_app?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">Cursos d&apos;água</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right">
+                              {property.area_cursos_agua?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-4 py-2 border border-green-200 text-sm">Área de Ocupação Após 2008</td>
+                            <td className="px-4 py-2 border border-green-200 text-sm text-right">
+                              {property.area_ocupacao_apos_2008?.toLocaleString('pt-BR', { minimumFractionDigits: 4 }) || '-'} ha
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {editingRural && (
+                <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-green-100">
+                  <strong>Nota:</strong> O campo Número do CAR é obrigatório para imóveis rurais.
                 </div>
               )}
             </div>
