@@ -146,6 +146,7 @@ export async function searchImoveis(query: string) {
           utm_long,
           dms_lat,
           dms_long,
+          arquivogeorreferenciamento,
           address:addresses!address_id (
             logradouro,
             numero,

@@ -16,6 +16,9 @@ export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
   const stableProcesses = React.useMemo(() => [], []);
   const stableCompanies = React.useMemo(() => [], []);
 
+  // Log para debug
+  console.log('[ImovelGeoPanel] Renderizado com carFileName:', carFileName);
+
 
   // Chama importGeoFileFromServer após o modal abrir e o ref estar disponível
   useEffect(() => {
