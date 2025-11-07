@@ -53,9 +53,7 @@ export default function ImovelGeoPanel({ carFileName }: ImovelGeoPanelProps) {
       </div>
       {showGeoModal && (
         <Modal isOpen={showGeoModal} onClose={() => setShowGeoModal(false)} title="Visualização Geo" size="xl" fullscreen>
-          <div style={{ height: '100vh', width: '100vw', maxWidth: '100vw', maxHeight: '100vh', margin: 0, padding: 0 }}>
-            <GeoVisualization ref={geoRef} processes={stableProcesses} companies={stableCompanies} />
-          </div>
+          <GeoVisualization ref={geoRef} processes={stableProcesses} companies={stableCompanies} />
         </Modal>
       )}
     </div>

@@ -907,7 +907,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   return (
-    <div className="flex flex-col bg-white h-full">
+    <div className="flex flex-col bg-white h-full w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -954,7 +954,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         </div>
       </div>
 
-      <div className="flex-1 flex" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Layers Panel */}
         <div 
           className="border-r border-gray-200 flex flex-col bg-gray-50 flex-shrink-0"
@@ -1176,7 +1176,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
             <MapContainer
               center={[mapSettings.defaultCenter.lat, mapSettings.defaultCenter.lng]}
               zoom={mapSettings.defaultZoom}
-              style={{ height: '100%', width: '100%', minHeight: 'calc(100vh - 160px)' }}
+              style={{ height: '100%', width: '100%' }}
               className="z-0"
             >
               {/* Base Layer Selector */}
@@ -1274,7 +1274,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
             </MapContainer>
           ) : (
             // Empty state when no data
-            <div className="w-full bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center" style={{ height: 'calc(100vh - 160px)' }}>
+            <div className="w-full h-full bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
               <div className="text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MapPin className="w-8 h-8 text-green-600" />
