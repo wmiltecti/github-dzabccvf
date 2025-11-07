@@ -445,6 +445,29 @@ export default function ImovelPage() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* UF (Início) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    UF (Início) <span className="text-red-500">*</span>
+                  </label>
+                  {editingLinear ? (
+                    <select
+                      value={linearData.uf_inicio}
+                      onChange={(e) => handleLinearFieldChange('uf_inicio', e.target.value)}
+                      className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Selecione</option>
+                      {ufs.map(uf => (
+                        <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                      {property.uf_inicio || '-'}
+                    </p>
+                  )}
+                </div>
+                
                 {/* Município de Início */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -471,25 +494,25 @@ export default function ImovelPage() {
                   )}
                 </div>
                 
-                {/* UF (Início) */}
+                {/* UF Final (Opcional) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    UF (Início) <span className="text-red-500">*</span>
+                    UF (Final)
                   </label>
                   {editingLinear ? (
                     <select
-                      value={linearData.uf_inicio}
-                      onChange={(e) => handleLinearFieldChange('uf_inicio', e.target.value)}
+                      value={linearData.uf_final}
+                      onChange={(e) => handleLinearFieldChange('uf_final', e.target.value)}
                       className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
-                      <option value="">Selecione</option>
+                      <option value="">Mesma UF de início</option>
                       {ufs.map(uf => (
                         <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
                       ))}
                     </select>
                   ) : (
                     <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
-                      {property.uf_inicio || '-'}
+                      {property.uf_final || property.uf_inicio || '-'}
                     </p>
                   )}
                 </div>
@@ -516,29 +539,6 @@ export default function ImovelPage() {
                   ) : (
                     <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
                       {property.municipio_final || '-'}
-                    </p>
-                  )}
-                </div>
-                
-                {/* UF Final (Opcional) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    UF (Final)
-                  </label>
-                  {editingLinear ? (
-                    <select
-                      value={linearData.uf_final}
-                      onChange={(e) => handleLinearFieldChange('uf_final', e.target.value)}
-                      className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="">Mesma UF de início</option>
-                      {ufs.map(uf => (
-                        <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
-                      {property.uf_final || property.uf_inicio || '-'}
                     </p>
                   )}
                 </div>
@@ -608,21 +608,6 @@ export default function ImovelPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Município de Início <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="Porto Velho"
-                    >
-                      <option>Porto Velho</option>
-                      <option>Ji-Paraná</option>
-                      <option>Ariquemes</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       UF (Início) <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -638,16 +623,16 @@ export default function ImovelPage() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Município Final <span className="text-red-500">*</span>
+                      Município de Início <span className="text-red-500">*</span>
                     </label>
                     <select
                       disabled
                       className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="Ji-Paraná"
+                      value="Porto Velho"
                     >
-                      <option>Ji-Paraná</option>
                       <option>Porto Velho</option>
-                      <option>Cacoal</option>
+                      <option>Ji-Paraná</option>
+                      <option>Ariquemes</option>
                     </select>
                   </div>
                   
@@ -661,6 +646,21 @@ export default function ImovelPage() {
                     >
                       <option>Mesma UF de início</option>
                       <option>RO - Rondônia</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Município Final <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      disabled
+                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
+                      value="Ji-Paraná"
+                    >
+                      <option>Ji-Paraná</option>
+                      <option>Porto Velho</option>
+                      <option>Cacoal</option>
                     </select>
                   </div>
                   
