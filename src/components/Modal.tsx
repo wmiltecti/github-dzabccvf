@@ -23,7 +23,7 @@ export default function Modal({ isOpen, onClose, title, size = 'md', fullscreen 
       <div
         className={
           fullscreen
-            ? 'bg-white w-screen h-screen rounded-none shadow-none relative'
+            ? 'bg-white w-screen h-screen rounded-lg shadow-none relative'
             : `bg-white rounded-lg shadow-lg w-full ${widthClass} mx-4 relative`
         }
         style={fullscreen ? {maxWidth: '100vw', maxHeight: '100vh'} : {}}
