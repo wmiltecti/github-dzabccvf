@@ -982,8 +982,8 @@ const saveStep2ToAPI = async () => {
                     </div>
                   </div>
                   {idx < steps.length - 1 && (
-                    <div className={`flex items-center justify-center mx-2 ${step.id < currentStep ? 'text-green-600' : 'text-gray-300'}`}>
-                      <span className="text-xl font-bold">➤</span>
+                    <div className="flex items-center justify-center mx-2">
+                      <span className="text-xl font-bold" style={{ color: 'darkgreen' }}>➤</span>
                     </div>
                   )}
                 </div>
