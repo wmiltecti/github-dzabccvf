@@ -511,6 +511,119 @@ export default function ImovelPage() {
         </p>
       </div>
 
+      {/* Seletor de Tipo de Imóvel */}
+      <div className="mb-6 bg-white border border-gray-200 rounded-lg p-4">
+        <label className="block text-sm font-medium text-gray-900 mb-3">
+          Tipo de Imóvel <span className="text-red-500">*</span>
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Opção URBANO */}
+          <button
+            type="button"
+            onClick={() => {
+              if (property) {
+                setProperty({ ...property, kind: 'URBANO' });
+              }
+            }}
+            className={`relative border-2 rounded-lg p-4 text-left transition-all ${
+              property?.kind === 'URBANO'
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                property?.kind === 'URBANO' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                URBANO
+              </span>
+              {property?.kind === 'URBANO' && (
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">
+              Imóvel localizado em área urbana, com endereço e coordenadas específicas.
+            </p>
+          </button>
+
+          {/* Opção RURAL */}
+          <button
+            type="button"
+            onClick={() => {
+              if (property) {
+                setProperty({ ...property, kind: 'RURAL' });
+              }
+            }}
+            className={`relative border-2 rounded-lg p-4 text-left transition-all ${
+              property?.kind === 'RURAL'
+                ? 'border-green-500 bg-green-50'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                property?.kind === 'RURAL' 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-green-100 text-green-800'
+              }`}>
+                RURAL
+              </span>
+              {property?.kind === 'RURAL' && (
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">
+              Propriedade rural com Código CAR obrigatório e área total em hectares.
+            </p>
+          </button>
+
+          {/* Opção LINEAR */}
+          <button
+            type="button"
+            onClick={() => {
+              if (property) {
+                setProperty({ ...property, kind: 'LINEAR' });
+              }
+            }}
+            className={`relative border-2 rounded-lg p-4 text-left transition-all ${
+              property?.kind === 'LINEAR'
+                ? 'border-purple-500 bg-purple-50'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                property?.kind === 'LINEAR' 
+                  ? 'bg-purple-600 text-white' 
+                  : 'bg-purple-100 text-purple-800'
+              }`}>
+                LINEAR
+              </span>
+              {property?.kind === 'LINEAR' && (
+                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <p className="text-sm text-gray-700">
+              Empreendimento linear com município de início e fim, como rodovias e dutos.
+            </p>
+          </button>
+        </div>
+        
+        {!property && (
+          <p className="mt-3 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded p-2">
+            ℹ️ Selecione um imóvel primeiro para poder escolher o tipo.
+          </p>
+        )}
+      </div>
+
       {/* Imóvel Selecionado */}
       {property ? (
         <div className="space-y-4 mb-6">
