@@ -17,7 +17,7 @@ export default defineConfig({
     // turf modular pré-empacotado p/ dev
     include: ['@turf/buffer', '@turf/helpers', '@turf/difference', '@turf/area', '@turf/length'],
   },
-    server: {
+  server: {
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -25,5 +25,16 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined, // Desabilita chunking manual que pode causar problemas
+      },
+    },
+    // Gera sourcemaps para debug em produção
+    sourcemap: false,
+    // Aumenta o limite de warning para chunks grandes
+    chunkSizeWarningLimit: 1000,
   },
 })

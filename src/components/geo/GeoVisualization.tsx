@@ -17,6 +17,7 @@ import UserPanel from './UserPanel';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
+import { loadGeoFileFromServer } from '../../lib/geo/utils/geoFileLoader';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -64,7 +65,6 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
     loadGeoFile: async (filename: string) => {
       if (!filename) return;
       try {
-  const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
         const geoData = await loadGeoFileFromServer(filename);
         // Accepts both FeatureCollection and array of features
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
@@ -102,7 +102,6 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
       console.log('[Geo] importGeoFileFromServer chamado', filename);
       if (!filename) return;
       try {
-        const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
         const geoData = await loadGeoFileFromServer(filename);
         // handleUploadData espera (features, fileName)
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
