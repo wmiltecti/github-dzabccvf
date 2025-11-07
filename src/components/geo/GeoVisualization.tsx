@@ -18,7 +18,7 @@ import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } fr
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
 import 'leaflet/dist/leaflet.css';
-
+ import { loadGeoFileFromServer } from '../../lib/geo/utils/geoFileLoader';
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -64,7 +64,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
     loadGeoFile: async (filename: string) => {
       if (!filename) return;
       try {
-  const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
+
         const geoData = await loadGeoFileFromServer(filename);
         // Accepts both FeatureCollection and array of features
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
