@@ -982,12 +982,9 @@ const saveStep2ToAPI = async () => {
                     </div>
                   </div>
                   {idx < steps.length - 1 && (
-                    <motion.div
-                      className={`h-0.5 flex-1 mx-2 ${step.id < currentStep ? 'bg-green-600' : 'bg-gray-300'}`}
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
+                    <div className={`flex items-center justify-center mx-2 ${step.id < currentStep ? 'text-green-600' : 'text-gray-300'}`}>
+                      <span className="text-xl font-bold">➤</span>
+                    </div>
                   )}
                 </div>
               );
