@@ -96,6 +96,13 @@ export interface SearchImovelResult {
   dms_lat?: string;
   dms_long?: string;
   arquivogeorreferenciamento?: string;
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
 }
 
 // Função de busca de imóveis

@@ -56,6 +56,13 @@ export interface PropertyPayload {
   dms_long?: string;
   car_codigo?: string | null;
   address?: Address | ID | null; // objeto novo OU id existente
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
 }
 
 export interface PropertyTitlePayload {

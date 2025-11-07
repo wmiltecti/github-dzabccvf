@@ -92,6 +92,18 @@ export default function ImovelPage() {
   const handleConfirmImovel = () => {
     if (!selectedImovel) return;
 
+    // Validação para imóvel LINEAR
+    if (selectedImovel.kind === 'LINEAR') {
+      if (!selectedImovel.municipio_inicio || !selectedImovel.municipio_final) {
+        toast.error('Imóvel LINEAR deve ter município de início e fim cadastrados');
+        return;
+      }
+      if (!selectedImovel.uf_inicio) {
+        toast.error('Imóvel LINEAR deve ter UF de início cadastrada');
+        return;
+      }
+    }
+
     // Mapeia o imóvel selecionado para o formato do store
     const propertyData = {
       kind: selectedImovel.kind,
@@ -115,7 +127,13 @@ export default function ImovelPage() {
         ponto_referencia: '',
         uf: selectedImovel.uf || '',
         municipio: selectedImovel.municipio || ''
-      }
+      },
+      // Campos específicos para LINEAR
+      municipio_inicio: selectedImovel.municipio_inicio || '',
+      uf_inicio: selectedImovel.uf_inicio || '',
+      municipio_final: selectedImovel.municipio_final || '',
+      uf_final: selectedImovel.uf_final || '',
+      sistema_referencia: selectedImovel.sistema_referencia || 'SIRGAS 2000'
     };
 
     setProperty(propertyData);
@@ -271,6 +289,56 @@ export default function ImovelPage() {
           </div>
           {/* Painel Visualização Geo */}
           <ImovelGeoPanel carFileName={property?.arquivogeorreferenciamento ? `CAR_${property.arquivogeorreferenciamento}.geojson` : undefined} />
+          
+          {/* Dados Específicos para Imóvel LINEAR */}
+          {property.kind === 'LINEAR' && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-5 h-5 text-purple-600" />
+                <h4 className="font-medium text-purple-900">
+                  Dados do Empreendimento Linear
+                </h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Município de Início
+                  </label>
+                  <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                    {property.municipio_inicio || '-'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    UF (Início)
+                  </label>
+                  <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                    {property.uf_inicio || '-'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Município Final
+                  </label>
+                  <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                    {property.municipio_final || '-'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sistema de Referência/Projeção
+                  </label>
+                  <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                    {property.sistema_referencia || 'SIRGAS 2000'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="mb-6">
@@ -513,6 +581,31 @@ export default function ImovelPage() {
                                   <span className="font-medium">DMS:</span> {selectedImovel.dms_lat}, {selectedImovel.dms_long}
                                 </p>
                               )}
+                            </div>
+                          )}
+
+                          {/* Dados específicos para LINEAR */}
+                          {selectedImovel.kind === 'LINEAR' && (
+                            <div className="mt-3 pt-3 border-t border-purple-200 bg-purple-50 -mx-3 -mb-3 px-3 py-3 rounded-b-lg">
+                              <p className="text-xs font-medium text-purple-900 mb-2">Dados do Empreendimento Linear</p>
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="font-medium text-gray-700">Município Início:</span>
+                                  <span className="text-gray-900 ml-1">{selectedImovel.municipio_inicio || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">UF Início:</span>
+                                  <span className="text-gray-900 ml-1">{selectedImovel.uf_inicio || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Município Final:</span>
+                                  <span className="text-gray-900 ml-1">{selectedImovel.municipio_final || '-'}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-gray-700">Sistema Ref.:</span>
+                                  <span className="text-gray-900 ml-1">{selectedImovel.sistema_referencia || 'SIRGAS 2000'}</span>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>

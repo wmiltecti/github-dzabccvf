@@ -63,6 +63,13 @@ export interface Property {
   car_codigo?: string;
   arquivogeorreferenciamento?: string;
   address?: Address;
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
 }
 
 export interface InscricaoState {
