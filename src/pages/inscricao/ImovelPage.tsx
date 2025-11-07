@@ -756,13 +756,13 @@ export default function ImovelPage() {
               <div className="flex items-center gap-2 mb-3">
                 <MapPin className="w-5 h-5 text-blue-600" />
                 <h4 className="font-medium text-blue-900">
-                  PREVIEW: Como ficaria se este imóvel fosse do tipo LINEAR
+                  PREVIEW INTERATIVO: Teste os campos LINEAR (imóvel atual é {property.kind})
                 </h4>
               </div>
               
               <p className="text-sm text-blue-700 mb-3">
-                Este imóvel atual é do tipo <strong>{property.kind}</strong>. Abaixo está um exemplo de como 
-                apareceria a seção de dados editável se fosse LINEAR:
+                Este imóvel atual é do tipo <strong>{property.kind}</strong>. Você pode interagir com os campos abaixo 
+                para testar a funcionalidade (as alterações não serão salvas no imóvel atual):
               </p>
               
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -770,15 +770,35 @@ export default function ImovelPage() {
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-purple-600" />
                     <h4 className="font-medium text-purple-900">
-                      Dados do Empreendimento Linear
+                      Dados do Empreendimento Linear (TESTE)
                     </h4>
                   </div>
-                  <button
-                    disabled
-                    className="px-3 py-1 text-sm bg-purple-400 text-white rounded cursor-not-allowed opacity-60"
-                  >
-                    Editar
-                  </button>
+                  {!editingLinear ? (
+                    <button
+                      onClick={() => setEditingLinear(true)}
+                      className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                    >
+                      Testar Edição
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCancelLinearEdit}
+                        className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        onClick={() => {
+                          toast.info('Preview: alterações não foram salvas (imóvel não é LINEAR)');
+                          setEditingLinear(false);
+                        }}
+                        className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                      >
+                        Simular Salvar
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -786,79 +806,124 @@ export default function ImovelPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       UF (Início) <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="RO"
-                    >
-                      <option>RO - Rondônia</option>
-                      <option>AC - Acre</option>
-                      <option>AM - Amazonas</option>
-                    </select>
+                    {editingLinear ? (
+                      <select
+                        value={linearData.uf_inicio}
+                        onChange={(e) => handleLinearFieldChange('uf_inicio', e.target.value)}
+                        className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">Selecione</option>
+                        {ufs.map(uf => (
+                          <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                        {linearData.uf_inicio || '-'}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Município de Início <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="Porto Velho"
-                    >
-                      <option>Porto Velho</option>
-                      <option>Ji-Paraná</option>
-                      <option>Ariquemes</option>
-                    </select>
+                    {editingLinear ? (
+                      <select
+                        value={linearData.municipio_inicio}
+                        onChange={(e) => handleLinearFieldChange('municipio_inicio', e.target.value)}
+                        className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">Selecione</option>
+                        {municipios
+                          .filter(m => !linearData.uf_inicio || m.uf === linearData.uf_inicio)
+                          .map(m => (
+                            <option key={m.id} value={m.nome}>{m.nome}</option>
+                          ))
+                        }
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                        {linearData.municipio_inicio || '-'}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       UF (Final)
                     </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                    >
-                      <option>Mesma UF de início</option>
-                      <option>RO - Rondônia</option>
-                    </select>
+                    {editingLinear ? (
+                      <select
+                        value={linearData.uf_final}
+                        onChange={(e) => handleLinearFieldChange('uf_final', e.target.value)}
+                        className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">Mesma UF de início</option>
+                        {ufs.map(uf => (
+                          <option key={uf.sigla} value={uf.sigla}>{uf.sigla} - {uf.nome}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                        {linearData.uf_final || linearData.uf_inicio || '-'}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Município Final <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="Ji-Paraná"
-                    >
-                      <option>Ji-Paraná</option>
-                      <option>Porto Velho</option>
-                      <option>Cacoal</option>
-                    </select>
+                    {editingLinear ? (
+                      <select
+                        value={linearData.municipio_final}
+                        onChange={(e) => handleLinearFieldChange('municipio_final', e.target.value)}
+                        className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">Selecione</option>
+                        {municipios
+                          .filter(m => !linearData.uf_final || m.uf === linearData.uf_final)
+                          .map(m => (
+                            <option key={m.id} value={m.nome}>{m.nome}</option>
+                          ))
+                        }
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                        {linearData.municipio_final || '-'}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Sistema de Referência/Projeção
                     </label>
-                    <select
-                      disabled
-                      className="w-full px-3 py-2 border border-purple-200 rounded bg-white cursor-not-allowed opacity-75"
-                      value="SIRGAS 2000"
-                    >
-                      <option>SIRGAS 2000</option>
-                      <option>WGS 84</option>
-                      <option>SAD 69</option>
-                    </select>
+                    {editingLinear ? (
+                      <select
+                        value={linearData.sistema_referencia}
+                        onChange={(e) => handleLinearFieldChange('sistema_referencia', e.target.value)}
+                        className="w-full px-3 py-2 border border-purple-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        {sistemasReferencia.map(sistema => (
+                          <option key={sistema} value={sistema}>{sistema}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 bg-white px-3 py-2 rounded border border-purple-100">
+                        {linearData.sistema_referencia || 'SIRGAS 2000'}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
-                <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-purple-100">
-                  <strong>Nota:</strong> Ao clicar em "Editar", os campos ficarão editáveis com combos de seleção.
-                </div>
+                {editingLinear && (
+                  <div className="mt-3 text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-200">
+                    <strong>Modo Teste:</strong> Você está testando a interface. As alterações não serão salvas porque 
+                    este imóvel é do tipo <strong>{property.kind}</strong>, não LINEAR.
+                  </div>
+                )}
               </div>
             </div>
           )}
