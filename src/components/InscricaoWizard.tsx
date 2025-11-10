@@ -121,7 +121,7 @@ export default function InscricaoWizard() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-white" />
@@ -134,7 +134,7 @@ export default function InscricaoWizard() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 w-full lg:w-auto">
           <button
             onClick={handleNewInscricao}
             className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
