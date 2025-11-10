@@ -330,7 +330,14 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
 
   React.useEffect(() => {
     setActiveSection(initialSection);
+    setShowForm(false);
+    setEditingItem(null);
   }, [initialSection]);
+
+  React.useEffect(() => {
+    setShowForm(false);
+    setEditingItem(null);
+  }, [activeSection]);
 
   const currentConfig = entityConfigs[activeSection as keyof typeof entityConfigs];
 
