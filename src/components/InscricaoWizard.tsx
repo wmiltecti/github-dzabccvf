@@ -13,12 +13,15 @@ import EmpreendimentoPage from '../pages/inscricao/EmpreendimentoPage';
 import FormularioPage from '../pages/inscricao/FormularioPage';
 import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
+import ConfirmDialog from './ConfirmDialog';
 
 export default function InscricaoWizard() {
   const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
 
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
 
   const isCreatingProcesso = useRef(false);
 
@@ -71,21 +74,25 @@ export default function InscricaoWizard() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
-      reset();
-      setProcessoId(null);
-      toast.info('Processo reiniciado');
-      window.location.reload();
-    }
+    setConfirmResetOpen(true);
+  };
+
+  const confirmReset = () => {
+    reset();
+    setProcessoId(null);
+    toast.info('Processo reiniciado');
+    window.location.reload();
   };
 
   const handleNewInscricao = () => {
-    if (window.confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
-      startNewInscricao();
-      setProcessoId(null);
-      toast.info('Nova inscrição iniciada');
-      window.location.reload();
-    }
+    setConfirmNewOpen(true);
+  };
+
+  const confirmNewInscricao = () => {
+    startNewInscricao();
+    setProcessoId(null);
+    toast.info('Nova inscrição iniciada');
+    window.location.reload();
   };
 
   const renderCurrentStep = () => {
@@ -184,6 +191,26 @@ export default function InscricaoWizard() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={confirmReset}
+        title="Reiniciar Processo"
+        message="Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos."
+        confirmText="Sim, Reiniciar"
+        cancelText="Cancelar"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmNewOpen}
+        onClose={() => setConfirmNewOpen(false)}
+        onConfirm={confirmNewInscricao}
+        title="Nova Inscrição"
+        message="Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos."
+        confirmText="Sim, Iniciar Nova"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }
