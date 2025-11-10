@@ -392,10 +392,9 @@ export default function ParticipantesPage() {
         <button
           onClick={handleNext}
           disabled={!isStepComplete(1)}
-          className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
-          <span className="hidden sm:inline">Próximo: Imóvel</span>
-          <span className="sm:hidden">Próximo</span>
+          Próximo: Imóvel
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -484,7 +483,7 @@ export default function ParticipantesPage() {
                                 <td className="px-4 py-3">
                                   <button
                                     onClick={() => handleSelectPessoa(pessoa)}
-                                    className="px-2 py-1 text-xs sm:px-3 sm:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
                                   >
                                     Selecionar
                                   </button>
@@ -573,14 +572,14 @@ export default function ParticipantesPage() {
                   <div className="flex justify-between pt-4 border-t border-gray-200">
                     <button
                       onClick={handleBackToSearch}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Voltar
                     </button>
                     <button
                       onClick={handleAddParticipante}
                       disabled={!selectedPapel || selectedPapel.trim() === '' || loading}
-                      className="px-4 py-1.5 sm:px-6 sm:py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                       {loading ? (
                         <>
