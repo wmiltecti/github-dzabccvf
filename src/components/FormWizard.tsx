@@ -971,7 +971,7 @@ const saveStep2ToAPI = async () => {
           </AnimatePresence>
 
           {/* Steps Navigation */}
-          <div className="mt-3 overflow-x-auto scrollbar-hide -mx-2 sm:-mx-4 lg:-mx-6">
+          <div className="mt-3 overflow-x-auto overflow-y-hidden -mx-2 sm:-mx-4 lg:-mx-6 pb-2 stepper-scroll" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
             <div className="flex items-center justify-between min-w-max px-2 sm:px-4 lg:px-6">
               {steps.map((step, idx) => {
                 const Icon = step.icon;
