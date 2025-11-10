@@ -159,42 +159,43 @@ export default function InscricaoLayout() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-lg font-semibold text-gray-900 truncate">Nova Inscrição</h1>
                   {processoId && (
-                    <p className="text-sm text-gray-500">Processo #{processoId}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">Processo #{processoId}</p>
                   )}
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handleNewInscricao}
-                className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+                className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1 sm:gap-2"
                 title="Iniciar nova inscrição (mantém usuário)"
               >
-                <Plus className="w-4 h-4" />
-                Nova Inscrição
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden md:inline">Nova Inscrição</span>
+                <span className="md:hidden">Nova</span>
               </button>
               <button
                 onClick={handleSaveDraft}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1 sm:gap-2"
               >
-                <Save className="w-4 h-4" />
-                Salvar Rascunho
+                <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Salvar</span>
               </button>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+                className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1 sm:gap-2"
                 title="Reiniciar processo (limpa tudo)"
               >
-                <AlertTriangle className="w-4 h-4" />
-                Reiniciar
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Reiniciar</span>
               </button>
             </div>
           </div>

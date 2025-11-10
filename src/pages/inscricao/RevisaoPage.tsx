@@ -374,26 +374,29 @@ export default function RevisaoPage() {
       <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
         <button
           onClick={handleBack}
-          className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+          className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar: Documentação
+          <span className="hidden sm:inline">Voltar: Documentação</span>
+          <span className="sm:hidden">Voltar</span>
         </button>
 
         <button
           onClick={handleSubmit}
           disabled={!allStepsComplete || submitting}
-          className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+          className="px-4 py-2 sm:px-8 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
         >
           {submitting ? (
             <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Submetendo Solicitação...
+              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="hidden sm:inline">Submetendo Solicitação...</span>
+              <span className="sm:hidden">Enviando...</span>
             </>
           ) : (
             <>
-              <Send className="w-5 h-5" />
-              Submeter Solicitação
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Submeter Solicitação</span>
+              <span className="sm:hidden">Enviar</span>
             </>
           )}
         </button>

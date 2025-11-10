@@ -312,17 +312,19 @@ export default function ImovelPage() {
       <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
         <button
           onClick={handleBack}
-          className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+          className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar: Participantes
+          <span className="hidden sm:inline">Voltar: Participantes</span>
+          <span className="sm:hidden">Voltar</span>
         </button>
-        
+
         <button
           onClick={handleNext}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          className="px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
-          Próximo: Empreendimento
+          <span className="hidden sm:inline">Próximo: Empreendimento</span>
+          <span className="sm:hidden">Próximo</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
