@@ -5,6 +5,7 @@ import GenericCRUD from './GenericCRUD';
 import GenericForm from './GenericForm';
 import BillingConfigurationForm from './BillingConfigurationForm';
 import ActivityForm from './ActivityForm';
+import EmpreendimentoForm from './EmpreendimentoForm';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -281,9 +282,9 @@ const entityConfigs = {
       { key: 'name', label: 'Nome', type: 'text' as const },
       { key: 'description', label: 'Descrição', type: 'text' as const },
       { key: 'document_types', label: 'Tipos', type: 'array' as const },
-      { 
-        key: 'template_file_name', 
-        label: 'Modelo', 
+      {
+        key: 'template_file_name',
+        label: 'Modelo',
         type: 'text' as const,
         render: (value: string) => value ? (
           <span className="text-blue-600 text-sm">📎 {value}</span>
@@ -295,10 +296,10 @@ const entityConfigs = {
     formFields: [
       { key: 'name', label: 'Nome do Documento', type: 'text' as const, required: true, placeholder: 'Ex: Requerimento de Licença' },
       { key: 'description', label: 'Descrição', type: 'textarea' as const, required: true, placeholder: 'Descrição detalhada do documento' },
-      { 
-        key: 'document_types', 
-        label: 'Tipos de Documento', 
-        type: 'multiselect' as const, 
+      {
+        key: 'document_types',
+        label: 'Tipos de Documento',
+        type: 'multiselect' as const,
         required: true,
         options: [
           { value: 'Word', label: 'Word' },
@@ -308,13 +309,40 @@ const entityConfigs = {
           { value: 'Excel', label: 'Excel' }
         ]
       },
-      { 
-        key: 'template_file', 
-        label: 'Upload de Modelo (Opcional)', 
-        type: 'file' as const, 
+      {
+        key: 'template_file',
+        label: 'Upload de Modelo (Opcional)',
+        type: 'file' as const,
         accept: '.doc,.docx,.pdf,.jpg,.jpeg,.png,.xlsx,.xls'
       }
     ]
+  },
+  'empreendimentos': {
+    title: 'Empreendimentos',
+    tableName: 'empreendimentos',
+    columns: [
+      { key: 'nome', label: 'Nome', type: 'text' as const },
+      { key: 'situacao', label: 'Situação', type: 'text' as const },
+      {
+        key: 'numero_empregados',
+        label: 'Nº Empregados',
+        type: 'number' as const,
+        render: (value: number) => value || '-'
+      },
+      {
+        key: 'horario_inicio',
+        label: 'Horário Início',
+        type: 'text' as const,
+        render: (value: string) => value || '-'
+      },
+      {
+        key: 'horario_fim',
+        label: 'Horário Fim',
+        type: 'text' as const,
+        render: (value: string) => value || '-'
+      }
+    ],
+    formFields: [] // Will use custom form
   }
 };
 
@@ -433,6 +461,34 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
             isOpen={showForm}
             onClose={() => setShowForm(false)}
             title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title.slice(0, -1)}`}
+            item={editingItem}
+            onSave={handleFormSave}
+          />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Special handling for empreendimentos
+  if (activeSection === 'empreendimentos') {
+    return (
+      <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
+        <div className="p-6 h-full overflow-y-auto">
+          <GenericCRUD
+            key={`${activeSection}-${refreshKey}`}
+            title={currentConfig.title}
+            tableName={currentConfig.tableName}
+            columns={currentConfig.columns}
+            searchFields={['nome', 'situacao']}
+            onCreate={handleCreate}
+            onEdit={handleEdit}
+            onView={handleView}
+          />
+
+          <EmpreendimentoForm
+            isOpen={showForm}
+            onClose={() => setShowForm(false)}
+            title={`${editingItem ? 'Editar' : 'Novo'} Empreendimento`}
             item={editingItem}
             onSave={handleFormSave}
           />

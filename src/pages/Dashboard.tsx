@@ -353,6 +353,7 @@ export default function Dashboard() {
     { id: 'process-types', name: 'Tipos de Processo' },
     { id: 'license-types', name: 'Tipos de Licença' },
     { id: 'activities', name: 'Atividades' },
+    { id: 'empreendimentos', name: 'Empreendimentos' },
     { id: 'enterprise-sizes', name: 'Porte do Empreendimento' },
     { id: 'pollution-potentials', name: 'Potencial Poluidor' },
     { id: 'reference-units', name: 'Unidades de Referência' },
