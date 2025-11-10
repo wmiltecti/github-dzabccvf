@@ -215,6 +215,7 @@ body::before {
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -229,6 +230,25 @@ body::before {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(107, 114, 128, 0.9);
+}
+
+/* Horizontal scrollbar for stepper */
+.stepper-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.stepper-scroll::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 1);
+  border-radius: 2px;
+}
+
+.stepper-scroll::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 1);
+  border-radius: 2px;
+}
+
+.stepper-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 1);
 }
 
 /* Animation for sidebar collapse */
