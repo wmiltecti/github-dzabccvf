@@ -970,24 +970,23 @@ const saveStep2ToAPI = async () => {
             )}
           </AnimatePresence>
 
-          {/* Steps Navigation - Horizontal Scroll (Mobile to XL) */}
-          <div className="mt-2 overflow-x-auto scrollbar-hide -mx-2 sm:-mx-4 lg:-mx-6">
-            <div className="flex items-center gap-0.5 sm:gap-1 min-w-max px-2 sm:px-4 lg:px-6 pb-1">
+          {/* Steps Navigation */}
+          <div className="mt-3 overflow-x-auto scrollbar-hide -mx-2 sm:-mx-4 lg:-mx-6">
+            <div className="flex items-center justify-between min-w-max px-2 sm:px-4 lg:px-6">
               {steps.map((step, idx) => {
                 const Icon = step.icon;
                 const isActive = step.id === currentStep;
                 const isCompleted = step.id < currentStep;
 
                 return (
-                  <React.Fragment key={step.id}>
-                    <motion.div
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentStep(step.id)}
-                      className="flex flex-col items-center gap-0.5 sm:gap-1 flex-shrink-0 touch-manipulation cursor-pointer"
-                    >
-                      <div
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1 group relative">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentStep(step.id)}
                         className={`
-                          w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all
+                          w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer
                           ${
                             isCompleted
                               ? 'bg-green-600 border-green-600 text-white'
@@ -998,23 +997,24 @@ const saveStep2ToAPI = async () => {
                         `}
                       >
                         {isCompleted ? (
-                          <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                         ) : (
-                          <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         )}
+                      </motion.div>
+                      <div className="absolute top-10 sm:top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
+                        <div className="bg-gray-900 text-white text-[10px] sm:text-xs font-medium px-2 sm:px-3 py-1 sm:py-2 rounded-lg shadow-lg">
+                          {step.name}
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                        </div>
                       </div>
-                      <span className={`text-[8px] sm:text-[9px] text-center max-w-[36px] sm:max-w-[42px] leading-tight ${
-                        isActive ? 'text-blue-600 font-medium' : isCompleted ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        {step.name.split(' ')[0]}
-                      </span>
-                    </motion.div>
+                    </div>
                     {idx < steps.length - 1 && (
-                      <div className="flex items-center justify-center flex-shrink-0 px-0.5 sm:px-1">
-                        <span className="text-xs sm:text-sm font-bold" style={{ color: isCompleted ? 'green' : 'lightgray' }}>➤</span>
+                      <div className="flex items-center justify-center mx-1 sm:mx-2">
+                        <span className="text-base sm:text-xl font-bold" style={{ color: isCompleted ? 'darkgreen' : 'lightgray' }}>➤</span>
                       </div>
                     )}
-                  </React.Fragment>
+                  </div>
                 );
               })}
             </div>
