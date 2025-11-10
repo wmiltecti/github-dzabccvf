@@ -1045,7 +1045,7 @@ const saveStep2ToAPI = async () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleBack}
               disabled={currentStep === 1}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-2 sm:order-1"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-2 sm:order-1"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar
@@ -1060,13 +1060,12 @@ const saveStep2ToAPI = async () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleNext}
               disabled={isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-1 sm:order-3"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-1 sm:order-3"
             >
               {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="hidden sm:inline">Salvando...</span>
-                  <span className="sm:hidden">Salvar</span>
+                  Salvando...
                 </>
               ) : (
                 <>

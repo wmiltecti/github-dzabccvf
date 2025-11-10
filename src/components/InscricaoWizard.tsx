@@ -134,10 +134,10 @@ export default function InscricaoWizard() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           <button
             onClick={handleNewInscricao}
-            className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1.5"
             title="Iniciar nova inscrição (mantém usuário)"
           >
             <Plus className="w-4 h-4" />
@@ -145,14 +145,14 @@ export default function InscricaoWizard() {
           </button>
           <button
             onClick={handleSaveDraft}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             Salvar Rascunho
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5"
             title="Reiniciar processo (limpa tudo)"
           >
             <AlertTriangle className="w-4 h-4" />
