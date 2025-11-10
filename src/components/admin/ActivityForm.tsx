@@ -44,14 +44,23 @@ export default function ActivityForm({
     code: '',
     name: '',
     description: '',
-    enterprise_size_id: '',
     pollution_potential_id: '',
     measurement_unit: '',
-    range_start: '',
-    range_end: '',
     license_types: [],
     documents: []
   });
+
+  const [enterpriseSizeRanges, setEnterpriseSizeRanges] = useState<Array<{
+    id: string;
+    enterprise_size_id: string;
+    range_start: string;
+    range_end: string;
+  }>>([{
+    id: crypto.randomUUID(),
+    enterprise_size_id: '',
+    range_start: '',
+    range_end: ''
+  }]);
   
   const [loading, setLoading] = useState(false);
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
@@ -86,15 +95,22 @@ export default function ActivityForm({
         code: item.code?.toString() || '',
         name: item.name || '',
         description: item.description || '',
-        enterprise_size_id: item.enterprise_size_id || '',
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
-        range_start: item.range_start?.toString() || '',
-        range_end: item.range_end?.toString() || '',
         license_types: [],
         documents: []
       });
-      
+
+      // Se tiver dados de porte/faixa no item, carregar
+      if (item.enterprise_size_id) {
+        setEnterpriseSizeRanges([{
+          id: crypto.randomUUID(),
+          enterprise_size_id: item.enterprise_size_id,
+          range_start: item.range_start?.toString() || '',
+          range_end: item.range_end?.toString() || ''
+        }]);
+      }
+
       if (item.id) {
         loadActivityRelationships(item.id);
       }
@@ -103,14 +119,17 @@ export default function ActivityForm({
         code: '',
         name: '',
         description: '',
-        enterprise_size_id: '',
         pollution_potential_id: '',
         measurement_unit: '',
-        range_start: '',
-        range_end: '',
         license_types: [],
         documents: []
       });
+      setEnterpriseSizeRanges([{
+        id: crypto.randomUUID(),
+        enterprise_size_id: '',
+        range_start: '',
+        range_end: ''
+      }]);
     }
   }, [item]);
 
@@ -195,6 +214,43 @@ export default function ActivityForm({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAddEnterpriseSizeRange = () => {
+    setEnterpriseSizeRanges(prev => [...prev, {
+      id: crypto.randomUUID(),
+      enterprise_size_id: '',
+      range_start: '',
+      range_end: ''
+    }]);
+  };
+
+  const handleRemoveEnterpriseSizeRange = (id: string) => {
+    if (enterpriseSizeRanges.length === 1) {
+      toast.warning('Deve haver pelo menos um porte configurado');
+      return;
+    }
+    setEnterpriseSizeRanges(prev => prev.filter(range => range.id !== id));
+  };
+
+  const handleEnterpriseSizeRangeChange = (id: string, field: string, value: string) => {
+    setEnterpriseSizeRanges(prev => prev.map(range =>
+      range.id === id ? { ...range, [field]: value } : range
+    ));
+  };
+
+  const validateRanges = (): boolean => {
+    for (const range of enterpriseSizeRanges) {
+      if (range.range_start && range.range_end) {
+        const start = parseFloat(range.range_start);
+        const end = parseFloat(range.range_end);
+        if (end < start) {
+          toast.error('Faixa final não pode ser menor que a faixa inicial');
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const handleLicenseTypeToggle = (licenseTypeId: string) => {
     setFormData(prev => {
       const existingIndex = prev.license_types.findIndex(
@@ -273,44 +329,44 @@ export default function ActivityForm({
       toast.error('Selecione pelo menos um tipo de licença');
       return false;
     }
-    if (!formData.enterprise_size_id) {
-      toast.error('Selecione o porte do empreendimento');
-      return false;
-    }
     if (!formData.pollution_potential_id) {
       toast.error('Selecione o potencial poluidor');
       return false;
     }
-    
-    // Validate range
-    if (formData.range_start && formData.range_end) {
-      const start = parseFloat(formData.range_start);
-      const end = parseFloat(formData.range_end);
-      if (start >= end) {
-        toast.error('A faixa inicial deve ser menor que a faixa final');
-        return false;
-      }
+
+    // Validar portes/faixas
+    const hasValidRange = enterpriseSizeRanges.some(range => range.enterprise_size_id);
+    if (!hasValidRange) {
+      toast.error('Configure pelo menos um porte do empreendimento');
+      return false;
     }
-    
+
+    if (!validateRanges()) {
+      return false;
+    }
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
     try {
+      // Usar o primeiro porte/faixa para manter compatibilidade com o banco atual
+      const firstRange = enterpriseSizeRanges[0];
+
       const activityData = {
         code: parseFloat(formData.code),
         name: formData.name,
         description: formData.description || null,
-        enterprise_size_id: formData.enterprise_size_id,
+        enterprise_size_id: firstRange.enterprise_size_id,
         pollution_potential_id: formData.pollution_potential_id,
         measurement_unit: formData.measurement_unit || null,
-        range_start: formData.range_start ? parseFloat(formData.range_start) : null,
-        range_end: formData.range_end ? parseFloat(formData.range_end) : null
+        range_start: firstRange.range_start ? parseFloat(firstRange.range_start) : null,
+        range_end: firstRange.range_end ? parseFloat(firstRange.range_end) : null
       };
 
       let activityId: string;
@@ -471,18 +527,17 @@ export default function ActivityForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Porte do Empreendimento <span className="text-red-500">*</span>
+                Unidade de Medida
               </label>
               <select
-                value={formData.enterprise_size_id}
-                onChange={(e) => handleInputChange('enterprise_size_id', e.target.value)}
+                value={formData.measurement_unit}
+                onChange={(e) => handleInputChange('measurement_unit', e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
               >
-                <option value="">Selecione o porte...</option>
-                {enterpriseSizes.map(size => (
-                  <option key={size.id} value={size.id}>
-                    {size.name}
+                <option value="">Selecione a unidade...</option>
+                {measurementUnits.map(unit => (
+                  <option key={unit} value={unit}>
+                    {unit}
                   </option>
                 ))}
               </select>
@@ -508,53 +563,91 @@ export default function ActivityForm({
             </div>
           </div>
 
-          {/* Measurement and Range */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Unidade de Medida
+          {/* Enterprise Size Ranges - Repeatable Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                Configuração de Porte e Faixas <span className="text-red-500">*</span>
               </label>
-              <select
-                value={formData.measurement_unit}
-                onChange={(e) => handleInputChange('measurement_unit', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Selecione a unidade...</option>
-                {measurementUnits.map(unit => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Faixa Inicial
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.range_start}
-                onChange={(e) => handleInputChange('range_start', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: 0"
-              />
-            </div>
+            {enterpriseSizeRanges.map((range, index) => (
+              <div key={range.id} className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    Porte {index + 1}
+                  </span>
+                  {enterpriseSizeRanges.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEnterpriseSizeRange(range.id)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                      title="Remover porte"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Faixa Final
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.range_end}
-                onChange={(e) => handleInputChange('range_end', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: 1000"
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Porte do Empreendimento <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={range.enterprise_size_id}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'enterprise_size_id', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      required
+                    >
+                      <option value="">Selecione o porte...</option>
+                      {enterpriseSizes.map(size => (
+                        <option key={size.id} value={size.id}>
+                          {size.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Faixa Inicial
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={range.range_start}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'range_start', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Ex: 0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Faixa Final
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={range.range_end}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'range_end', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Ex: 1000"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={handleAddEnterpriseSizeRange}
+              className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar outro porte
+            </button>
           </div>
 
           {/* License Types */}
