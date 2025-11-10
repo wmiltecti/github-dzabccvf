@@ -872,54 +872,81 @@ const saveStep2ToAPI = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="w-full h-full flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Formulário</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Etapa {currentStep} de {steps.length}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-3">
+      <div className="bg-white border-b border-gray-200 shadow-sm flex-shrink-0">
+        <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+          <div className="flex flex-col gap-2 mb-2">
+            {/* Title and Actions Row */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-base lg:text-xl font-bold text-gray-900 truncate">Formulário</h1>
+                <p className="text-[9px] sm:text-xs text-gray-500">
+                  Etapa {currentStep} de {steps.length}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                {/* Desktop buttons with text */}
                 <button
                   onClick={handleFillMockData}
-                  className="flex items-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="hidden md:flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                 >
-                  <Wand2 className="w-4 h-4" />
-                  Preencher
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Preencher</span>
                 </button>
                 <button
                   onClick={handleSaveDraft}
                   disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="hidden md:flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <Save className="w-3.5 h-3.5" />
                   )}
-                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? 'Salvando...' : 'Salvar Rascunho'}
+                  <span className="hidden lg:inline">Salvar</span>
+                </button>
+
+                {/* Mobile buttons - Icon only */}
+                <button
+                  onClick={handleFillMockData}
+                  className="md:hidden p-1.5 sm:p-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors touch-manipulation"
+                  title="Preencher dados de exemplo"
+                >
+                  <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={isSaving || isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
+                  className="md:hidden p-1.5 sm:p-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50 touch-manipulation"
+                  title="Salvar rascunho"
+                >
+                  {isSaving || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
+                    <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  )}
                 </button>
               </div>
-              {processoId && (
-                <div className="text-xs text-gray-500 font-mono">
-                  uso interno: {processoId}
-                </div>
-              )}
             </div>
+
+            {/* Process ID - Only on larger screens */}
+            {processoId && (
+              <div className="hidden sm:block text-[9px] sm:text-[10px] text-gray-400 font-mono truncate">
+                ID: {processoId}
+              </div>
+            )}
           </div>
 
           {/* Progress Bar */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+          <div className="mb-2">
+            <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-600 mb-1">
               <span>Progresso</span>
               <span className="font-medium">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
               <motion.div
                 className="h-full bg-green-600"
                 initial={{ width: 0 }}
@@ -936,59 +963,61 @@ const saveStep2ToAPI = async () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-sm text-center text-green-600 font-medium"
+                className="text-[10px] sm:text-xs text-center text-green-600 font-medium py-1"
               >
                 {saveMessage}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Steps Navigation */}
-          <div className="flex items-center justify-between mt-4">
-            {steps.map((step, idx) => {
-              const Icon = step.icon;
-              const isActive = step.id === currentStep;
-              const isCompleted = step.id < currentStep;
+          {/* Steps Navigation - Horizontal Scroll (Mobile to XL) */}
+          <div className="mt-2 overflow-x-auto scrollbar-hide -mx-2 sm:-mx-4 lg:-mx-6">
+            <div className="flex items-center gap-0.5 sm:gap-1 min-w-max px-2 sm:px-4 lg:px-6 pb-1">
+              {steps.map((step, idx) => {
+                const Icon = step.icon;
+                const isActive = step.id === currentStep;
+                const isCompleted = step.id < currentStep;
 
-              return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1 group relative">
+                return (
+                  <React.Fragment key={step.id}>
                     <motion.div
-                      whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentStep(step.id)}
-                      className={`
-                        w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer
-                        ${
-                          isCompleted
-                            ? 'bg-green-600 border-green-600 text-white'
-                            : isActive
-                            ? 'bg-blue-600 border-blue-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-400'
-                        }
-                      `}
+                      className="flex flex-col items-center gap-0.5 sm:gap-1 flex-shrink-0 touch-manipulation cursor-pointer"
                     >
-                      {isCompleted ? (
-                        <CheckCircle className="w-5 h-5" />
-                      ) : (
-                        <Icon className="w-5 h-5" />
-                      )}
-                    </motion.div>
-                    <div className="absolute top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 whitespace-nowrap">
-                      <div className="bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-lg">
-                        {step.name}
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+                      <div
+                        className={`
+                          w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all
+                          ${
+                            isCompleted
+                              ? 'bg-green-600 border-green-600 text-white'
+                              : isActive
+                              ? 'bg-blue-600 border-blue-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-400'
+                          }
+                        `}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        ) : (
+                          <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        )}
                       </div>
-                    </div>
-                  </div>
-                  {idx < steps.length - 1 && (
-                    <div className="flex items-center justify-center mx-2">
-                      <span className="text-xl font-bold" style={{ color: 'darkgreen' }}>➤</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                      <span className={`text-[8px] sm:text-[9px] text-center max-w-[36px] sm:max-w-[42px] leading-tight ${
+                        isActive ? 'text-blue-600 font-medium' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                      }`}>
+                        {step.name.split(' ')[0]}
+                      </span>
+                    </motion.div>
+                    {idx < steps.length - 1 && (
+                      <div className="flex items-center justify-center flex-shrink-0 px-0.5 sm:px-1">
+                        <span className="text-xs sm:text-sm font-bold" style={{ color: isCompleted ? 'green' : 'lightgray' }}>➤</span>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -1010,19 +1039,19 @@ const saveStep2ToAPI = async () => {
 
         {/* Navigation Buttons */}
         {currentStep < steps.length && (
-          <div className="flex items-center justify-between mt-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mt-4 sm:mt-6">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleBack}
               disabled={currentStep === 1}
-              className="flex items-center gap-2 px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-2 sm:order-1"
             >
               <ArrowLeft className="w-4 h-4" />
               Voltar
             </motion.button>
 
-            <div className="text-sm text-gray-600">
+            <div className="hidden sm:block text-xs sm:text-sm text-gray-600 text-center order-1 sm:order-2">
               Etapa {currentStep} de {steps.length}
             </div>
 
@@ -1031,12 +1060,13 @@ const saveStep2ToAPI = async () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleNext}
               disabled={isInitializing || isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6}
-              className="flex items-center gap-2 px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation order-1 sm:order-3"
             >
               {isSavingToAPI || isSavingStep2 || isSavingStep3 || isSavingStep5 || isSavingStep6 ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Salvando...
+                  <span className="hidden sm:inline">Salvando...</span>
+                  <span className="sm:hidden">Salvar</span>
                 </>
               ) : (
                 <>
