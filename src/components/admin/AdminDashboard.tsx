@@ -390,24 +390,26 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          <GenericCRUD
-            key={`${activeSection}-${refreshKey}`}
-            title={currentConfig.title}
-            tableName={currentConfig.tableName}
-            columns={currentConfig.columns}
-            searchFields={['activities.name', 'license_types.name', 'reference_units.code']}
-            onCreate={handleCreate}
-            onEdit={handleEdit}
-            onView={handleView}
-          />
-
-          <BillingConfigurationForm
-            isOpen={showForm}
-            onClose={() => setShowForm(false)}
-            title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title}`}
-            item={editingItem}
-            onSave={handleFormSave}
-          />
+          {!showForm ? (
+            <GenericCRUD
+              key={`${activeSection}-${refreshKey}`}
+              title={currentConfig.title}
+              tableName={currentConfig.tableName}
+              columns={currentConfig.columns}
+              searchFields={['activities.name', 'license_types.name', 'reference_units.code']}
+              onCreate={handleCreate}
+              onEdit={handleEdit}
+              onView={handleView}
+            />
+          ) : (
+            <BillingConfigurationForm
+              isOpen={showForm}
+              onClose={() => setShowForm(false)}
+              title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title}`}
+              item={editingItem}
+              onSave={handleFormSave}
+            />
+          )}
         </div>
       </AdminLayout>
     );
@@ -418,24 +420,26 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          <GenericCRUD
-            key={`${activeSection}-${refreshKey}`}
-            title={currentConfig.title}
-            tableName={currentConfig.tableName}
-            columns={currentConfig.columns}
-            searchFields={['name', 'code']}
-            onCreate={handleCreate}
-            onEdit={handleEdit}
-            onView={handleView}
-          />
-
-          <ActivityForm
-            isOpen={showForm}
-            onClose={() => setShowForm(false)}
-            title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title.slice(0, -1)}`}
-            item={editingItem}
-            onSave={handleFormSave}
-          />
+          {!showForm ? (
+            <GenericCRUD
+              key={`${activeSection}-${refreshKey}`}
+              title={currentConfig.title}
+              tableName={currentConfig.tableName}
+              columns={currentConfig.columns}
+              searchFields={['name', 'code']}
+              onCreate={handleCreate}
+              onEdit={handleEdit}
+              onView={handleView}
+            />
+          ) : (
+            <ActivityForm
+              isOpen={showForm}
+              onClose={() => setShowForm(false)}
+              title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title.slice(0, -1)}`}
+              item={editingItem}
+              onSave={handleFormSave}
+            />
+          )}
         </div>
       </AdminLayout>
     );
@@ -455,26 +459,28 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   return (
     <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
       <div className="p-6 h-full overflow-y-auto">
-        <GenericCRUD
-          key={`${activeSection}-${refreshKey}`}
-          title={currentConfig.title}
-          tableName={currentConfig.tableName}
-          columns={currentConfig.columns}
-          searchFields={['name', 'description', 'abbreviation', 'code']}
-          onCreate={handleCreate}
-          onEdit={handleEdit}
-          onView={handleView}
-        />
-
-        <GenericForm
-          isOpen={showForm}
-          onClose={() => setShowForm(false)}
-          title={`${editingItem ? 'Editar' : 'Novo'} ${currentConfig.title.slice(0, -1)}`}
-          tableName={currentConfig.tableName}
-          fields={currentConfig.formFields}
-          item={editingItem}
-          onSave={handleFormSave}
-        />
+        {!showForm ? (
+          <GenericCRUD
+            key={`${activeSection}-${refreshKey}`}
+            title={currentConfig.title}
+            tableName={currentConfig.tableName}
+            columns={currentConfig.columns}
+            searchFields={['name', 'description', 'abbreviation', 'code']}
+            onCreate={handleCreate}
+            onEdit={handleEdit}
+            onView={handleView}
+          />
+        ) : (
+          <GenericForm
+            isOpen={showForm}
+            onClose={() => setShowForm(false)}
+            title={`${editingItem ? 'Editar' : 'Novo'} ${currentConfig.title.slice(0, -1)}`}
+            tableName={currentConfig.tableName}
+            fields={currentConfig.formFields}
+            item={editingItem}
+            onSave={handleFormSave}
+          />
+        )}
       </div>
     </AdminLayout>
   );
