@@ -8,7 +8,6 @@ import {
   completeStep,
   WorkflowStep 
 } from '../services/workflowApi';
-import { ProcessService } from '../services/processService';
 
 // Páginas do wizard
 import ParticipantesPage from '../pages/inscricao/ParticipantesPage';
@@ -36,7 +35,7 @@ interface InscricaoWizardMotorProps {
  */
 export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoWizardMotorProps) {
   // Zustand store actions
-  const setWorkflowData = useInscricaoStore(state => state.setWorkflowInstanceId);
+  const setWorkflowInstance = useInscricaoStore(state => state.setWorkflowInstance);
   
   // Estado do workflow
   const [workflowInstanceId, setWorkflowInstanceId] = useState<string | null>(null);
@@ -56,51 +55,39 @@ export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoW
   }, []);
 
   /**
-   * Cria processo e inicia workflow
+   * Inicia workflow (backend cria processo automaticamente)
    */
   const initializeWorkflow = async () => {
     setIsInitializing(true);
     setWorkflowError(null);
 
     try {
-      let processIdToUse = currentProcessoId;
-
-      // Se não tem processo, cria um novo
-      if (!processIdToUse) {
-        console.log('🔧 Criando novo processo...');
-        const newProcesso = await ProcessService.createProcess({
-          license_type: 'LP', // Default
-          status: '1', // Em andamento
-          description: 'Processo criado via Workflow Engine',
-          company: 'Empresa Teste',
-          cnpj: '00000000000000',
-          city: 'Cidade',
-          state: 'SP'
-        });
-
-        processIdToUse = newProcesso.id;
-        console.log(`✅ Processo criado: ${processIdToUse}`);
-
-        setCurrentProcessoId(processIdToUse);
-      }
-
-      // Inicia workflow no backend
-      console.log('🚀 Iniciando workflow para processo:', processIdToUse);
-      const workflowResponse = await startWorkflowForLicense(processIdToUse);
+      console.log('� Iniciando workflow...');
+      
+      // Chama backend para iniciar workflow
+      // Backend cria o processo automaticamente se não existir
+      const workflowResponse = await startWorkflowForLicense(processoId || 'new');
 
       console.log('✅ Workflow iniciado:', workflowResponse);
 
+      // Extrai processo_id da resposta se vier (pode estar em qualquer campo)
+      const processId = (workflowResponse as any).processId || 
+                       (workflowResponse as any).processo_id || 
+                       workflowResponse.instanceId;
+      
       setWorkflowInstanceId(workflowResponse.instanceId);
       setCurrentStep(workflowResponse.currentStep);
+      setCurrentProcessoId(processId);
       
       // Salva no Zustand store
-      setWorkflowData(workflowResponse.instanceId, workflowResponse.currentStep.id, workflowResponse.currentStep.key);
+      setWorkflowInstance(workflowResponse.instanceId, workflowResponse.currentStep.id, workflowResponse.currentStep.key);
 
       toast.success('Workflow iniciado com sucesso!');
     } catch (error: any) {
       console.error('❌ Erro ao inicializar workflow:', error);
-      setWorkflowError(error.message || 'Erro ao iniciar workflow');
-      toast.error('Erro ao iniciar workflow: ' + (error.message || 'Erro desconhecido'));
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro ao iniciar workflow';
+      setWorkflowError(errorMessage);
+      toast.error('Erro ao iniciar workflow: ' + errorMessage);
     } finally {
       setIsInitializing(false);
     }
