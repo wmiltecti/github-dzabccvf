@@ -23,6 +23,7 @@ import FormularioWorkflowPage from '../pages/inscricao/workflow/FormularioWorkfl
 interface InscricaoWizardMotorProps {
   onClose?: () => void;
   processoId?: string; // Se fornecido, retoma workflow existente
+  asModal?: boolean; // Se true, renderiza como modal. Se false, renderiza inline
 }
 
 /**
@@ -30,6 +31,10 @@ interface InscricaoWizardMotorProps {
  * 
  * Visual: Idêntico ao InscricaoWizard.tsx (layout aprovado em produção)
  * Controle: 100% pelo Workflow Engine Backend
+ * 
+ * Pode funcionar de 2 formas:
+ * 1. Modal (asModal=true): Botão verde "Motor BPMN" no header do Dashboard
+ * 2. Inline (asModal=false): Aba "Processos Motor" → botão "Novo Processo Motor"
  * 
  * Fluxo:
  * 1. Cria processo no banco
@@ -39,7 +44,7 @@ interface InscricaoWizardMotorProps {
  * 5. Backend avança para próximo step automaticamente
  * 6. Frontend apenas renderiza o step atual retornado pelo backend
  */
-export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoWizardMotorProps) {
+export default function InscricaoWizardMotor({ onClose, processoId, asModal = false }: InscricaoWizardMotorProps) {
   // Zustand store
   const { 
     setWorkflowInstance, 
@@ -280,20 +285,34 @@ export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoW
    * Renderiza tela de loading inicial
    */
   if (isInitializing) {
+    const loadingContent = (
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Inicializando processo com Motor BPMN...</p>
+      </div>
+    );
+
+    if (asModal) {
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+            {loadingContent}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Inicializando processo com Motor BPMN...</p>
-        </div>
+        {loadingContent}
       </div>
     );
   }
 
   /**
-   * Renderiza wizard principal (MESMO LAYOUT do InscricaoWizard)
+   * Conteúdo do wizard (MESMO LAYOUT do InscricaoWizard)
    */
-  return (
+  const wizardContent = (
     <div className="space-y-6">
       {/* Header Actions - IDÊNTICO ao original */}
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
@@ -419,4 +438,22 @@ export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoW
       />
     </div>
   );
+
+  /**
+   * Se asModal=true, envolve o conteúdo em um modal flutuante
+   * Se asModal=false, retorna conteúdo inline
+   */
+  if (asModal) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="bg-gray-50 rounded-lg shadow-2xl w-full max-w-7xl my-8">
+          <div className="max-h-[90vh] overflow-y-auto p-6">
+            {wizardContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return wizardContent;
 }

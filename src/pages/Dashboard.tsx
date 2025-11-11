@@ -104,7 +104,7 @@ export default function Dashboard() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [showWizardInInscricoes, setShowWizardInInscricoes] = useState(false);
-  const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN
+  const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN (botão verde no header)
   const [showWizardInProcessesMotor, setShowWizardInProcessesMotor] = useState(false); // Controla wizard na aba Processos Motor
 
   React.useEffect(() => {
@@ -800,6 +800,7 @@ export default function Dashboard() {
             </button>
           </div>
           <InscricaoWizardMotor
+            asModal={false}
             onClose={() => {
               setShowWizardInProcessesMotor(false);
               loadProcesses();
@@ -1361,9 +1362,10 @@ export default function Dashboard() {
         onUpdateProcess={handleUpdateProcess}
       />
 
-      {/* Wizard do Motor BPMN (Workflow Engine) */}
+      {/* Wizard do Motor BPMN (Workflow Engine) - Botão verde no header */}
       {showWizardMotor && (
         <InscricaoWizardMotor
+          asModal={true}
           onClose={() => {
             setShowWizardMotor(false);
             loadProcesses();
