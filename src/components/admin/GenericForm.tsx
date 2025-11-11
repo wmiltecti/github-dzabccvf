@@ -97,12 +97,17 @@ export default function GenericForm({
             throw uploadError;
           }
           
+          // Get public URL for the uploaded file
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents')
+            .getPublicUrl(filePath);
+          
           finalData = {
             ...finalData,
-            template_file_path: uploadData.path,
+            template_file_url: publicUrl,
             template_file_name: uploadedFile.name,
-            template_file_size: uploadedFile.size,
-            template_file_type: uploadedFile.type
+            file_size_bytes: uploadedFile.size,
+            mime_type: uploadedFile.type
           };
         } catch (uploadError) {
           console.error('Error uploading file:', uploadError);

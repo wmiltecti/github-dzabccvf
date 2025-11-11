@@ -1,0 +1,6 @@
+Este é um documento de teste para upload no sistema de licenciamento ambiental.
+
+Arquivo criado automaticamente pelo teste Selenium.
+
+Data: 2025-11-11
+Propósito: Validar funcionalidade de upload de templates de documentação.

@@ -310,7 +310,7 @@ const entityConfigs = {
         ]
       },
       { 
-        key: 'template_file', 
+        key: 'template_file_name', 
         label: 'Upload de Modelo (Opcional)', 
         type: 'file' as const, 
         accept: '.doc,.docx,.pdf,.jpg,.jpeg,.png,.xlsx,.xls'
