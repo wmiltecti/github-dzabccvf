@@ -35,7 +35,7 @@ interface InscricaoWizardMotorProps {
  */
 export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoWizardMotorProps) {
   // Zustand store actions
-  const setWorkflowInstance = useInscricaoStore(state => state.setWorkflowInstance);
+  const { setWorkflowInstance, setProcessId } = useInscricaoStore();
   
   // Estado do workflow
   const [workflowInstanceId, setWorkflowInstanceId] = useState<string | null>(null);
@@ -79,8 +79,14 @@ export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoW
       setCurrentStep(workflowResponse.currentStep);
       setCurrentProcessoId(processId);
       
-      // Salva no Zustand store
+      // Salva no Zustand store (workflow + processo)
       setWorkflowInstance(workflowResponse.instanceId, workflowResponse.currentStep.id, workflowResponse.currentStep.key);
+      
+      // ✅ CRÍTICO: Salva processId no store para as páginas acessarem
+      if (processId) {
+        console.log('📝 Salvando processId no store:', processId);
+        setProcessId(String(processId));
+      }
 
       toast.success('Workflow iniciado com sucesso!');
     } catch (error: any) {
