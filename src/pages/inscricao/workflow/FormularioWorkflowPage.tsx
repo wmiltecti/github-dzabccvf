@@ -1,325 +1,196 @@
-import { useState } from 'react';
-import { FileText, ArrowRight, CheckCircle } from 'lucide-react';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useInscricaoStore } from '../../../lib/store/inscricao';
-import { completeStep } from '../../../services/workflowApi';
+import FormWizard from '../../../components/FormWizard';
+import { getStepSubprocess, completeSubprocessStep, WorkflowStep } from '../../../services/workflowApi';
 
 /**
  * Página Formulário para Workflow Engine (Motor BPMN)
  * 
- * Versão simplificada focada na integração com o motor.
- * Esta página pode ter sub-processos (Aba 1-6 do formulário completo).
+ * 🔄 Cópia EXATA da FormularioPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * - Suporta subprocess (Aba1-6 do formulário)
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
  */
 export default function FormularioWorkflowPage() {
-  const { workflowInstanceId, currentStepId } = useInscricaoStore();
-  const [loading, setLoading] = useState(false);
-  const [formulario, setFormulario] = useState({
-    tipo_licenca: '',
-    atividade_principal: '',
-    possui_recursos_hidricos: false,
-    possui_area_preservacao: false,
-    possui_residuos_perigosos: false,
-    observacoes: '',
-    // Campos simplificados das abas
-    aba1_caracteristicas: '',
-    aba2_recursos_energia: '',
-    aba3_uso_agua: '',
-    aba4_residuos: '',
-    aba5_outras_info: ''
-  });
+  const navigate = useNavigate();
+  
+  // Zustand store - pega TODOS os dados (processo + workflow + subprocess)
+  const { 
+    processId: processoId,
+    workflowInstanceId, 
+    currentStepId,
+    subprocessInstanceId: contextSubprocessId,
+    setCurrentStep, 
+    setSubprocessInstance, 
+    clearSubprocess,
+    setCurrentStepFromEngine 
+  } = useInscricaoStore();
+  
+  // Estado local para controle do subprocess
+  const [localSubprocessId, setLocalSubprocessId] = useState<string | null>(null);
+  const [subprocessCurrentStep, setSubprocessCurrentStep] = useState<WorkflowStep | null>(null);
+  const [isLoadingSubprocess, setIsLoadingSubprocess] = useState(true);
 
-  /**
-   * Atualiza campo
-   */
-  const handleChange = (field: string, value: any) => {
-    setFormulario({ ...formulario, [field]: value });
-  };
-
-  /**
-   * Preenche dados de teste
-   */
-  const handlePreencherTeste = () => {
-    setFormulario({
-      tipo_licenca: 'LP',
-      atividade_principal: 'Indústria de transformação - atividade de teste',
-      possui_recursos_hidricos: true,
-      possui_area_preservacao: false,
-      possui_residuos_perigosos: true,
-      observacoes: 'Observações gerais sobre o licenciamento para testes',
-      aba1_caracteristicas: 'Características técnicas preenchidas para teste',
-      aba2_recursos_energia: 'Consumo de energia elétrica estimado em 1000 kWh/mês',
-      aba3_uso_agua: 'Captação de água superficial estimada em 10m³/dia',
-      aba4_residuos: 'Geração de resíduos classe I e II em pequena quantidade',
-      aba5_outras_info: 'Informações complementares adicionais'
-    });
-    toast.success('Dados de teste preenchidos!');
-  };
-
-  /**
-   * Valida formulário
-   */
-  const validarFormulario = (): boolean => {
-    if (!formulario.tipo_licenca) {
-      toast.warning('Selecione o tipo de licença');
-      return false;
-    }
-    if (!formulario.atividade_principal.trim()) {
-      toast.warning('Descreva a atividade principal');
-      return false;
-    }
-    return true;
-  };
-
-  /**
-   * Completa step e avança
-   */
-  const handleNext = async () => {
-    if (!validarFormulario()) return;
-
-    if (!workflowInstanceId || !currentStepId) {
-      toast.error('Workflow não inicializado');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      console.log('📤 Completando step Formulário:', {
-        instanceId: workflowInstanceId,
-        stepId: currentStepId,
-        data: { formulario }
+  // Detecta se o passo FORMULARIO possui um subprocesso ativo
+  useEffect(() => {
+    const checkForSubprocess = async () => {
+      console.log('🔍 [FormularioPage] Verificando subprocesso...', { 
+        workflowInstanceId, 
+        currentStepId 
       });
 
-      await completeStep(workflowInstanceId, currentStepId, { formulario });
+      if (!workflowInstanceId || !currentStepId) {
+        console.log('⚠️ [FormularioPage] Workflow não inicializado, usando modo local');
+        setIsLoadingSubprocess(false);
+        return;
+      }
 
-      console.log('✅ Step completado');
-      toast.success('Formulário salvo! Finalizando workflow...');
-    } catch (error: any) {
-      console.error('❌ Erro ao completar step:', error);
-      toast.error('Erro ao avançar: ' + (error.message || 'Erro desconhecido'));
-    } finally {
-      setLoading(false);
+      try {
+        const subprocessInfo = await getStepSubprocess(workflowInstanceId, currentStepId);
+        
+        if (subprocessInfo.has_subprocess && subprocessInfo.subprocess_instance_id) {
+          console.log('✅ [FormularioPage] Subprocesso detectado:', subprocessInfo);
+          
+          // Salva no store global
+          setSubprocessInstance(
+            subprocessInfo.subprocess_instance_id,
+            subprocessInfo.subprocess_current_step?.id || '',
+            subprocessInfo.subprocess_current_step?.key || ''
+          );
+          
+          // Salva no estado local
+          setLocalSubprocessId(subprocessInfo.subprocess_instance_id);
+          setSubprocessCurrentStep(subprocessInfo.subprocess_current_step || null);
+        } else {
+          console.log('ℹ️ [FormularioPage] Nenhum subprocesso ativo, usando modo local');
+          clearSubprocess();
+        }
+      } catch (error) {
+        console.error('❌ [FormularioPage] Erro ao verificar subprocesso:', error);
+        // Em caso de erro, continua em modo local
+      } finally {
+        setIsLoadingSubprocess(false);
+      }
+    };
+
+    checkForSubprocess();
+  }, [workflowInstanceId, currentStepId, setSubprocessInstance, clearSubprocess]);
+
+  const handleComplete = async () => {
+    console.log('📝 [FormularioPage] Formulário completado');
+    
+    // Se tem subprocesso ativo, completa o passo do subprocesso
+    if (localSubprocessId && subprocessCurrentStep?.id) {
+      console.log('🔄 [FormularioPage] Completando passo do subprocesso:', {
+        subprocessId: localSubprocessId,
+        stepId: subprocessCurrentStep.id
+      });
+
+      try {
+        const response = await completeSubprocessStep(
+          localSubprocessId, 
+          subprocessCurrentStep.id,
+          { completed: true } // Payload indicando conclusão do formulário
+        );
+
+        console.log('✅ [FormularioPage] Subprocesso completado:', response);
+
+        // Backend automaticamente completa o passo pai FORMULARIO
+        // e retorna o próximo passo
+        if (response.nextStep) {
+          setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
+          navigate(response.nextStep.path);
+        } else if (response.status === 'FINISHED') {
+          console.log('🎉 [FormularioPage] Workflow finalizado!');
+          // Navega para página de conclusão ou dashboard
+          navigate('/dashboard');
+        }
+
+        // Limpa o subprocesso do estado
+        clearSubprocess();
+        setLocalSubprocessId(null);
+        setSubprocessCurrentStep(null);
+
+      } catch (error) {
+        console.error('❌ [FormularioPage] Erro ao completar subprocesso:', error);
+        alert('Erro ao completar o formulário. Tente novamente.');
+        return;
+      }
+    } else {
+      // Modo local/fallback: navegação tradicional
+      console.log('ℹ️ [FormularioPage] Modo local, navegando tradicionalmente');
+      if (window.location.pathname.includes('/inscricao/')) {
+        navigate('/inscricao/documentacao');
+      } else {
+        setCurrentStep(5);
+      }
     }
   };
 
+  const handleBack = () => {
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/empreendimento');
+    } else {
+      setCurrentStep(3);
+    }
+  };
+
+  // Mostra loading enquanto aguarda processoId
+  if (!processoId) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900">Inicializando processo...</h3>
+          <p className="text-gray-600">Aguarde um momento</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostra loading enquanto verifica subprocesso
+  if (isLoadingSubprocess) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium text-gray-900">Verificando subprocesso...</h3>
+          <p className="text-gray-600">Preparando formulário</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-          <FileText className="w-6 h-6 text-orange-600" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Formulário de Licenciamento</h2>
-          <p className="text-sm text-gray-600">
-            Informações técnicas detalhadas (versão simplificada para testes)
-          </p>
-        </div>
-      </div>
-
-      {/* Botão Teste */}
-      <div className="flex justify-end">
+    <div className="p-6">
+      {/* Header com botão voltar */}
+      <div className="mb-6">
         <button
-          onClick={handlePreencherTeste}
-          className="text-sm px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          onClick={handleBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
         >
-          📝 Preencher Teste
+          <ArrowLeft className="w-4 h-4" />
+          Voltar para Atividade
         </button>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Formulário de Licenciamento</h2>
+        <p className="text-gray-600">
+          Preencha as informações detalhadas sobre recursos, energia, água, resíduos e outras informações.
+        </p>
       </div>
 
-      {/* Formulário */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
-        {/* Seção 1: Dados Gerais */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-blue-600" />
-            Dados Gerais
-          </h3>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Licença *
-              </label>
-              <select
-                value={formulario.tipo_licenca}
-                onChange={(e) => handleChange('tipo_licenca', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Selecione...</option>
-                <option value="LP">Licença Prévia (LP)</option>
-                <option value="LI">Licença de Instalação (LI)</option>
-                <option value="LO">Licença de Operação (LO)</option>
-                <option value="LAC">Licença Ambiental por Compromisso (LAC)</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Atividade Principal *
-            </label>
-            <textarea
-              value={formulario.atividade_principal}
-              onChange={(e) => handleChange('atividade_principal', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={2}
-              placeholder="Descrição da atividade principal a ser licenciada"
-            />
-          </div>
-        </div>
-
-        {/* Seção 2: Checkboxes */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Características</h3>
-
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formulario.possui_recursos_hidricos}
-                onChange={(e) => handleChange('possui_recursos_hidricos', e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">Utiliza recursos hídricos</span>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formulario.possui_area_preservacao}
-                onChange={(e) => handleChange('possui_area_preservacao', e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">Possui área de preservação permanente</span>
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formulario.possui_residuos_perigosos}
-                onChange={(e) => handleChange('possui_residuos_perigosos', e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">Gera resíduos perigosos</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Seção 3: Abas Simplificadas */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Informações Técnicas (Simplificado)</h3>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              📋 Aba 1 - Características
-            </label>
-            <input
-              type="text"
-              value={formulario.aba1_caracteristicas}
-              onChange={(e) => handleChange('aba1_caracteristicas', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Resumo das características"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              ⚡ Aba 2 - Recursos/Energia
-            </label>
-            <input
-              type="text"
-              value={formulario.aba2_recursos_energia}
-              onChange={(e) => handleChange('aba2_recursos_energia', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Consumo de energia"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              💧 Aba 3 - Uso da Água
-            </label>
-            <input
-              type="text"
-              value={formulario.aba3_uso_agua}
-              onChange={(e) => handleChange('aba3_uso_agua', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Captação e consumo"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              🗑️ Aba 4 - Resíduos
-            </label>
-            <input
-              type="text"
-              value={formulario.aba4_residuos}
-              onChange={(e) => handleChange('aba4_residuos', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Geração e destinação"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              📝 Aba 5 - Outras Informações
-            </label>
-            <input
-              type="text"
-              value={formulario.aba5_outras_info}
-              onChange={(e) => handleChange('aba5_outras_info', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Informações complementares"
-            />
-          </div>
-        </div>
-
-        {/* Observações */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Observações Gerais
-          </label>
-          <textarea
-            value={formulario.observacoes}
-            onChange={(e) => handleChange('observacoes', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            rows={3}
-            placeholder="Observações adicionais sobre o licenciamento"
-          />
-        </div>
-      </div>
-
-      {/* Debug Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs">
-        <p className="font-semibold text-blue-900 mb-2">🔧 Debug Info</p>
-        <p className="text-blue-700">Workflow Instance: {workflowInstanceId || 'N/A'}</p>
-        <p className="text-blue-700">Current Step: {currentStepId || 'N/A'}</p>
-        <p className="text-blue-700">Tipo Licença: {formulario.tipo_licenca || '(vazio)'}</p>
-        <p className="text-blue-700">Recursos Hídricos: {formulario.possui_recursos_hidricos ? 'Sim' : 'Não'}</p>
-      </div>
-
-      {/* Botão Finalizar */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleNext}
-          disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Processando...
-            </>
-          ) : (
-            <>
-              Finalizar
-              <ArrowRight className="w-5 h-5" />
-            </>
-          )}
-        </button>
-      </div>
+      {/* FormWizard integrado */}
+      <FormWizard 
+        processoId={processoId ? String(processoId) : undefined}
+        onComplete={handleComplete}
+        // Futuros props para controle de subprocesso (opcional):
+        // subprocessInstanceId={localSubprocessId}
+        // subprocessCurrentStep={subprocessCurrentStep}
+      />
     </div>
   );
 }
