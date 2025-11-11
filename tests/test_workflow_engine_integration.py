@@ -67,19 +67,35 @@ class WorkflowEngineTestSuite:
         print(f"\n{Colors.CYAN}🔧 Configurando WebDriver...{Colors.END}")
         
         chrome_options = Options()
-        chrome_options.add_argument('--headless')  # Executar sem interface gráfica
+        
+        # Modo headless (pode ser controlado pela env var HEADLESS)
+        headless = os.getenv('HEADLESS', 'true').lower() == 'true'
+        if headless:
+            chrome_options.add_argument('--headless')
+        
         chrome_options.add_argument('--no-sandbox')
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--window-size=1920,1080')
         
-        # Se quiser ver o teste rodando, comente a linha --headless acima
-        # chrome_options.add_argument('--start-maximized')
+        # Tentar usar chromedriver manual primeiro, depois webdriver_manager
+        try:
+            manual_chromedriver = r'C:\chromedriver\chromedriver.exe'
+            if os.path.exists(manual_chromedriver):
+                print(f"{Colors.CYAN}   Usando ChromeDriver manual: {manual_chromedriver}{Colors.END}")
+                self.driver = webdriver.Chrome(
+                    service=Service(manual_chromedriver),
+                    options=chrome_options
+                )
+            else:
+                raise FileNotFoundError("ChromeDriver manual não encontrado")
+        except Exception as e:
+            print(f"{Colors.YELLOW}   Tentando webdriver_manager...{Colors.END}")
+            self.driver = webdriver.Chrome(
+                service=Service(ChromeDriverManager().install()),
+                options=chrome_options
+            )
         
-        self.driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=chrome_options
-        )
         self.wait = WebDriverWait(self.driver, TEST_TIMEOUT)
         
         print(f"{Colors.GREEN}✅ WebDriver configurado{Colors.END}")
@@ -147,40 +163,80 @@ class WorkflowEngineTestSuite:
         print(f"\n{Colors.BLUE}🔐 Verificando autenticação...{Colors.END}")
         
         try:
-            self.driver.get(BASE_URL)
+            # Vai direto para a página de login
+            self.driver.get(f"{BASE_URL}/login")
             time.sleep(2)
             
-            # Verifica se já está logado (procura por elemento do dashboard)
-            try:
-                self.driver.find_element(By.XPATH, "//*[contains(text(), 'Dashboard') or contains(text(), 'Nova Solicitação')]")
+            # Verifica se já está logado (redireciona para dashboard)
+            if '/dashboard' in self.driver.current_url or '/inscricao' in self.driver.current_url:
                 print(f"{Colors.GREEN}✅ Já autenticado{Colors.END}")
                 return True
-            except NoSuchElementException:
-                pass
             
-            # Se não estiver logado, tenta fazer login
+            # Se não estiver logado, faz o login
             print(f"{Colors.YELLOW}⚠️  Não autenticado, fazendo login...{Colors.END}")
             
-            # Procura campos de login
-            email_input = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email'], input[name='email']"))
+            # Aguarda página de login carregar
+            print(f"  {Colors.CYAN}→ Aguardando formulário de login...{Colors.END}")
+            time.sleep(2)
+            
+            # Seleciona Pessoa Física (PF) - garante que está selecionado
+            try:
+                tipo_select = self.driver.find_element(By.CSS_SELECTOR, 'select')
+                tipo_select.send_keys('PF')  # Seleciona Pessoa Física
+                print(f"  {Colors.CYAN}→ Tipo de pessoa: PF (CPF){Colors.END}")
+                time.sleep(1)
+            except:
+                print(f"  {Colors.CYAN}→ Já está PF por default{Colors.END}")
+                pass
+            
+            # Procura campo de identificação (CPF)
+            print(f"  {Colors.CYAN}→ Procurando campo de identificação...{Colors.END}")
+            identificacao_input = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="text"], input[placeholder*="CPF" i], input[placeholder*="identificação" i]'))
             )
-            password_input = self.driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password']")
             
-            # Credenciais de teste (ajuste conforme necessário)
-            email_input.send_keys(os.getenv('TEST_USER_EMAIL', 'teste@example.com'))
-            password_input.send_keys(os.getenv('TEST_USER_PASSWORD', 'senha123'))
+            # Procura campo de senha
+            password_input = self.driver.find_element(By.CSS_SELECTOR, 'input[type="password"]')
             
-            # Clica em login
-            login_button = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-            login_button.click()
+            # Credenciais de teste
+            test_cpf = os.getenv('TEST_USER_EMAIL', '61404694579')
+            test_password = os.getenv('TEST_USER_PASSWORD', 'Senh@01!')
             
-            # Aguarda dashboard carregar
-            self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Dashboard') or contains(text(), 'Nova Solicitação')]"))
-            )
+            print(f"  {Colors.CYAN}→ Preenchendo CPF: {test_cpf}{Colors.END}")
+            identificacao_input.clear()
+            identificacao_input.send_keys(test_cpf)
+            time.sleep(0.5)
             
+            print(f"  {Colors.CYAN}→ Preenchendo senha{Colors.END}")
+            password_input.clear()
+            password_input.send_keys(test_password)
+            time.sleep(0.5)
+            
+            # Procura e clica no botão de submit
+            print(f"  {Colors.CYAN}→ Procurando botão Entrar...{Colors.END}")
+            submit_button = self.driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
+            print(f"  {Colors.CYAN}→ Clicando em Entrar...{Colors.END}")
+            submit_button.click()
+            
+            print(f"  {Colors.CYAN}→ Aguardando redirecionamento para dashboard (timeout: 30s)...{Colors.END}")
+            
+            # Aguarda redirecionamento para dashboard ou home
+            try:
+                WebDriverWait(self.driver, 30).until(
+                    lambda driver: '/dashboard' in driver.current_url or driver.current_url == f"{BASE_URL}/" or driver.current_url == BASE_URL
+                )
+            except:
+                # Se não redirecionou, verifica se houve erro
+                print(f"  {Colors.RED}→ URL atual após submit: {self.driver.current_url}{Colors.END}")
+                try:
+                    error_text = self.driver.find_element(By.CSS_SELECTOR, '.bg-red-50').text
+                    print(f"  {Colors.RED}→ Erro na página: {error_text}{Colors.END}")
+                except:
+                    pass
+                raise
             print(f"{Colors.GREEN}✅ Login realizado com sucesso{Colors.END}")
+            time.sleep(2)  # Aguarda carregamento completo
+            
             return True
             
         except Exception as e:
@@ -211,34 +267,44 @@ class WorkflowEngineTestSuite:
             self.driver.get(BASE_URL)
             time.sleep(2)
             
-            # Clicar em "Nova Solicitação" ou "Solicitação de Processo"
-            nova_solicitacao_btn = self.wait.until(
+            # Clicar no botão "Motor BPMN" (Workflow Engine)
+            print(f"  {Colors.CYAN}→ Procurando botão 'Motor BPMN'...{Colors.END}")
+            motor_btn = self.wait.until(
                 EC.element_to_be_clickable((
                     By.XPATH, 
-                    "//button[contains(text(), 'Nova Solicitação') or contains(text(), 'Solicitação de Processo')]"
+                    "//button[contains(text(), 'Motor BPMN') or contains(text(), 'Motor') or @title[contains(., 'Motor BPMN')]]"
                 ))
             )
             
-            print(f"  {Colors.CYAN}→ Clicando em Nova Solicitação...{Colors.END}")
-            nova_solicitacao_btn.click()
-            time.sleep(3)  # Aguarda inicialização do workflow
+            print(f"  {Colors.CYAN}→ Clicando em Motor BPMN...{Colors.END}")
+            motor_btn.click()
+            time.sleep(5)  # Aguarda inicialização do workflow (cria processo + inicia motor)
             
-            # Verificar se redirecionou para /inscricao/participantes
-            current_url = self.driver.current_url
-            print(f"  {Colors.CYAN}→ URL atual: {current_url}{Colors.END}")
+            # O wizard do motor ABRE EM MODAL
+            # Verificar se o modal do wizard apareceu
+            print(f"  {Colors.CYAN}→ Aguardando modal do Workflow Engine...{Colors.END}")
+            modal = self.wait.until(
+                EC.presence_of_element_located((
+                    By.XPATH, 
+                    "//*[contains(text(), 'Nova Inscrição (Motor BPMN)') or contains(text(), 'Inicializando Workflow')]"
+                ))
+            )
             
-            if '/inscricao/participantes' not in current_url:
-                raise AssertionError(f"URL esperada: /inscricao/participantes, atual: {current_url}")
+            print(f"  {Colors.CYAN}→ Modal do Workflow Engine aberto{Colors.END}")
             
-            # Verificar se a página Participantes carregou
+            # Aguarda inicialização completar e página Participantes aparecer
+            print(f"  {Colors.CYAN}→ Aguardando wizard inicializar...{Colors.END}")
+            time.sleep(3)
+            
+            # Verifica se chegou na página Participantes
             participantes_title = self.wait.until(
                 EC.presence_of_element_located((
                     By.XPATH, 
-                    "//*[contains(text(), 'Participantes') or contains(text(), 'Adicionar Participante')]"
+                    "//*[contains(text(), 'Participantes') or contains(text(), 'Adicionar Participante') or contains(text(), 'Requerente')]"
                 ))
             )
             
-            print(f"  {Colors.CYAN}→ Página Participantes carregada{Colors.END}")
+            print(f"  {Colors.CYAN}→ Wizard Participantes carregado{Colors.END}")
             
             # TODO: Capturar requisição /workflow/instances/start via CDP
             # Por enquanto, verificamos se chegou na página correta

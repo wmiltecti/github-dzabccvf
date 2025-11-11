@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import InscricaoWizard from '../components/InscricaoWizard';
+import InscricaoWizardMotor from '../components/InscricaoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
@@ -103,6 +104,7 @@ export default function Dashboard() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [showWizardInInscricoes, setShowWizardInInscricoes] = useState(false);
+  const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -374,18 +376,29 @@ export default function Dashboard() {
       <div className="sticky top-0 z-30 bg-white pb-2 pt-2 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
-          <div className="flex space-x-2 sm:space-x-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
               onClick={() => {
                 setActiveTab('inscricoes');
                 setShowWizardInInscricoes(true);
               }}
-              title="Iniciar nova solicitação"
+              title="Iniciar nova solicitação (fluxo manual)"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Nova Solicitação</span>
               <span className="xs:hidden">Solicitação</span>
+            </button>
+            
+            {/* Botão para testar Workflow Engine (Motor BPMN) */}
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardMotor(true)}
+              title="Nova solicitação com Workflow Engine (Motor BPMN)"
+            >
+              <FilePlus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Motor BPMN</span>
+              <span className="sm:hidden">Motor</span>
             </button>
           </div>
         </div>
@@ -1209,6 +1222,16 @@ export default function Dashboard() {
         process={selectedProcess}
         onUpdateProcess={handleUpdateProcess}
       />
+
+      {/* Wizard do Motor BPMN (Workflow Engine) */}
+      {showWizardMotor && (
+        <InscricaoWizardMotor
+          onClose={() => {
+            setShowWizardMotor(false);
+            loadDashboardData(); // Recarrega dados após fechar
+          }}
+        />
+      )}
     </div>
   );
 }
