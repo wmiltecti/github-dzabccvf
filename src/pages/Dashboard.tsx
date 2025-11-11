@@ -332,7 +332,7 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    { id: 'processes', name: 'Processos', icon: FileText }
+    //{ id: 'processes', name: 'Processos', icon: FileText }
   ];
 
   const otherNavigation = [
