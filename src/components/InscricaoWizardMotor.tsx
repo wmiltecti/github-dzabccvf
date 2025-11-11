@@ -9,13 +9,13 @@ import {
   WorkflowStep 
 } from '../services/workflowApi';
 
-// Páginas do wizard
-import ParticipantesPage from '../pages/inscricao/ParticipantesPage';
-import ImovelPage from '../pages/inscricao/ImovelPage';
-import EmpreendimentoPage from '../pages/inscricao/EmpreendimentoPage';
-import FormularioPage from '../pages/inscricao/FormularioPage';
-// import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
-// import RevisaoPage from '../pages/inscricao/RevisaoPage';
+// Páginas do wizard - versões integradas com Workflow Engine
+import ParticipantesWorkflowPage from '../pages/inscricao/workflow/ParticipantesWorkflowPage';
+import ImovelWorkflowPage from '../pages/inscricao/workflow/ImovelWorkflowPage';
+import EmpreendimentoWorkflowPage from '../pages/inscricao/workflow/EmpreendimentoWorkflowPage';
+import FormularioWorkflowPage from '../pages/inscricao/workflow/FormularioWorkflowPage';
+// import DocumentacaoWorkflowPage from '../pages/inscricao/workflow/DocumentacaoWorkflowPage';
+// import RevisaoWorkflowPage from '../pages/inscricao/workflow/RevisaoWorkflowPage';
 
 interface InscricaoWizardMotorProps {
   onClose: () => void;
@@ -179,22 +179,22 @@ export default function InscricaoWizardMotor({ onClose, processoId }: InscricaoW
     // Não precisamos passar onNext/onPrevious
     switch (stepKey) {
       case 'participantes':
-        return <ParticipantesPage />;
+        return <ParticipantesWorkflowPage />;
 
       case 'imovel':
-        return <ImovelPage />;
+        return <ImovelWorkflowPage />;
 
       case 'empreendimento':
-        return <EmpreendimentoPage />;
+        return <EmpreendimentoWorkflowPage />;
 
       case 'formulario':
-        return <FormularioPage />;
+        return <FormularioWorkflowPage />;
 
       // case 'documentacao':
-      //   return <DocumentacaoPage />;
+      //   return <DocumentacaoWorkflowPage />;
 
       // case 'revisao':
-      //   return <RevisaoPage />;
+      //   return <RevisaoWorkflowPage />;
 
       default:
         return (
