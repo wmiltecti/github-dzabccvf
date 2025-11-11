@@ -123,17 +123,13 @@ export default function BillingConfigurationForm({
 
   const loadDropdownData = async () => {
     try {
-      // Load activities with relationships
+      // Load activities
       const { data: activitiesData, error: activitiesError } = await supabase
         .from('activities')
-        .select(`
-          id, code, name, measurement_unit, range_start, range_end,
-          enterprise_sizes(name),
-          pollution_potentials(name)
-        `)
+        .select('id, code, name, description')
         .eq('is_active', true)
         .order('code');
-
+      
       if (activitiesError) throw activitiesError;
       setActivities(activitiesData || []);
 

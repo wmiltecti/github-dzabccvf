@@ -135,6 +135,46 @@ npm run dev
 
 - `PRODUCTION_SETUP.md` - Guia para deploy em produção
 - `SUPABASE_PRODUCTION.md` - Configuração detalhada do Supabase
+- `tests/README_SETUP_SELENIUM.md` - **🧪 Guia de configuração de testes automatizados**
+
+## 🧪 Testes Automatizados
+
+Este projeto inclui **10 testes E2E** completos com Selenium para validar funcionalidades administrativas:
+
+### Setup Rápido
+```bash
+# 1. Criar ambiente virtual
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1  # Windows
+# ou
+source .venv/bin/activate      # Linux/Mac
+
+# 2. Instalar dependências
+cd tests
+pip install -r requirements.txt
+
+# 3. Configurar .env (criar na raiz do projeto)
+TEST_CPF=61404694579
+TEST_PASSWORD=teste123
+TEST_BASE_URL=http://localhost:5173
+
+# 4. Executar teste
+python tests/test_property_types_selenium.py
+```
+
+### Testes Disponíveis
+- ✅ `test_property_types_selenium.py` - Tipos de Imóvel
+- ✅ `test_process_types_selenium.py` - Tipos de Processo
+- ✅ `test_license_types_selenium.py` - Tipos de Licença
+- ✅ `test_study_types_selenium.py` - Tipos de Estudo
+- ✅ `test_enterprise_sizes_selenium.py` - Porte do Empreendimento
+- ✅ `test_pollution_potentials_selenium.py` - Potencial Poluidor
+- ✅ `test_reference_units_selenium.py` - Unidades de Referência
+- ✅ `test_documentation_selenium.py` - Documentação
+- ✅ `test_billing_configurations_selenium.py` - Configuração de Cobrança
+- ✅ `test_activities_crud_selenium.py` - Atividades (CRUD completo)
+
+📖 **Guia completo:** [`tests/README_SETUP_SELENIUM.md`](tests/README_SETUP_SELENIUM.md)
 
 ---
 

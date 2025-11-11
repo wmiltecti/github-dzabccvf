@@ -225,13 +225,25 @@ export default function InscricaoLayout() {
 
       {/* Process Info Footer */}
       {processoId && (
-        <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <div className="flex items-center space-x-2 text-sm">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">Processo ativo:</span>
-            <span className="font-medium text-gray-900">#{processoId}</span>
+        <>
+          <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+            <div className="flex items-center space-x-2 text-sm">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-gray-600">Processo ativo:</span>
+              <span className="font-medium text-gray-900">#{processoId}</span>
+            </div>
           </div>
-        </div>
+          
+          {/* DEBUG Panel - abaixo do processo ativo */}
+          <div className="fixed bottom-20 right-4 bg-yellow-50 border border-yellow-200 rounded-lg shadow-lg p-3 max-w-md">
+            <div className="text-xs">
+              <div className="font-bold text-yellow-900 mb-1">🔍 DEBUG - Informações do Sistema</div>
+              <div className="text-yellow-800">
+                <strong>Processo ID:</strong> {processoId}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       <ConfirmDialog

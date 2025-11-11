@@ -63,6 +63,33 @@ export interface Property {
   car_codigo?: string;
   arquivogeorreferenciamento?: string;
   address?: Address;
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
+  
+  // URBANO específico
+  uf?: string;
+  municipio?: string;
+  roteiro_acesso_detalhado?: string;
+  // Coordenadas UTM já existem: utm_lat, utm_long, utm_zona
+  // Coordenadas DMS já existem: dms_lat, dms_long
+  // Endereço já existe via address (cep, logradouro, numero, bairro, complemento, uf, municipio)
+  // Sistema de referência compartilha com LINEAR
+  // Dados cartoriais (via PropertyTitle): tipo_cartorio, nome_cartorio, comarca, uf, matricula, livro, folha, area_total_ha
+  
+  // RURAL específico
+  // car_codigo já existe (campo principal para RURAL)
+  car_situacao?: string; // Ex: "Pendente", "Ativo", "Cancelado"
+  area_total_imovel?: number; // em hectares
+  area_uso_consolidado?: number; // em hectares
+  area_vegetacao_nativa?: number; // em hectares
+  area_app?: number; // Área de Preservação Permanente em hectares
+  area_cursos_agua?: number; // em hectares
+  area_ocupacao_apos_2008?: number; // em hectares
 }
 
 export interface InscricaoState {

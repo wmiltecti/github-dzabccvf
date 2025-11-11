@@ -96,6 +96,26 @@ export interface SearchImovelResult {
   dms_lat?: string;
   dms_long?: string;
   arquivogeorreferenciamento?: string;
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
+  
+  // URBANO específico
+  roteiro_acesso_detalhado?: string;
+  utm_zona?: string;
+  
+  // RURAL específico
+  car_situacao?: string;
+  area_total_imovel?: number;
+  area_uso_consolidado?: number;
+  area_vegetacao_nativa?: number;
+  area_app?: number;
+  area_cursos_agua?: number;
+  area_ocupacao_apos_2008?: number;
 }
 
 // Função de busca de imóveis
@@ -126,6 +146,7 @@ export async function searchImoveis(query: string) {
           utm_long,
           dms_lat,
           dms_long,
+          arquivogeorreferenciamento,
           address:addresses!address_id (
             logradouro,
             numero,

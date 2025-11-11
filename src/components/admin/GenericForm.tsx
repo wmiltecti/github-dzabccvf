@@ -73,6 +73,10 @@ export default function GenericForm({
     e.preventDefault();
     setLoading(true);
 
+    console.log('🔍 GenericForm handleSubmit - tableName:', tableName);
+    console.log('🔍 GenericForm handleSubmit - formData:', formData);
+    console.log('🔍 GenericForm handleSubmit - item:', item);
+
     try {
       let finalData = { ...formData };
 
@@ -93,12 +97,17 @@ export default function GenericForm({
             throw uploadError;
           }
           
+          // Get public URL for the uploaded file
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents')
+            .getPublicUrl(filePath);
+          
           finalData = {
             ...finalData,
-            template_file_path: uploadData.path,
+            template_file_url: publicUrl,
             template_file_name: uploadedFile.name,
-            template_file_size: uploadedFile.size,
-            template_file_type: uploadedFile.type
+            file_size_bytes: uploadedFile.size,
+            mime_type: uploadedFile.type
           };
         } catch (uploadError) {
           console.error('Error uploading file:', uploadError);
@@ -107,6 +116,9 @@ export default function GenericForm({
       }
 
       if (item?.id) {
+        console.log('🔄 Updating item with ID:', item.id);
+        console.log('🔄 Update data:', finalData);
+        
         const { data, error } = await supabase
           .from(tableName)
           .update(finalData)
@@ -115,11 +127,15 @@ export default function GenericForm({
           .single();
         
         if (error) {
+          console.error('❌ Update error:', error);
           throw error;
         }
         
-        console.log('Item updated successfully:', data);
+        console.log('✅ Item updated successfully:', data);
       } else {
+        console.log('➕ Inserting new item');
+        console.log('➕ Insert data:', finalData);
+        
         const { data, error } = await supabase
           .from(tableName)
           .insert(finalData)
@@ -127,10 +143,11 @@ export default function GenericForm({
           .single();
         
         if (error) {
+          console.error('❌ Insert error:', error);
           throw error;
         }
         
-        console.log('Item created successfully:', data);
+        console.log('✅ Item created successfully:', data);
       }
 
       toast.success(item?.id ? 'Item atualizado com sucesso!' : 'Item criado com sucesso!');
@@ -166,7 +183,15 @@ export default function GenericForm({
           <input
             type="number"
             value={value}
-            onChange={(e) => handleInputChange(field.key, field.type === 'decimal' ? parseFloat(e.target.value) : parseInt(e.target.value))}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Se vazio, enviar null; senão converter para number
+              if (val === '' || val === null) {
+                handleInputChange(field.key, null);
+              } else {
+                handleInputChange(field.key, field.type === 'decimal' ? parseFloat(val) : parseInt(val));
+              }
+            }}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder={field.placeholder}
             step={field.type === 'decimal' ? '0.01' : '1'}

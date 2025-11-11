@@ -3,6 +3,7 @@ import { useInscricaoStore } from '../lib/store/inscricao';
 import { criarProcesso } from '../services/processosService';
 import { getUserId } from '../utils/authToken';
 import { InscricaoProvider } from '../contexts/InscricaoContext';
+import { EnterpriseProvider } from '../contexts/EnterpriseContext';
 import InscricaoStepper from './InscricaoStepper';
 import { FileText, Save, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -176,9 +177,11 @@ export default function InscricaoWizard() {
 
       {/* Main Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
-        <InscricaoProvider processoId={processoId}>
-          {renderCurrentStep()}
-        </InscricaoProvider>
+        <EnterpriseProvider>
+          <InscricaoProvider processoId={processoId}>
+            {renderCurrentStep()}
+          </InscricaoProvider>
+        </EnterpriseProvider>
       </div>
 
       {/* Process Info Footer */}

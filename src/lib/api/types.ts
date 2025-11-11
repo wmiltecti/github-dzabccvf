@@ -56,6 +56,28 @@ export interface PropertyPayload {
   dms_long?: string;
   car_codigo?: string | null;
   address?: Address | ID | null; // objeto novo OU id existente
+  
+  // LINEAR específico
+  municipio_inicio?: string;
+  uf_inicio?: string;
+  municipio_final?: string;
+  uf_final?: string;
+  sistema_referencia?: string;
+  
+  // URBANO específico
+  uf?: string;
+  municipio?: string;
+  roteiro_acesso_detalhado?: string;
+  // Demais campos já existentes: utm_*, dms_*, address, sistema_referencia
+  
+  // RURAL específico
+  car_situacao?: string;
+  area_total_imovel?: number;
+  area_uso_consolidado?: number;
+  area_vegetacao_nativa?: number;
+  area_app?: number;
+  area_cursos_agua?: number;
+  area_ocupacao_apos_2008?: number;
 }
 
 export interface PropertyTitlePayload {
