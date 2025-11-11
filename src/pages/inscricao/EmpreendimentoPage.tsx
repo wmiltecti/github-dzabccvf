@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
-import { Building, ArrowLeft, ArrowRight, Upload, MapPin, AlertTriangle, FileText } from 'lucide-react';
+import { Building, ArrowLeft, ArrowRight, Upload, MapPin, AlertTriangle, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
+import EnterpriseSearch from '../../components/enterprise/EnterpriseSearch';
+import { useEnterprise } from '../../contexts/EnterpriseContext';
+import useSystemConfig from '../../hooks/useSystemConfig';
+import { getEnterpriseName, getEnterpriseDocument } from '../../services/enterpriseService';
 
 export default function EmpreendimentoPage() {
   const navigate = useNavigate();
   const { setCurrentStep } = useInscricaoStore();
+  
+  // Contexto e configurações
+  const { selectedEnterprise, isNewEnterprise, searchPerformed, setNewEnterprise } = useEnterprise();
+  const { configs, allowNewEnterprise, isSearchRequired } = useSystemConfig();
   
   const [formData, setFormData] = useState({
     tipo_empreendimento: '',
@@ -21,6 +29,16 @@ export default function EmpreendimentoPage() {
     sistema_referencia: 'SIRGAS 2000',
     area_total: ''
   });
+
+  // Preencher campos quando empreendimento for selecionado
+  useEffect(() => {
+    if (selectedEnterprise) {
+      console.log('[EmpreendimentoPage] Empreendimento selecionado, preenchendo campos:', selectedEnterprise);
+      // Aqui você pode preencher os campos do formulário com dados do empreendimento
+      // Por exemplo, se tiver tipo_empreendimento no banco:
+      // setFormData(prev => ({ ...prev, tipo_empreendimento: selectedEnterprise.tipo_empreendimento }));
+    }
+  }, [selectedEnterprise]);
 
   const tiposEmpreendimento = [
     'Selecione',
@@ -81,6 +99,22 @@ export default function EmpreendimentoPage() {
   };
 
   const handleNext = () => {
+    // Validação 1: Se pesquisa é obrigatória e não foi realizada
+    if (isSearchRequired() && !searchPerformed) {
+      toast.error('Por favor, pesquise o empreendimento antes de continuar', {
+        icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
+      });
+      return;
+    }
+
+    // Validação 2: Se não permite novo e não selecionou empreendimento existente
+    if (isSearchRequired() && !allowNewEnterprise() && !selectedEnterprise && !isNewEnterprise) {
+      toast.error('Cadastro de novo empreendimento não permitido. Selecione um empreendimento existente', {
+        icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
+      });
+      return;
+    }
+
     if (!formData.tipo_empreendimento || formData.tipo_empreendimento === 'Selecione') {
       toast.error('Selecione o tipo de empreendimento');
       return;
@@ -109,6 +143,20 @@ export default function EmpreendimentoPage() {
     }
   };
 
+  const handleNewEnterpriseClick = () => {
+    if (!allowNewEnterprise()) {
+      toast.error('Cadastro de novo empreendimento não permitido pelas configurações do sistema', {
+        icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
+      });
+      return;
+    }
+    
+    setNewEnterprise();
+    toast.success('Modo de novo cadastro ativado. Preencha os dados abaixo.', {
+      icon: <Plus className="w-5 h-5 text-green-600" />,
+    });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
@@ -119,8 +167,45 @@ export default function EmpreendimentoPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Seção 1: Dados do Empreendimento */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        {/* Seção de Pesquisa de Empreendimento */}
+        {!isNewEnterprise && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <EnterpriseSearch />
+            
+            {/* Botão Cadastrar Novo - só aparece se: pesquisa foi feita E (sem resultados OU config permite) */}
+            {searchPerformed && !selectedEnterprise && allowNewEnterprise() && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleNewEnterpriseClick}
+                  className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Cadastrar Novo Empreendimento
+                </button>
+                <p className="text-sm text-gray-500 text-center mt-2">
+                  Não encontrou o empreendimento? Cadastre um novo abaixo.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Indicador de Novo Cadastro */}
+        {isNewEnterprise && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <Plus className="w-5 h-5 text-green-700" />
+              <div>
+                <h4 className="font-semibold text-green-900">Novo Cadastro de Empreendimento</h4>
+                <p className="text-sm text-green-700">Preencha os dados do novo empreendimento abaixo.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Seção 1: Dados do Empreendimento - Somente visível se: selecionou OU modo novo cadastro */}
+        {(selectedEnterprise || isNewEnterprise) && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Building className="w-5 h-5 text-blue-600" />
             Dados do Empreendimento
@@ -173,8 +258,10 @@ export default function EmpreendimentoPage() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Seção 2: Licença ou Autorização Anterior */}
+        {(selectedEnterprise || isNewEnterprise) && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             O Empreendimento possui Licença ou Autorização anterior?
@@ -257,8 +344,10 @@ export default function EmpreendimentoPage() {
             )}
           </div>
         </div>
+        )}
 
         {/* Seção 3: Geoprocessamento */}
+        {(selectedEnterprise || isNewEnterprise) && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <MapPin className="w-5 h-5 text-green-600" />
@@ -314,8 +403,10 @@ export default function EmpreendimentoPage() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Seção 4: Área Total */}
+        {(selectedEnterprise || isNewEnterprise) && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="max-w-md">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -330,8 +421,10 @@ export default function EmpreendimentoPage() {
             />
           </div>
         </div>
+        )}
 
         {/* Seção 5: Consultas */}
+        {(selectedEnterprise || isNewEnterprise) && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultas</h3>
           
@@ -522,8 +615,9 @@ export default function EmpreendimentoPage() {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Seção 6: Ações */}
+        {/* Seção 6: Ações - Sempre visível */}
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
             <FileText className="w-5 h-5 text-gray-600" />

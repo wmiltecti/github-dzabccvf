@@ -5,6 +5,7 @@ import GenericCRUD from './GenericCRUD';
 import GenericForm from './GenericForm';
 import BillingConfigurationForm from './BillingConfigurationForm';
 import ActivityForm from './ActivityForm';
+import SystemConfigSettings from './SystemConfigSettings';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -384,6 +385,17 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     // Trigger refresh of the data
     setRefreshKey(prev => prev + 1);
   };
+
+  // Special handling for system configurations
+  if (activeSection === 'system-configurations') {
+    return (
+      <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
+        <div className="p-6 h-full overflow-y-auto">
+          <SystemConfigSettings />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   // Special handling for billing configurations
   if (activeSection === 'billing-configurations') {

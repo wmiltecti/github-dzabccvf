@@ -331,11 +331,11 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck }
+    { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
+    { id: 'processes', name: 'Processos', icon: FileText }
   ];
 
   const otherNavigation = [
-    // { id: 'processes', name: 'Processos', icon: FileText },
     // { id: 'form-wizard', name: 'Formulário', icon: FileText },
     // { id: 'companies', name: 'Empresas', icon: Building2 },
     // { id: 'reports', name: 'Relatórios', icon: BarChart3 },
@@ -349,6 +349,7 @@ export default function Dashboard() {
   ];
 
   const adminDirectSections = [
+    { id: 'system-configurations', name: 'Configurações do Sistema' },
     { id: 'property-types', name: 'Tipos de Imóvel' },
     { id: 'process-types', name: 'Tipos de Processo' },
     { id: 'license-types', name: 'Tipos de Licença' },
@@ -514,7 +515,10 @@ export default function Dashboard() {
         <div className="p-4 sm:p-6">
           <div className="space-y-3 sm:space-y-4">
             {/* Renderização condicional: pesquisa ativa tem prioridade */}
-            {console.log('🎨 Renderizando Atividade Recente - loadingProcesses:', loadingProcesses, 'searchState.active:', searchState.active)}
+            {(() => {
+              console.log('🎨 Renderizando Atividade Recente - loadingProcesses:', loadingProcesses, 'searchState.active:', searchState.active);
+              return null;
+            })()}
             {searchState.active ? (
               searchState.loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -911,7 +915,7 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
-      // case 'processes': return renderProcesses();
+      case 'processes': return renderProcesses();
       case 'inscricoes': return renderInscricoes();
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (
