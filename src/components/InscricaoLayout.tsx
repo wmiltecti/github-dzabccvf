@@ -8,6 +8,7 @@ import InscricaoStepper from './InscricaoStepper';
 import { FileText, ArrowLeft, Save, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import http from '../lib/api/http';
+import ConfirmDialog from './ConfirmDialog';
 
 export default function InscricaoLayout() {
   const navigate = useNavigate();
@@ -17,7 +18,9 @@ export default function InscricaoLayout() {
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
-  
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
+
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
 
@@ -115,23 +118,27 @@ export default function InscricaoLayout() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
-      reset();
-      setProcessoId(null);
-      navigate('/inscricao/participantes');
-      toast.info('Processo reiniciado');
-      window.location.reload(); // Força reload para criar novo processo
-    }
+    setConfirmResetOpen(true);
+  };
+
+  const confirmReset = () => {
+    reset();
+    setProcessoId(null);
+    navigate('/inscricao/participantes');
+    toast.info('Processo reiniciado');
+    window.location.reload();
   };
 
   const handleNewInscricao = () => {
-    if (window.confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
-      startNewInscricao();
-      setProcessoId(null);
-      navigate('/inscricao/participantes');
-      toast.info('Nova inscrição iniciada');
-      window.location.reload(); // Força reload para criar novo processo
-    }
+    setConfirmNewOpen(true);
+  };
+
+  const confirmNewInscricao = () => {
+    startNewInscricao();
+    setProcessoId(null);
+    navigate('/inscricao/participantes');
+    toast.info('Nova inscrição iniciada');
+    window.location.reload();
   };
 
   if (isInitializing) {
@@ -238,6 +245,26 @@ export default function InscricaoLayout() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={confirmReset}
+        title="Reiniciar Processo"
+        message="Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos."
+        confirmText="Sim, Reiniciar"
+        cancelText="Cancelar"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmNewOpen}
+        onClose={() => setConfirmNewOpen(false)}
+        onConfirm={confirmNewInscricao}
+        title="Nova Inscrição"
+        message="Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos."
+        confirmText="Sim, Iniciar Nova"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }

@@ -13,13 +13,12 @@ import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import CalculationProgress from './CalculationProgress';
-import UserPanel from './UserPanel';
+import ConfirmDialog from '../ConfirmDialog';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
-import { loadGeoFileFromServer } from '../../lib/geo/utils/geoFileLoader';
 import 'leaflet/dist/leaflet.css';
-
+ import { loadGeoFileFromServer } from '../../lib/geo/utils/geoFileLoader';
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -60,11 +59,13 @@ interface GeoVisualizationProps {
 const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProps>(
   function GeoVisualization({ processes = [], companies = [] }, ref) {
   const [layers, setLayers] = useState<GeoLayer[]>([]);
+  const [confirmDeleteLayerId, setConfirmDeleteLayerId] = useState<string | null>(null);
   // Expose loadGeoFile method to parent
   useImperativeHandle(ref, () => ({
     loadGeoFile: async (filename: string) => {
       if (!filename) return;
       try {
+
         const geoData = await loadGeoFileFromServer(filename);
         // Accepts both FeatureCollection and array of features
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
@@ -95,13 +96,14 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         setLayers(prev => [newLayer, ...prev.filter(l => l.id !== newLayer.id)]);
         setZoomToLayerId(newLayer.id);
       } catch (err) {
-        alert('Erro ao carregar arquivo CAR: ' + (err as Error).message);
+        toast.error('Erro ao carregar arquivo CAR: ' + (err as Error).message);
       }
     },
     importGeoFileFromServer: async (filename: string) => {
       console.log('[Geo] importGeoFileFromServer chamado', filename);
       if (!filename) return;
       try {
+        const { loadGeoFileFromServer } = await import('../../lib/geo/utils/geoFileLoader');
         const geoData = await loadGeoFileFromServer(filename);
         // handleUploadData espera (features, fileName)
         let features = Array.isArray(geoData.features) ? geoData.features : geoData;
@@ -117,7 +119,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         }));
         handleUploadData(adaptedFeatures, filename);
       } catch (err) {
-        alert('Erro ao importar arquivo: ' + (err as Error).message);
+        toast.error('Erro ao importar arquivo: ' + (err as Error).message);
       }
     }
   }), []);
@@ -347,8 +349,14 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   const handleDeleteLayer = (layerId: string) => {
-    if (window.confirm('Tem certeza que deseja remover esta camada?')) {
-      setLayers(prev => prev.filter(layer => layer.id !== layerId));
+    setConfirmDeleteLayerId(layerId);
+  };
+
+  const confirmDeleteLayer = () => {
+    if (confirmDeleteLayerId) {
+      setLayers(prev => prev.filter(layer => layer.id !== confirmDeleteLayerId));
+      toast.success('Camada removida');
+      setConfirmDeleteLayerId(null);
     }
   };
 
@@ -907,7 +915,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   return (
-    <div className="flex flex-col bg-white h-full">
+    <div className="flex flex-col bg-white h-full w-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -954,7 +962,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         </div>
       </div>
 
-      <div className="flex-1 flex" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Layers Panel */}
         <div 
           className="border-r border-gray-200 flex flex-col bg-gray-50 flex-shrink-0"
@@ -1176,7 +1184,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
             <MapContainer
               center={[mapSettings.defaultCenter.lat, mapSettings.defaultCenter.lng]}
               zoom={mapSettings.defaultZoom}
-              style={{ height: '100%', width: '100%', minHeight: 'calc(100vh - 160px)' }}
+              style={{ height: '100%', width: '100%' }}
               className="z-0"
             >
               {/* Base Layer Selector */}
@@ -1274,7 +1282,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
             </MapContainer>
           ) : (
             // Empty state when no data
-            <div className="w-full bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center" style={{ height: 'calc(100vh - 160px)' }}>
+            <div className="w-full h-full bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
               <div className="text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MapPin className="w-8 h-8 text-green-600" />
@@ -1445,7 +1453,15 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         success={calculationSuccess}
       />
 
-      <UserPanel />
+      <ConfirmDialog
+        isOpen={confirmDeleteLayerId !== null}
+        onClose={() => setConfirmDeleteLayerId(null)}
+        onConfirm={confirmDeleteLayer}
+        title="Remover Camada"
+        message="Tem certeza que deseja remover esta camada?"
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
+      />
     </div>
   );
 });

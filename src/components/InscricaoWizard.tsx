@@ -14,12 +14,15 @@ import EmpreendimentoPage from '../pages/inscricao/EmpreendimentoPage';
 import FormularioPage from '../pages/inscricao/FormularioPage';
 import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
+import ConfirmDialog from './ConfirmDialog';
 
 export default function InscricaoWizard() {
   const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
 
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
 
   const isCreatingProcesso = useRef(false);
 
@@ -72,21 +75,25 @@ export default function InscricaoWizard() {
   };
 
   const handleReset = () => {
-    if (window.confirm('Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos.')) {
-      reset();
-      setProcessoId(null);
-      toast.info('Processo reiniciado');
-      window.location.reload();
-    }
+    setConfirmResetOpen(true);
+  };
+
+  const confirmReset = () => {
+    reset();
+    setProcessoId(null);
+    toast.info('Processo reiniciado');
+    window.location.reload();
   };
 
   const handleNewInscricao = () => {
-    if (window.confirm('Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos.')) {
-      startNewInscricao();
-      setProcessoId(null);
-      toast.info('Nova inscrição iniciada');
-      window.location.reload();
-    }
+    setConfirmNewOpen(true);
+  };
+
+  const confirmNewInscricao = () => {
+    startNewInscricao();
+    setProcessoId(null);
+    toast.info('Nova inscrição iniciada');
+    window.location.reload();
   };
 
   const renderCurrentStep = () => {
@@ -122,7 +129,7 @@ export default function InscricaoWizard() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
             <FileText className="w-5 h-5 text-white" />
@@ -135,10 +142,10 @@ export default function InscricaoWizard() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
           <button
             onClick={handleNewInscricao}
-            className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
             title="Iniciar nova inscrição (mantém usuário)"
           >
             <Plus className="w-4 h-4" />
@@ -146,14 +153,14 @@ export default function InscricaoWizard() {
           </button>
           <button
             onClick={handleSaveDraft}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             Salvar Rascunho
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5"
             title="Reiniciar processo (limpa tudo)"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -187,6 +194,26 @@ export default function InscricaoWizard() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={confirmReset}
+        title="Reiniciar Processo"
+        message="Tem certeza que deseja reiniciar o processo? Todos os dados serão perdidos."
+        confirmText="Sim, Reiniciar"
+        cancelText="Cancelar"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmNewOpen}
+        onClose={() => setConfirmNewOpen(false)}
+        onConfirm={confirmNewInscricao}
+        title="Nova Inscrição"
+        message="Deseja iniciar uma nova inscrição? Os dados atuais serão perdidos."
+        confirmText="Sim, Iniciar Nova"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }

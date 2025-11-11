@@ -114,66 +114,68 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-3 sm:py-4">
       <nav aria-label="Progress">
-        <ol className="flex items-center justify-center gap-2 max-w-4xl mx-auto">
-          {steps.map((step, stepIdx) => {
-            const status = getStepStatus(step.id);
-            const styles = getStepStyles(status);
-            const Icon = step.icon;
+        <div className="overflow-x-auto overflow-y-hidden stepper-scroll pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
+          <ol className="flex items-center justify-center gap-1 sm:gap-2 min-w-max mx-auto">
+            {steps.map((step, stepIdx) => {
+              const status = getStepStatus(step.id);
+              const styles = getStepStyles(status);
+              const Icon = step.icon;
 
-            return (
-              <React.Fragment key={step.id}>
-                <li className="flex items-center gap-2">
-                  {/* Step Content */}
-                  <div
-                    className={`flex items-center gap-2 ${styles.container}`}
-                    onClick={() => {
-                      if (status !== 'disabled' && onStepClick) {
-                        onStepClick(step.id);
-                      }
-                    }}
-                  >
-                    {/* Step Circle */}
-                    <div className={`
-                      w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200
-                      ${styles.circle}
-                    `}>
-                      {status === 'completed' ? (
-                        <CheckCircle className="w-5 h-5" />
-                      ) : status === 'current' ? (
-                        <Icon className="w-4 h-4" />
-                      ) : (
-                        <span className="text-sm font-medium">{step.id}</span>
-                      )}
-                    </div>
-
-                    {/* Step Text */}
-                    <p className={`text-sm font-medium whitespace-nowrap ${styles.text}`}>
-                      {step.name}
-                    </p>
-                  </div>
-                </li>
-
-                {/* Connector Arrow */}
-                {stepIdx !== steps.length - 1 && (
-                  <li>
-                    <span
-                      className={`text-xl leading-none transition-colors duration-300 ${
-                        getStepStatus(step.id + 1) === 'completed' ||
-                        getStepStatus(step.id + 1) === 'current'
-                          ? 'text-green-800'
-                          : 'text-gray-300'
-                      }`}
+              return (
+                <React.Fragment key={step.id}>
+                  <li className="flex items-center gap-1 sm:gap-2">
+                    {/* Step Content */}
+                    <div
+                      className={`flex items-center gap-1 sm:gap-2 ${styles.container}`}
+                      onClick={() => {
+                        if (status !== 'disabled' && onStepClick) {
+                          onStepClick(step.id);
+                        }
+                      }}
                     >
-                      ➤
-                    </span>
+                      {/* Step Circle */}
+                      <div className={`
+                        w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200
+                        ${styles.circle}
+                      `}>
+                        {status === 'completed' ? (
+                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        ) : status === 'current' ? (
+                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        ) : (
+                          <span className="text-xs sm:text-sm font-medium">{step.id}</span>
+                        )}
+                      </div>
+
+                      {/* Step Text */}
+                      <p className={`text-xs sm:text-sm font-medium whitespace-nowrap ${styles.text}`}>
+                        {step.name}
+                      </p>
+                    </div>
                   </li>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </ol>
+
+                  {/* Connector Arrow */}
+                  {stepIdx !== steps.length - 1 && (
+                    <li>
+                      <span
+                        className={`text-base sm:text-xl leading-none transition-colors duration-300 ${
+                          getStepStatus(step.id + 1) === 'completed' ||
+                          getStepStatus(step.id + 1) === 'current'
+                            ? 'text-green-800'
+                            : 'text-gray-300'
+                        }`}
+                      >
+                        ➤
+                      </span>
+                    </li>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </ol>
+        </div>
       </nav>
     </div>
   );

@@ -6,6 +6,7 @@ import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
 import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search, Eye } from 'lucide-react';
 import ImovelGeoPanel from '../../components/ImovelGeoPanel';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 type ModalStep = 'search' | 'confirm';
 
@@ -28,6 +29,7 @@ export default function ImovelPage() {
   const [selectedImovel, setSelectedImovel] = useState<SearchImovelResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
   // Estados para dados LINEAR (virão das APIs)
@@ -663,10 +665,13 @@ export default function ImovelPage() {
   };
 
   const handleRemoveProperty = () => {
-    if (!window.confirm('Deseja remover o imóvel selecionado?')) return;
-    
+    setConfirmRemoveOpen(true);
+  };
+
+  const confirmRemoveProperty = () => {
     setProperty(undefined);
     setPropertyId(undefined);
+    toast.info('Imóvel removido');
   };
 
   const handleNext = () => {
@@ -2265,6 +2270,16 @@ export default function ImovelPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmRemoveOpen}
+        onClose={() => setConfirmRemoveOpen(false)}
+        onConfirm={confirmRemoveProperty}
+        title="Remover Imóvel"
+        message="Deseja remover o imóvel selecionado?"
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }
