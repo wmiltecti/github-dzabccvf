@@ -13,6 +13,7 @@ import GeoColorPicker from './GeoColorPicker';
 import BufferZoneSelector from './BufferZoneSelector';
 import AreaMetricsPanel from './AreaMetricsPanel';
 import CalculationProgress from './CalculationProgress';
+import ConfirmDialog from '../ConfirmDialog';
 import { calcularBuffer, calcularDiferenca, calcularArea, type LayerMetrics } from '../../lib/geo/bufferCalculations';
 import { geoLayerToFeatureCollection } from '../../lib/geo/metricsAdapter';
 import { exportarFeatureCollection } from '../../lib/geo/exportUtils';
@@ -58,6 +59,7 @@ interface GeoVisualizationProps {
 const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProps>(
   function GeoVisualization({ processes = [], companies = [] }, ref) {
   const [layers, setLayers] = useState<GeoLayer[]>([]);
+  const [confirmDeleteLayerId, setConfirmDeleteLayerId] = useState<string | null>(null);
   // Expose loadGeoFile method to parent
   useImperativeHandle(ref, () => ({
     loadGeoFile: async (filename: string) => {
@@ -94,7 +96,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         setLayers(prev => [newLayer, ...prev.filter(l => l.id !== newLayer.id)]);
         setZoomToLayerId(newLayer.id);
       } catch (err) {
-        alert('Erro ao carregar arquivo CAR: ' + (err as Error).message);
+        toast.error('Erro ao carregar arquivo CAR: ' + (err as Error).message);
       }
     },
     importGeoFileFromServer: async (filename: string) => {
@@ -117,7 +119,7 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         }));
         handleUploadData(adaptedFeatures, filename);
       } catch (err) {
-        alert('Erro ao importar arquivo: ' + (err as Error).message);
+        toast.error('Erro ao importar arquivo: ' + (err as Error).message);
       }
     }
   }), []);
@@ -347,8 +349,14 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
   };
 
   const handleDeleteLayer = (layerId: string) => {
-    if (window.confirm('Tem certeza que deseja remover esta camada?')) {
-      setLayers(prev => prev.filter(layer => layer.id !== layerId));
+    setConfirmDeleteLayerId(layerId);
+  };
+
+  const confirmDeleteLayer = () => {
+    if (confirmDeleteLayerId) {
+      setLayers(prev => prev.filter(layer => layer.id !== confirmDeleteLayerId));
+      toast.success('Camada removida');
+      setConfirmDeleteLayerId(null);
     }
   };
 
@@ -1443,6 +1451,16 @@ const GeoVisualization = forwardRef<GeoVisualizationRefApi, GeoVisualizationProp
         progress={calculationProgress}
         error={calculationError}
         success={calculationSuccess}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDeleteLayerId !== null}
+        onClose={() => setConfirmDeleteLayerId(null)}
+        onConfirm={confirmDeleteLayer}
+        title="Remover Camada"
+        message="Tem certeza que deseja remover esta camada?"
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
       />
     </div>
   );

@@ -7,6 +7,7 @@ import { CollaborationService } from '../services/collaborationService';
 import DocumentViewer from './DocumentViewer';
 import CollaborationPanel from './CollaborationPanel';
 import { X, FileText, Calendar, User, MapPin, Building2, Clock, CheckCircle, AlertTriangle, MessageSquare, Upload } from 'lucide-react';
+import ConfirmDialog from './ConfirmDialog';
 
 interface ProcessDetailsModalProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [userPermission, setUserPermission] = useState<'owner' | 'admin' | 'editor' | 'viewer' | null>(null);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<{id: string, name: string} | null>(null);
+  const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState<string | null>(null);
 
   const handleViewDocument = (document: any) => {
     console.log('Viewing document:', document);
@@ -155,12 +158,16 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
     }
 
     const documentToDelete = documents.find(doc => doc.id === documentId);
-    const confirmMessage = `Tem certeza que deseja excluir o documento "${documentToDelete?.name || 'documento'}"?`;
-    
-    if (!window.confirm(confirmMessage)) {
-      console.log('User cancelled document deletion');
-      return;
-    }
+    if (!documentToDelete) return;
+
+    setConfirmDeleteDoc({ id: documentId, name: documentToDelete.name || 'documento' });
+  };
+
+  const confirmDeleteDocument = async () => {
+    if (!confirmDeleteDoc) return;
+
+    const documentId = confirmDeleteDoc.id;
+    console.log('User confirmed document deletion');
 
     console.log('🗑️ User confirmed deletion of document:', { 
       id: documentId, 
@@ -172,6 +179,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
       console.log('📞 Calling DocumentService.deleteDocument...');
       await DocumentService.deleteDocument(documentId);
       console.log('✅ Document deleted from database, updating local state...');
+      setConfirmDeleteDoc(null);
       
       // Update local state immediately
       setDocuments(prevDocs => {
@@ -277,12 +285,18 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este comentário?')) return;
-    
+  const handleDeleteComment = (commentId: string) => {
+    setConfirmDeleteCommentId(commentId);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!confirmDeleteCommentId) return;
+
     try {
-      await CommentService.deleteComment(commentId);
-      await loadComments(); // Reload comments after deleting
+      await CommentService.deleteComment(confirmDeleteCommentId);
+      await loadComments();
+      setConfirmDeleteCommentId(null);
+      toast.success('Comentário excluído');
     } catch (error) {
       console.error('Error deleting comment:', error);
       toast.error('Erro ao excluir comentário: ' + (error as Error).message);
@@ -831,6 +845,26 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
           setSelectedDocument(null);
         }}
         document={selectedDocument}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDeleteDoc !== null}
+        onClose={() => setConfirmDeleteDoc(null)}
+        onConfirm={confirmDeleteDocument}
+        title="Excluir Documento"
+        message={`Tem certeza que deseja excluir o documento "${confirmDeleteDoc?.name}"?`}
+        confirmText="Sim, Excluir"
+        cancelText="Cancelar"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDeleteCommentId !== null}
+        onClose={() => setConfirmDeleteCommentId(null)}
+        onConfirm={confirmDeleteComment}
+        title="Excluir Comentário"
+        message="Tem certeza que deseja excluir este comentário?"
+        confirmText="Sim, Excluir"
+        cancelText="Cancelar"
       />
     </div>
   );

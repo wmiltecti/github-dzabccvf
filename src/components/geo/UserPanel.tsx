@@ -2,26 +2,29 @@ import { useState } from 'react';
 import { User, LogOut, Mail, Shield, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
+import ConfirmDialog from '../ConfirmDialog';
 
 export default function UserPanel() {
   const { user, userMetadata, signOut } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   if (!user) return null;
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     if (isLoggingOut) return;
+    setConfirmLogoutOpen(true);
+  };
 
-    if (window.confirm('Deseja realmente sair?')) {
-      setIsLoggingOut(true);
-      try {
-        await signOut();
-      } catch (error) {
-        console.error('Erro ao sair:', error);
-        toast.error('Erro ao fazer logout. Tente novamente.');
-        setIsLoggingOut(false);
-      }
+  const confirmSignOut = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao sair:', error);
+      toast.error('Erro ao fazer logout. Tente novamente.');
+      setIsLoggingOut(false);
     }
   };
 
@@ -120,6 +123,17 @@ export default function UserPanel() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmLogoutOpen}
+        onClose={() => setConfirmLogoutOpen(false)}
+        onConfirm={confirmSignOut}
+        title="Sair do Sistema"
+        message="Deseja realmente sair?"
+        confirmText="Sim, Sair"
+        cancelText="Cancelar"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+      />
     </div>
   );
 }

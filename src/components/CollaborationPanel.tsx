@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { CollaborationService, type Collaborator, type CollaborationInvite } from '../services/collaborationService';
 import { Users, UserPlus, Mail, Shield, Trash2, CreditCard as Edit3, Eye, Crown, AlertCircle, Check, X } from 'lucide-react';
+import ConfirmDialog from './ConfirmDialog';
 
 interface CollaborationPanelProps {
   processId: string;
@@ -15,6 +16,7 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePermission, setInvitePermission] = useState<'viewer' | 'editor' | 'admin'>('viewer');
   const [loading, setLoading] = useState(false);
+  const [confirmRemoveUserId, setConfirmRemoveUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (processId) {
@@ -60,13 +62,18 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
     }
   };
 
-  const handleRemoveCollaborator = async (userId: string) => {
-    if (!window.confirm('Tem certeza que deseja remover este colaborador?')) return;
+  const handleRemoveCollaborator = (userId: string) => {
+    setConfirmRemoveUserId(userId);
+  };
+
+  const confirmRemoveCollaborator = async () => {
+    if (!confirmRemoveUserId) return;
 
     try {
-      await CollaborationService.removeCollaborator(processId, userId);
+      await CollaborationService.removeCollaborator(processId, confirmRemoveUserId);
       loadCollaborators();
       toast.success('Colaborador removido com sucesso!');
+      setConfirmRemoveUserId(null);
     } catch (error) {
       console.error('Error removing collaborator:', error);
       toast.error('Erro ao remover colaborador: ' + (error as Error).message);
@@ -330,6 +337,16 @@ export default function CollaborationPanel({ processId, userPermission }: Collab
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmRemoveUserId !== null}
+        onClose={() => setConfirmRemoveUserId(null)}
+        onConfirm={confirmRemoveCollaborator}
+        title="Remover Colaborador"
+        message="Tem certeza que deseja remover este colaborador?"
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
+      />
     </div>
   );
 }
