@@ -6,6 +6,16 @@ interface InscricaoStore extends InscricaoState {
   // User info (para auditoria)
   userId: string | null;
   
+  // Workflow Engine
+  workflowInstanceId: string | null;
+  currentStepId: string | null;
+  currentStepKey: string | null;
+  
+  // Subprocesso (Subfluxo)
+  subprocessInstanceId: string | null;
+  subprocessCurrentStepId: string | null;
+  subprocessCurrentStepKey: string | null;
+  
   // Actions
   setProcessId: (id: string) => void;
   setUserId: (id: string) => void;
@@ -24,6 +34,14 @@ interface InscricaoStore extends InscricaoState {
   reset: () => void;
   startNewInscricao: () => void; // Limpa tudo para nova solicitação
   loadInscricao: (processId: string) => void; // Carrega solicitação existente
+  
+  // Workflow Engine Actions
+  setWorkflowInstance: (instanceId: string, stepId: string, stepKey: string) => void;
+  setCurrentStepFromEngine: (stepId: string, stepKey: string) => void;
+  
+  // Subprocess Actions
+  setSubprocessInstance: (instanceId: string, stepId: string, stepKey: string) => void;
+  clearSubprocess: () => void;
 
   // Computed
   isStepComplete: (step: number) => boolean;
@@ -44,7 +62,15 @@ const initialState: InscricaoState = {
 const initialStoreState = {
   ...initialState,
   userId: null,
-  isProcessInitializing: false
+  isProcessInitializing: false,
+  // Workflow Engine
+  workflowInstanceId: null,
+  currentStepId: null,
+  currentStepKey: null,
+  // Subprocesso
+  subprocessInstanceId: null,
+  subprocessCurrentStepId: null,
+  subprocessCurrentStepKey: null
 };
 
 export const useInscricaoStore = create<InscricaoStore>()(
@@ -98,6 +124,43 @@ export const useInscricaoStore = create<InscricaoStore>()(
 
       setProcessInitializing: (initializing: boolean) => set({ isProcessInitializing: initializing }),
 
+      // Workflow Engine Actions
+      setWorkflowInstance: (instanceId: string, stepId: string, stepKey: string) => {
+        console.log('🔧 [Store] Setting workflow instance:', { instanceId, stepId, stepKey });
+        set({ 
+          workflowInstanceId: instanceId,
+          currentStepId: stepId,
+          currentStepKey: stepKey
+        });
+      },
+
+      setCurrentStepFromEngine: (stepId: string, stepKey: string) => {
+        console.log('🔧 [Store] Updating current step from engine:', { stepId, stepKey });
+        set({ 
+          currentStepId: stepId,
+          currentStepKey: stepKey
+        });
+      },
+
+      // Subprocess Actions
+      setSubprocessInstance: (instanceId: string, stepId: string, stepKey: string) => {
+        console.log('🔄 [Store] Setting subprocess instance:', { instanceId, stepId, stepKey });
+        set({ 
+          subprocessInstanceId: instanceId,
+          subprocessCurrentStepId: stepId,
+          subprocessCurrentStepKey: stepKey
+        });
+      },
+
+      clearSubprocess: () => {
+        console.log('🔄 [Store] Clearing subprocess');
+        set({ 
+          subprocessInstanceId: null,
+          subprocessCurrentStepId: null,
+          subprocessCurrentStepKey: null
+        });
+      },
+
       reset: () => {
         console.log('🔄 [Store] Resetting all state');
         set(initialStoreState);
@@ -111,7 +174,15 @@ export const useInscricaoStore = create<InscricaoStore>()(
           ...initialStoreState,
           userId: currentUserId, // Mantém o userId para auditoria
           processId: null,
-          isProcessInitializing: false
+          isProcessInitializing: false,
+          // Limpa workflow
+          workflowInstanceId: null,
+          currentStepId: null,
+          currentStepKey: null,
+          // Limpa subprocess
+          subprocessInstanceId: null,
+          subprocessCurrentStepId: null,
+          subprocessCurrentStepKey: null
         });
       },
 
@@ -171,7 +242,11 @@ export const useInscricaoStore = create<InscricaoStore>()(
         property: state.property,
         titles: state.titles,
         atividadeId: state.atividadeId,
-        currentStep: state.currentStep
+        currentStep: state.currentStep,
+        // Workflow Engine
+        workflowInstanceId: state.workflowInstanceId,
+        currentStepId: state.currentStepId,
+        currentStepKey: state.currentStepKey
       })
     }
   )

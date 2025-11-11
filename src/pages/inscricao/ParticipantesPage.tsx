@@ -12,14 +12,25 @@ import {
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { completeStep } from '../../services/workflowApi';
 
 type ModalStep = 'search' | 'select-role';
 type PapelType = 'Requerente' | 'Procurador' | 'Responsável Técnico';
 
 export default function ParticipantesPage() {
   const navigate = useNavigate();
-  const { processoId } = useInscricaoContext(); // ✅ Usa Context ao invés de Zustand
-  const { isStepComplete, setParticipants, setCurrentStep } = useInscricaoStore();
+  const { 
+    processoId, 
+    workflowInstanceId, 
+    currentStepId, 
+    currentStepKey 
+  } = useInscricaoContext();
+  const { 
+    isStepComplete, 
+    setParticipants, 
+    setCurrentStep,
+    setCurrentStepFromEngine 
+  } = useInscricaoStore();
 
   const [participantes, setParticipantes] = useState<ParticipanteProcessoResponse[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -239,14 +250,53 @@ export default function ParticipantesPage() {
     }
   };
 
-  const handleNext = () => {
-    if (isStepComplete(1)) {
-      // Se estiver em uma rota de inscrição, navega; caso contrário, apenas muda o step
-      if (window.location.pathname.includes('/inscricao/')) {
-        navigate('/inscricao/imovel');
-      } else {
-        setCurrentStep(2);
+  const handleNext = async () => {
+    // 1. Validar step
+    if (!isStepComplete(1)) {
+      toast.error('Adicione pelo menos um requerente antes de continuar');
+      return;
+    }
+
+    // 2. Verificar se workflow está inicializado
+    if (!workflowInstanceId || !currentStepId) {
+      console.error('❌ Workflow não inicializado:', { workflowInstanceId, currentStepId });
+      toast.error('Workflow não inicializado. Tente reiniciar o processo.');
+      return;
+    }
+
+    try {
+      // 3. Completar step atual no workflow engine
+      console.log('🔧 Completando step no workflow:', { 
+        instanceId: workflowInstanceId, 
+        stepId: currentStepId,
+        stepKey: currentStepKey 
+      });
+
+      const response = await completeStep(workflowInstanceId, currentStepId, {
+        totalParticipantes: participantes.length,
+        hasRequerente: participantes.some(p => p.papel === 'Requerente')
+      });
+
+      console.log('✅ Step completado:', response);
+
+      // 4. Verificar se workflow finalizou
+      if (response.status === 'FINISHED' || !response.nextStep) {
+        toast.success('Processo finalizado!');
+        navigate('/inscricao/revisao');
+        return;
       }
+
+      // 5. Atualizar contexto com próximo step
+      setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
+
+      // 6. Navegar para próxima rota definida pelo backend
+      console.log('🧭 Navegando para:', response.nextStep.path);
+      navigate(response.nextStep.path);
+      
+      toast.success(`Avançando para: ${response.nextStep.label}`);
+    } catch (error: any) {
+      console.error('❌ Erro ao completar step:', error);
+      toast.error(error?.message || 'Erro ao avançar para próximo passo');
     }
   };
 

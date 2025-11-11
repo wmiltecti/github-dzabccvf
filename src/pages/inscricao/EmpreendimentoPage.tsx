@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
+import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { Building, ArrowLeft, ArrowRight, Upload, MapPin, AlertTriangle, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import EnterpriseSearch from '../../components/enterprise/EnterpriseSearch';
 import { useEnterprise } from '../../contexts/EnterpriseContext';
 import useSystemConfig from '../../hooks/useSystemConfig';
 import { getEnterpriseName, getEnterpriseDocument } from '../../services/enterpriseService';
+import { completeStep } from '../../services/workflowApi';
 
 export default function EmpreendimentoPage() {
   const navigate = useNavigate();
-  const { setCurrentStep } = useInscricaoStore();
+  const { 
+    workflowInstanceId,
+    currentStepId,
+    currentStepKey
+  } = useInscricaoContext();
+  const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
   
   // Contexto e configurações
   const { selectedEnterprise, isNewEnterprise, searchPerformed, setNewEnterprise } = useEnterprise();
@@ -98,8 +105,8 @@ export default function EmpreendimentoPage() {
     toast.info('Processando arquivo...');
   };
 
-  const handleNext = () => {
-    // Validação 1: Se pesquisa é obrigatória e não foi realizada
+  const handleNext = async () => {
+    // 1. Validações de negócio
     if (isSearchRequired() && !searchPerformed) {
       toast.error('Por favor, pesquise o empreendimento antes de continuar', {
         icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
@@ -107,7 +114,6 @@ export default function EmpreendimentoPage() {
       return;
     }
 
-    // Validação 2: Se não permite novo e não selecionou empreendimento existente
     if (isSearchRequired() && !allowNewEnterprise() && !selectedEnterprise && !isNewEnterprise) {
       toast.error('Cadastro de novo empreendimento não permitido. Selecione um empreendimento existente', {
         icon: <AlertTriangle className="w-5 h-5 text-red-600" />,
@@ -128,10 +134,48 @@ export default function EmpreendimentoPage() {
       return;
     }
 
-    if (window.location.pathname.includes('/inscricao/')) {
-      navigate('/inscricao/formulario');
-    } else {
-      setCurrentStep(4);
+    // 2. Verificar se workflow está inicializado
+    if (!workflowInstanceId || !currentStepId) {
+      console.error('❌ Workflow não inicializado:', { workflowInstanceId, currentStepId });
+      toast.error('Workflow não inicializado. Tente reiniciar o processo.');
+      return;
+    }
+
+    try {
+      // 3. Completar step atual no workflow engine
+      console.log('🔧 Completando step no workflow:', { 
+        instanceId: workflowInstanceId, 
+        stepId: currentStepId,
+        stepKey: currentStepKey 
+      });
+
+      const response = await completeStep(workflowInstanceId, currentStepId, {
+        hasEnterprise: !!selectedEnterprise || isNewEnterprise,
+        tipoEmpreendimento: formData.tipo_empreendimento,
+        tipoLicenca: formData.tipo_licenca,
+        situacao: formData.situacao
+      });
+
+      console.log('✅ Step completado:', response);
+
+      // 4. Verificar se workflow finalizou
+      if (response.status === 'FINISHED' || !response.nextStep) {
+        toast.success('Processo finalizado!');
+        navigate('/inscricao/revisao');
+        return;
+      }
+
+      // 5. Atualizar contexto com próximo step
+      setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
+
+      // 6. Navegar para próxima rota definida pelo backend
+      console.log('🧭 Navegando para:', response.nextStep.path);
+      navigate(response.nextStep.path);
+      
+      toast.success(`Avançando para: ${response.nextStep.label}`);
+    } catch (error: any) {
+      console.error('❌ Erro ao completar step:', error);
+      toast.error(error?.message || 'Erro ao avançar para próximo passo');
     }
   };
 

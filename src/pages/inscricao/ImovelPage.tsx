@@ -7,19 +7,27 @@ import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
 import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search, Eye } from 'lucide-react';
 import ImovelGeoPanel from '../../components/ImovelGeoPanel';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { completeStep } from '../../services/workflowApi';
 
 type ModalStep = 'search' | 'confirm';
 
 export default function ImovelPage() {
   const navigate = useNavigate();
-  const { processoId } = useInscricaoContext();
+  const { 
+    processoId,
+    workflowInstanceId,
+    currentStepId,
+    currentStepKey
+  } = useInscricaoContext();
   const {
     property,
+    propertyId,
     setProperty,
     setPropertyId,
     isStepComplete,
     canProceedToStep,
-    setCurrentStep
+    setCurrentStep,
+    setCurrentStepFromEngine
   } = useInscricaoStore();
   
   const [showModal, setShowModal] = useState(false);
@@ -674,13 +682,55 @@ export default function ImovelPage() {
     toast.info('Imóvel removido');
   };
 
-  const handleNext = () => {
-    // TODO: Validação temporariamente desabilitada para aprovação de design
-    // Reativar validação: if (canProceedToStep(3))
-    if (window.location.pathname.includes('/inscricao/')) {
-      navigate('/inscricao/empreendimento');
-    } else {
-      setCurrentStep(3);
+  const handleNext = async () => {
+    // 1. Validar step (validação temporariamente flexível)
+    // TODO: Reativar validação: if (!isStepComplete(2))
+    if (!property && !propertyId) {
+      toast.warning('Selecione ou cadastre um imóvel antes de continuar');
+      // Permitir continuar mesmo sem imóvel por enquanto
+    }
+
+    // 2. Verificar se workflow está inicializado
+    if (!workflowInstanceId || !currentStepId) {
+      console.error('❌ Workflow não inicializado:', { workflowInstanceId, currentStepId });
+      toast.error('Workflow não inicializado. Tente reiniciar o processo.');
+      return;
+    }
+
+    try {
+      // 3. Completar step atual no workflow engine
+      console.log('🔧 Completando step no workflow:', { 
+        instanceId: workflowInstanceId, 
+        stepId: currentStepId,
+        stepKey: currentStepKey 
+      });
+
+      const response = await completeStep(workflowInstanceId, currentStepId, {
+        hasProperty: !!property || !!propertyId,
+        propertyKind: property?.kind,
+        propertyId: propertyId
+      });
+
+      console.log('✅ Step completado:', response);
+
+      // 4. Verificar se workflow finalizou
+      if (response.status === 'FINISHED' || !response.nextStep) {
+        toast.success('Processo finalizado!');
+        navigate('/inscricao/revisao');
+        return;
+      }
+
+      // 5. Atualizar contexto com próximo step
+      setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
+
+      // 6. Navegar para próxima rota definida pelo backend
+      console.log('🧭 Navegando para:', response.nextStep.path);
+      navigate(response.nextStep.path);
+      
+      toast.success(`Avançando para: ${response.nextStep.label}`);
+    } catch (error: any) {
+      console.error('❌ Erro ao completar step:', error);
+      toast.error(error?.message || 'Erro ao avançar para próximo passo');
     }
   };
 

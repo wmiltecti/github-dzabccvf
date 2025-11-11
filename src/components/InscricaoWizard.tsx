@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../lib/store/inscricao';
 import { criarProcesso } from '../services/processosService';
 import { getUserId } from '../utils/authToken';
@@ -15,9 +16,17 @@ import FormularioPage from '../pages/inscricao/FormularioPage';
 import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
 import ConfirmDialog from './ConfirmDialog';
+import { startWorkflowForLicense } from '../services/workflowApi';
 
 export default function InscricaoWizard() {
-  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
+  const navigate = useNavigate();
+  const { 
+    currentStep, 
+    setCurrentStep, 
+    reset, 
+    startNewInscricao,
+    setWorkflowInstance 
+  } = useInscricaoStore();
 
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -39,23 +48,46 @@ export default function InscricaoWizard() {
       isCreatingProcesso.current = true;
 
       try {
+        // 1. Criar o processo de licenciamento
         const userId = getUserId();
         if (!userId) {
           toast.error('Usuário não autenticado');
           return;
         }
+        
         const newProcessoId = await criarProcesso(userId);
         console.log('✅ Processo criado na API (id remoto):', newProcessoId);
 
+        // 2. Criar dados gerais iniciais
         console.log('📝 Criando dados gerais iniciais...');
         await http.put(`/processos/${newProcessoId}/dados-gerais`, {
           processo_id: newProcessoId
         });
         console.log('✅ Dados gerais criados');
 
+        // 3. Iniciar o workflow engine
+        console.log('🔧 Iniciando workflow engine...');
+        const workflowResponse = await startWorkflowForLicense(newProcessoId);
+        console.log('✅ Workflow iniciado:', workflowResponse);
+
+        // 4. Salvar instância do workflow no store
+        setWorkflowInstance(
+          workflowResponse.instanceId,
+          workflowResponse.currentStep.id,
+          workflowResponse.currentStep.key
+        );
+        console.log('✅ Workflow instance salva no store');
+
+        // 5. Navegar para o primeiro step definido pelo engine
+        console.log('🧭 Navegando para:', workflowResponse.currentStep.path);
+        // Não navegamos aqui pois estamos dentro do Dashboard que controla via activeTab
+        // O path será usado pelo stepper para determinar qual componente renderizar
+        
         setProcessoId(newProcessoId);
+        
+        toast.success('Processo iniciado com sucesso!');
       } catch (error: any) {
-        console.error('Erro ao criar processo:', error);
+        console.error('❌ Erro ao criar processo:', error);
         toast.error(error?.message || 'Erro ao inicializar processo');
       } finally {
         setIsInitializing(false);
@@ -64,9 +96,13 @@ export default function InscricaoWizard() {
     };
 
     initializeProcesso();
-  }, []);
+  }, [setWorkflowInstance]);
 
   const handleStepClick = (step: number) => {
+    // ⚠️ DEPRECATED: Não usar mais setCurrentStep manual
+    // O fluxo agora é controlado pelo workflow engine
+    // TODO: Integrar com completeStep() do workflowApi
+    console.warn('⚠️ handleStepClick ainda usando setCurrentStep manual - migrar para workflow engine');
     setCurrentStep(step);
   };
 
@@ -97,6 +133,9 @@ export default function InscricaoWizard() {
   };
 
   const renderCurrentStep = () => {
+    // ℹ️ TRANSIÇÃO: Este switch ainda usa currentStep numérico (1,2,3...)
+    // TODO: Migrar para usar currentStepKey do workflow engine
+    // Exemplo: currentStepKey === 'PARTICIPANTES' -> <ParticipantesPage />
     switch (currentStep) {
       case 1:
         return <ParticipantesPage />;

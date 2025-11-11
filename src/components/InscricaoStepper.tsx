@@ -1,76 +1,92 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Users, Home, Building, FileText, Upload, FileCheck, CheckCircle, Circle } from 'lucide-react';
 import { useInscricaoStore } from '../lib/store/inscricao';
+import { useInscricaoContext } from '../contexts/InscricaoContext';
+import { getTemplateSteps, getInstanceStepHistory, WorkflowStep } from '../services/workflowApi';
 
-interface Step {
-  id: number;
-  name: string;
-  description: string;
-  icon: React.ComponentType<any>;
-  path: string;
-}
-
-const steps: Step[] = [
-  {
-    id: 1,
-    name: 'Participantes',
-    description: 'Requerente, procurador e responsável técnico',
-    icon: Users,
-    path: '/inscricao/participantes'
-  },
-  {
-    id: 2,
-    name: 'Imóvel',
-    description: 'Localização e características do imóvel',
-    icon: Home,
-    path: '/inscricao/imovel'
-  },
-  {
-    id: 3,
-    name: 'Atividade',
-    description: 'Atividade e detalhes do projeto',
-    icon: Building,
-    path: '/inscricao/empreendimento'
-  },
-  {
-    id: 4,
-    name: 'Formulário',
-    description: 'Informações técnicas detalhadas',
-    icon: FileText,
-    path: '/inscricao/formulario'
-  },
-  {
-    id: 5,
-    name: 'Documentação',
-    description: 'Upload de documentos necessários',
-    icon: Upload,
-    path: '/inscricao/documentacao'
-  },
-  {
-    id: 6,
-    name: 'Revisão',
-    description: 'Conferir dados e finalizar',
-    icon: FileCheck,
-    path: '/inscricao/revisao'
-  }
+// ⚠️ FALLBACK: Steps hardcoded para uso quando backend não estiver disponível
+const FALLBACK_STEPS = [
+  { id: '1', key: 'PARTICIPANTES', label: 'Participantes', path: '/inscricao/participantes' },
+  { id: '2', key: 'IMOVEL', label: 'Imóvel', path: '/inscricao/imovel' },
+  { id: '3', key: 'EMPREENDIMENTO', label: 'Empreendimento', path: '/inscricao/empreendimento' },
+  { id: '4', key: 'FORMULARIO', label: 'Formulário', path: '/inscricao/formulario' },
+  { id: '5', key: 'DOCUMENTACAO', label: 'Documentação', path: '/inscricao/documentacao' },
+  { id: '6', key: 'REVISAO', label: 'Revisão', path: '/inscricao/revisao' }
 ];
 
+// Mapeamento de keys para ícones
+const STEP_ICONS: Record<string, React.ComponentType<any>> = {
+  'PARTICIPANTES': Users,
+  'IMOVEL': Home,
+  'EMPREENDIMENTO': Building,
+  'FORMULARIO': FileText,
+  'DOCUMENTACAO': Upload,
+  'REVISAO': FileCheck
+};
+
 interface InscricaoStepperProps {
-  currentStep: number;
-  onStepClick?: (step: number) => void;
+  currentStep: number;  // ⚠️ DEPRECATED: será removido quando migração estiver completa
+  onStepClick?: (step: number) => void;  // ⚠️ DEPRECATED
 }
 
 export default function InscricaoStepper({ currentStep, onStepClick }: InscricaoStepperProps) {
   const { isStepComplete, canProceedToStep } = useInscricaoStore();
+  const { workflowInstanceId, currentStepKey } = useInscricaoContext();
+  
+  const [steps, setSteps] = useState<WorkflowStep[]>(FALLBACK_STEPS);
+  const [completedStepIds, setCompletedStepIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getStepStatus = (stepId: number) => {
-    if (stepId < currentStep) {
-      return isStepComplete(stepId) ? 'completed' : 'incomplete';
-    } else if (stepId === currentStep) {
-      return 'current';
-    } else {
-      return canProceedToStep(stepId) ? 'upcoming' : 'disabled';
+  // Carregar steps do template e histórico
+  useEffect(() => {
+    const loadSteps = async () => {
+      try {
+        // 1. Buscar steps do template
+        const templateSteps = await getTemplateSteps('LICENCIAMENTO_AMBIENTAL_COMPLETO');
+        setSteps(templateSteps);
+        console.log('✅ Steps carregados do backend:', templateSteps);
+
+        // 2. Se tiver instância ativa, buscar histórico
+        if (workflowInstanceId) {
+          const history = await getInstanceStepHistory(workflowInstanceId);
+          setCompletedStepIds(history.completedSteps);
+          console.log('✅ Histórico de steps:', history);
+        }
+      } catch (error) {
+        console.warn('⚠️ Falha ao carregar steps do backend, usando fallback:', error);
+        setSteps(FALLBACK_STEPS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSteps();
+  }, [workflowInstanceId]);
+
+  const getStepStatus = (step: WorkflowStep, stepIndex: number) => {
+    // 1. Se step foi completado (está no histórico)
+    if (completedStepIds.includes(step.id)) {
+      return 'completed';
     }
+    
+    // 2. Se é o step atual (baseado na key do contexto)
+    if (step.key === currentStepKey) {
+      return 'current';
+    }
+    
+    // 3. Se está antes do step atual (pela ordem no array)
+    const currentIndex = steps.findIndex(s => s.key === currentStepKey);
+    if (currentIndex !== -1 && stepIndex < currentIndex) {
+      return 'completed';  // Steps anteriores ao atual são considerados completos
+    }
+    
+    // 4. Se está depois do step atual
+    if (currentIndex !== -1 && stepIndex > currentIndex) {
+      return 'disabled';  // Steps futuros são desabilitados
+    }
+    
+    // 5. Fallback: upcoming
+    return 'upcoming';
   };
 
   const getStepStyles = (status: string) => {
@@ -118,62 +134,68 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
       <nav aria-label="Progress">
         <div className="overflow-x-auto overflow-y-hidden stepper-scroll pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 #f1f5f9' }}>
           <ol className="flex items-center justify-center gap-1 sm:gap-2 min-w-max mx-auto">
-            {steps.map((step, stepIdx) => {
-              const status = getStepStatus(step.id);
-              const styles = getStepStyles(status);
-              const Icon = step.icon;
+            {loading ? (
+              // Loading skeleton
+              <li className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+                <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+              </li>
+            ) : (
+              steps.map((step, stepIdx) => {
+                const status = getStepStatus(step, stepIdx);
+                const styles = getStepStyles(status);
+                const Icon = STEP_ICONS[step.key] || Circle;  // Busca ícone pelo key, fallback Circle
 
-              return (
-                <React.Fragment key={step.id}>
-                  <li className="flex items-center gap-1 sm:gap-2">
-                    {/* Step Content */}
-                    <div
-                      className={`flex items-center gap-1 sm:gap-2 ${styles.container}`}
-                      onClick={() => {
-                        if (status !== 'disabled' && onStepClick) {
-                          onStepClick(step.id);
-                        }
-                      }}
-                    >
-                      {/* Step Circle */}
-                      <div className={`
-                        w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200
-                        ${styles.circle}
-                      `}>
-                        {status === 'completed' ? (
-                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        ) : status === 'current' ? (
-                          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        ) : (
-                          <span className="text-xs sm:text-sm font-medium">{step.id}</span>
-                        )}
-                      </div>
-
-                      {/* Step Text */}
-                      <p className={`text-xs sm:text-sm font-medium whitespace-nowrap ${styles.text}`}>
-                        {step.name}
-                      </p>
-                    </div>
-                  </li>
-
-                  {/* Connector Arrow */}
-                  {stepIdx !== steps.length - 1 && (
-                    <li>
-                      <span
-                        className={`text-base sm:text-xl leading-none transition-colors duration-300 ${
-                          getStepStatus(step.id + 1) === 'completed' ||
-                          getStepStatus(step.id + 1) === 'current'
-                            ? 'text-green-800'
-                            : 'text-gray-300'
-                        }`}
+                return (
+                  <React.Fragment key={step.id}>
+                    <li className="flex items-center gap-1 sm:gap-2">
+                      {/* Step Content */}
+                      <div
+                        className={`flex items-center gap-1 sm:gap-2 ${styles.container}`}
+                        onClick={() => {
+                          // TODO: Implementar navegação por click quando backend permitir
+                          console.log('🖱️ Click no step:', step.key, status);
+                        }}
                       >
-                        ➤
-                      </span>
+                        {/* Step Circle */}
+                        <div className={`
+                          w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200
+                          ${styles.circle}
+                        `}>
+                          {status === 'completed' ? (
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                          ) : status === 'current' ? (
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          ) : (
+                            <span className="text-xs sm:text-sm font-medium">{stepIdx + 1}</span>
+                          )}
+                        </div>
+
+                        {/* Step Text */}
+                        <p className={`text-xs sm:text-sm font-medium whitespace-nowrap ${styles.text}`}>
+                          {step.label}
+                        </p>
+                      </div>
                     </li>
-                  )}
-                </React.Fragment>
-              );
-            })}
+
+                    {/* Connector Arrow */}
+                    {stepIdx !== steps.length - 1 && (
+                      <li>
+                        <span
+                          className={`text-base sm:text-xl leading-none transition-colors duration-300 ${
+                            stepIdx < steps.findIndex(s => s.key === currentStepKey)
+                              ? 'text-green-800'
+                              : 'text-gray-300'
+                          }`}
+                        >
+                          ➤
+                        </span>
+                      </li>
+                    )}
+                  </React.Fragment>
+                );
+              })
+            )}
           </ol>
         </div>
       </nav>
