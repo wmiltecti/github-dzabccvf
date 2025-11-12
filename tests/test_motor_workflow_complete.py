@@ -201,17 +201,23 @@ def main():
             else:
                 print("   ⚠️  Nenhum item encontrado na lista, tentando adicionar manualmente...")
             
-            # Clicar em Adicionar/Salvar
-            print("6. Procurando botão 'Adicionar'...")
-            save_btn = wait.until(
-                EC.presence_of_element_located((By.XPATH, "//button[text()='Adicionar' or contains(text(), 'Adicionar Participante')]"))
-            )
-            print(f"   Botão encontrado: {save_btn.text}")
+            # Aguardar pessoa ser selecionada e aparecer seção "Pessoa Selecionada"
+            print("6. Aguardando pessoa ser selecionada...")
+            time.sleep(1)
             
-            print("7. Clicando em adicionar participante...")
-            driver.execute_script("arguments[0].click();", save_btn)
+            # Procurar botão verde "+ Adicionar" no rodapé do modal
+            print("7. Procurando botão verde '+ Adicionar' no rodapé do modal...")
+            add_final_btn = wait.until(
+                EC.element_to_be_clickable((By.XPATH, 
+                    "//button[contains(text(), '+ Adicionar') or "
+                    "(contains(@class, 'bg-green') and contains(., 'Adicionar'))]"))
+            )
+            print(f"   Botão encontrado: {add_final_btn.text}")
+            
+            print("8. Clicando no botão '+ Adicionar' para finalizar...")
+            driver.execute_script("arguments[0].click();", add_final_btn)
             time.sleep(3)
-            print("   ✅ Participante adicionado!")
+            print("   ✅ Participante adicionado e modal fechado!")
             
             print("✅ Participante adicionado com sucesso!")
             
@@ -227,18 +233,24 @@ def main():
         print("\n➡️  ETAPA 5: AVANÇAR PARA IMÓVEL")
         print("-" * 60)
         
-        print("1. Procurando botão 'Próximo' ou 'Avançar'...")
+        print("1. Aguardando modal fechar e botão 'Próximo' aparecer...")
+        time.sleep(3)  # Aguarda modal fechar completamente
+        
+        print("2. Procurando botão 'Próximo' ou 'Avançar'...")
         try:
+            # Tenta encontrar botão com várias variações
             next_btn = wait.until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Próximo') or contains(text(), 'Avançar')]"))
+                EC.element_to_be_clickable((By.XPATH, 
+                    "//button[contains(text(), 'Próximo') or contains(text(), 'Avançar') or "
+                    "contains(text(), 'Continuar') or contains(@class, 'next') or contains(@class, 'proximo')]"))
             )
             print(f"   Botão encontrado: {next_btn.text}")
             
-            print("2. Clicando em 'Próximo'...")
-            next_btn.click()
+            print("3. Clicando em 'Próximo'...")
+            driver.execute_script("arguments[0].click();", next_btn)
             time.sleep(3)
             
-            print("3. Verificando se avançou para Imóvel...")
+            print("4. Verificando se avançou para Imóvel...")
             imovel_elementos = driver.find_elements(By.XPATH, "//*[contains(text(), 'Imóvel') or contains(text(), 'Propriedade')]")
             print(f"   Elementos 'Imóvel' encontrados: {len(imovel_elementos)}")
             
