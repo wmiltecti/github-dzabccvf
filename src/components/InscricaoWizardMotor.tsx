@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FileText, Save, AlertTriangle, Plus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { FileText, Save, AlertTriangle, Plus, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useInscricaoStore } from '../lib/store/inscricao';
 import { 
@@ -55,6 +55,9 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
     currentStep: currentStepNumber // Para compatibilidade com InscricaoStepper
   } = useInscricaoStore();
   
+  // Proteção contra execução dupla (React Strict Mode)
+  const initRef = useRef(false);
+  
   // Estado do workflow
   const [workflowInstanceId, setWorkflowInstanceId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<WorkflowStep | null>(null);
@@ -69,8 +72,18 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
 
   /**
    * Inicializa o workflow ao abrir o wizard
+   * useRef garante execução única mesmo com React Strict Mode
    */
   useEffect(() => {
+    // Se já inicializou, não faz nada
+    if (initRef.current) {
+      console.log('⚠️ initializeWorkflow já foi chamado, pulando execução duplicada');
+      return;
+    }
+    
+    // Marca como inicializado ANTES de chamar a função
+    initRef.current = true;
+    console.log('✅ Primeira execução de initializeWorkflow');
     initializeWorkflow();
   }, []);
 
@@ -78,6 +91,7 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
    * Inicia workflow (backend cria processo automaticamente)
    */
   const initializeWorkflow = async () => {
+    console.log('🚀 initializeWorkflow INICIADO');
     setIsInitializing(true);
     setWorkflowError(null);
 
@@ -337,18 +351,39 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
    */
   const wizardContent = (
     <div className="space-y-6">
-      {/* Header - Layout IDÊNTICO ao original aprovado */}
-      <div className="flex items-center justify-between">
-        {/* Left: Title */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nova Solicitação</h1>
+      {/* Primeira linha: Título e Botão Voltar */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+        {!asModal && onClose && (
+          <button
+            onClick={onClose}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            title="Voltar ao Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Voltar</span>
+          </button>
+        )}
+      </div>
+
+      {/* Header Actions */}
+      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+            <FileText className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
+            {currentProcessoId && (
+              <p className="text-sm text-gray-500">Processo #{currentProcessoId} • Motor BPMN</p>
+            )}
+          </div>
         </div>
 
-        {/* Right: Action buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
           <button
             onClick={handleNewInscricao}
-            className="px-4 py-2 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
             title="Iniciar nova inscrição (mantém usuário)"
           >
             <Plus className="w-4 h-4" />
@@ -356,14 +391,14 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
           </button>
           <button
             onClick={handleSaveDraft}
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             Salvar Rascunho
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5"
             title="Reiniciar processo (limpa tudo)"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -371,23 +406,6 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
           </button>
         </div>
       </div>
-
-      {/* Process Info Card - Abaixo do header */}
-      {currentProcessoId && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-base font-semibold text-gray-900">Nova Inscrição</h2>
-              <p className="text-sm text-gray-500">
-                Processo #{currentProcessoId} • Motor BPMN
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Stepper Motor - sem dependência de contexto */}
       <InscricaoStepperMotor
