@@ -123,6 +123,7 @@ export default function Login() {
               </label>
               <input
                 type="text"
+                name="identification"
                 value={numeroIdentificacao}
                 onChange={(e) => setNumeroIdentificacao(e.target.value)}
                 placeholder={getPlaceholder()}
@@ -137,6 +138,7 @@ export default function Login() {
               </label>
               <input
                 type="password"
+                name="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Digite sua senha"

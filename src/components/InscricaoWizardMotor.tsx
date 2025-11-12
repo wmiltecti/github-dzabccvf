@@ -7,18 +7,17 @@ import {
   completeStep,
   WorkflowStep 
 } from '../services/workflowApi';
-import { InscricaoProvider } from '../contexts/InscricaoContext';
 import { EnterpriseProvider } from '../contexts/EnterpriseContext';
-import InscricaoStepper from './InscricaoStepper';
+import InscricaoStepperMotor from './InscricaoStepperMotor';
 import ConfirmDialog from './ConfirmDialog';
 
-// Páginas do wizard - versões integradas com Workflow Engine
-import ParticipantesWorkflowPage from '../pages/inscricao/workflow/ParticipantesWorkflowPage';
-import ImovelWorkflowPage from '../pages/inscricao/workflow/ImovelWorkflowPage';
-import EmpreendimentoWorkflowPage from '../pages/inscricao/workflow/EmpreendimentoWorkflowPage';
-import FormularioWorkflowPage from '../pages/inscricao/workflow/FormularioWorkflowPage';
-// import DocumentacaoWorkflowPage from '../pages/inscricao/workflow/DocumentacaoWorkflowPage';
-// import RevisaoWorkflowPage from '../pages/inscricao/workflow/RevisaoWorkflowPage';
+// Páginas do wizard - versões MOTOR (isoladas, sem dependências de contexto antigo)
+import ParticipantesWorkflowPageMotor from '../pages/inscricao/workflow/ParticipantesWorkflowPageMotor';
+import ImovelWorkflowPageMotor from '../pages/inscricao/workflow/ImovelWorkflowPageMotor';
+import EmpreendimentoWorkflowPageMotor from '../pages/inscricao/workflow/EmpreendimentoWorkflowPageMotor';
+import FormularioWorkflowPageMotor from '../pages/inscricao/workflow/FormularioWorkflowPageMotor';
+// import DocumentacaoWorkflowPageMotor from '../pages/inscricao/workflow/DocumentacaoWorkflowPageMotor';
+// import RevisaoWorkflowPageMotor from '../pages/inscricao/workflow/RevisaoWorkflowPageMotor';
 
 interface InscricaoWizardMotorProps {
   onClose?: () => void;
@@ -197,22 +196,29 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
   const renderCurrentStep = () => {
     if (!currentStep || !currentProcessoId) return null;
 
-    const stepKey = currentStep.key;
+    const stepKey = currentStep.key?.toLowerCase(); // Case-insensitive
 
-    // Páginas gerenciam workflow internamente via Zustand + workflowApi
-    // Não precisamos passar onNext/onPrevious
+    console.log('🎯 Renderizando step:', stepKey, 'currentStep:', currentStep);
+
+    // Páginas Motor gerenciam workflow internamente via Zustand + workflowApi
+    // Versões isoladas sem dependências do InscricaoContext antigo
     switch (stepKey) {
       case 'participantes':
-        return <ParticipantesWorkflowPage />;
+        return <ParticipantesWorkflowPageMotor />;
 
       case 'imovel':
-        return <ImovelWorkflowPage />;
+        return <ImovelWorkflowPageMotor />;
 
       case 'empreendimento':
-        return <EmpreendimentoWorkflowPage />;
+        // EmpreendimentoWorkflowPageMotor precisa do EnterpriseProvider
+        return (
+          <EnterpriseProvider>
+            <EmpreendimentoWorkflowPageMotor />
+          </EnterpriseProvider>
+        );
 
       case 'formulario':
-        return <FormularioWorkflowPage />;
+        return <FormularioWorkflowPageMotor />;
 
       // case 'documentacao':
       //   return <DocumentacaoWorkflowPage />;
@@ -228,6 +234,9 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
             </p>
             <p className="text-gray-600 mt-2">
               Adicione o componente correspondente em renderCurrentStep()
+            </p>
+            <p className="text-xs text-gray-500 mt-4">
+              Debug: stepKey="{stepKey}", currentStep.key="{currentStep.key}"
             </p>
           </div>
         );
@@ -357,17 +366,15 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
         </div>
       </div>
 
-      {/* Stepper - IDÊNTICO ao original */}
-      <InscricaoStepper
+      {/* Stepper Motor - sem dependência de contexto */}
+      <InscricaoStepperMotor
         currentStep={currentStepNumber}
         onStepClick={handleStepClick}
       />
 
-      {/* Main Content - IDÊNTICO ao original */}
+      {/* Main Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
-        <EnterpriseProvider>
-          <InscricaoProvider processoId={currentProcessoId}>
-            {isLoadingWorkflow ? (
+        {isLoadingWorkflow ? (
               <div className="flex items-center justify-center h-[600px]">
                 <div className="text-center">
                   <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -393,8 +400,6 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
             ) : (
               renderCurrentStep()
             )}
-          </InscricaoProvider>
-        </EnterpriseProvider>
       </div>
 
       {/* Process Info Footer - IDÊNTICO ao original */}
