@@ -99,10 +99,12 @@ def main():
         print("   ✅ Navegou para Processos Motor")
         
         # =================================================================
-        # ETAPA 3: CLICAR EM "NOVO PROCESSO MOTOR"
+        # ETAPA 3: CLICAR EM "NOVO PROCESSO MOTOR" → CRIA PROCESSO NOVO
         # =================================================================
         print("\n➕ ETAPA 3: CRIAR NOVO PROCESSO")
         print("-" * 60)
+        print("   ⚠️  IMPORTANTE: Cada clique cria um NOVO processo no banco")
+        print("   ⚠️  Evita erro 409 (Conflict) ao adicionar participante duplicado")
         
         print("1. Procurando botão 'Novo Processo Motor'...")
         novo_processo_btn = wait.until(
@@ -113,7 +115,7 @@ def main():
         )
         print(f"   Botão encontrado: {novo_processo_btn.text}")
         
-        print("2. Clicando em 'Novo Processo Motor'...")
+        print("2. Clicando em 'Novo Processo Motor'... (cria processo novo)")
         novo_processo_btn.click()
         time.sleep(3)
         
