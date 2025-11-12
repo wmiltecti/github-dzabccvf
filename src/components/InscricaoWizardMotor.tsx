@@ -337,26 +337,18 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
    */
   const wizardContent = (
     <div className="space-y-6">
-      {/* Header Actions - IDÊNTICO ao original */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">Novo Processo de Licenciamento</h1>
-            {currentProcessoId && (
-              <p className="text-sm text-gray-500">
-                Processo #{currentProcessoId} • Motor BPMN
-              </p>
-            )}
-          </div>
+      {/* Header - Layout IDÊNTICO ao original aprovado */}
+      <div className="flex items-center justify-between">
+        {/* Left: Title */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Nova Solicitação</h1>
         </div>
 
-        <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
+        {/* Right: Action buttons */}
+        <div className="flex items-center gap-3">
           <button
             onClick={handleNewInscricao}
-            className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
+            className="px-4 py-2 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
             title="Iniciar nova inscrição (mantém usuário)"
           >
             <Plus className="w-4 h-4" />
@@ -364,14 +356,14 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
           </button>
           <button
             onClick={handleSaveDraft}
-            className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+            className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             Salvar Rascunho
           </button>
           <button
             onClick={handleReset}
-            className="px-3 py-1.5 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5"
+            className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
             title="Reiniciar processo (limpa tudo)"
           >
             <AlertTriangle className="w-4 h-4" />
@@ -379,6 +371,23 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
           </button>
         </div>
       </div>
+
+      {/* Process Info Card - Abaixo do header */}
+      {currentProcessoId && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-base font-semibold text-gray-900">Nova Inscrição</h2>
+              <p className="text-sm text-gray-500">
+                Processo #{currentProcessoId} • Motor BPMN
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stepper Motor - sem dependência de contexto */}
       <InscricaoStepperMotor
@@ -415,25 +424,6 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
               renderCurrentStep()
             )}
       </div>
-
-      {/* Process Info Footer - IDÊNTICO ao original */}
-      {currentProcessoId && (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <div className="flex items-center space-x-2 text-sm">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-gray-600">Processo ativo:</span>
-            <span className="font-medium text-gray-900">#{currentProcessoId}</span>
-            {workflowInstanceId && (
-              <>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-500 text-xs">
-                  Workflow: {workflowInstanceId.substring(0, 8)}...
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Dialogs de Confirmação */}
       <ConfirmDialog
