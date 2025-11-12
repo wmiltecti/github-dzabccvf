@@ -1,23 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInscricaoStore } from '../../lib/store/inscricao';
-import { useInscricaoContext } from '../../contexts/InscricaoContext';
+import { useInscricaoStore } from '../../../lib/store/inscricao';
 import { Building, ArrowLeft, ArrowRight, Upload, MapPin, AlertTriangle, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
-import EnterpriseSearch from '../../components/enterprise/EnterpriseSearch';
-import { useEnterprise } from '../../contexts/EnterpriseContext';
-import useSystemConfig from '../../hooks/useSystemConfig';
-import { getEnterpriseName, getEnterpriseDocument } from '../../services/enterpriseService';
-import { completeStep } from '../../services/workflowApi';
+import EnterpriseSearch from '../../../components/enterprise/EnterpriseSearch';
+import { useEnterprise } from '../../../contexts/EnterpriseContext';
+import useSystemConfig from '../../../hooks/useSystemConfig';
+import { getEnterpriseName, getEnterpriseDocument } from '../../../services/enterpriseService';
+import { completeStep } from '../../../services/workflowApi';
 
-export default function EmpreendimentoPage() {
+/**
+ * Página Empreendimento para Workflow Engine (Motor BPMN)
+ * 
+ * 🔄 Cópia EXATA da EmpreendimentoPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
+ */
+export default function EmpreendimentoWorkflowPageMotor() {
   const navigate = useNavigate();
-  const { 
+  
+  // Zustand store - pega TODOS os dados (processo + workflow)
+  const {
     workflowInstanceId,
     currentStepId,
-    currentStepKey
-  } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
+    currentStepKey,
+    setCurrentStep,
+    setCurrentStepFromEngine
+  } = useInscricaoStore();
   
   // Contexto e configurações
   const { selectedEnterprise, isNewEnterprise, searchPerformed, setNewEnterprise } = useEnterprise();
@@ -161,16 +173,16 @@ export default function EmpreendimentoPage() {
       // 4. Verificar se workflow finalizou
       if (response.status === 'FINISHED' || !response.nextStep) {
         toast.success('Processo finalizado!');
-        navigate('/inscricao/revisao');
         return;
       }
 
-      // 5. Atualizar contexto com próximo step
+      // 5. Atualizar Zustand store com próximo step retornado pelo backend
+      // InscricaoWizardMotor vai detectar a mudança e renderizar próximo componente
       setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
 
-      // 6. Navegar para próxima rota definida pelo backend
-      console.log('🧭 Navegando para:', response.nextStep.path);
-      navigate(response.nextStep.path);
+      // ✅ Motor BPMN: NÃO navega via Router, apenas atualiza store
+      // O InscricaoWizardMotor monitora mudanças no store e renderiza o próximo step
+      console.log('🧭 Próximo step atualizado no store:', response.nextStep.key);
       
       toast.success(`Avançando para: ${response.nextStep.label}`);
     } catch (error: any) {

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../lib/store/inscricao';
 import { criarProcesso } from '../services/processosService';
 import { getUserId } from '../utils/authToken';
@@ -15,9 +16,18 @@ import FormularioPage from '../pages/inscricao/FormularioPage';
 import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
 import ConfirmDialog from './ConfirmDialog';
+import { startWorkflowForLicense } from '../services/workflowApi';
 
 export default function InscricaoWizard() {
-  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
+  const navigate = useNavigate();
+  const { 
+    currentStep, 
+    setCurrentStep, 
+    reset, 
+    startNewInscricao,
+    setWorkflowInstance,
+    setProcessId: setProcessIdInStore
+  } = useInscricaoStore();
 
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -28,34 +38,71 @@ export default function InscricaoWizard() {
 
   useEffect(() => {
     const initializeProcesso = async () => {
-      if (processoId) return;
+      if (processoId) {
+        console.log('✅ [InscricaoWizard] Processo já existe:', processoId);
+        setIsInitializing(false);
+        return;
+      }
 
       if (isCreatingProcesso.current) {
         console.log('🔒 [InscricaoWizard] Já está criando processo, aguardando...');
         return;
       }
 
+      console.log('🚀 [InscricaoWizard] Iniciando criação de novo processo...');
       setIsInitializing(true);
       isCreatingProcesso.current = true;
 
       try {
+        // 1. Criar o processo de licenciamento
         const userId = getUserId();
         if (!userId) {
+          console.error('❌ [InscricaoWizard] Usuário não autenticado');
           toast.error('Usuário não autenticado');
+          setIsInitializing(false);
+          isCreatingProcesso.current = false;
           return;
         }
+        
+        console.log('👤 [InscricaoWizard] UserId:', userId);
+        
         const newProcessoId = await criarProcesso(userId);
         console.log('✅ Processo criado na API (id remoto):', newProcessoId);
 
+        // 2. Criar dados gerais iniciais
         console.log('📝 Criando dados gerais iniciais...');
         await http.put(`/processos/${newProcessoId}/dados-gerais`, {
           processo_id: newProcessoId
         });
         console.log('✅ Dados gerais criados');
 
+        // 3. Iniciar o workflow engine
+        console.log('🔧 Iniciando workflow engine...');
+        const workflowResponse = await startWorkflowForLicense(newProcessoId);
+        console.log('✅ Workflow iniciado:', workflowResponse);
+
+        // 4. Salvar instância do workflow no store
+        setWorkflowInstance(
+          workflowResponse.instanceId,
+          workflowResponse.currentStep.id,
+          workflowResponse.currentStep.key
+        );
+        console.log('✅ Workflow instance salva no store');
+
+        // 5. Salvar processoId no store (CRÍTICO para as páginas acessarem)
+        setProcessIdInStore(String(newProcessoId));
+        console.log('✅ ProcessId salvo no store:', newProcessoId);
+
+        // 6. Navegar para o primeiro step definido pelo engine
+        console.log('🧭 Navegando para:', workflowResponse.currentStep.path);
+        // Não navegamos aqui pois estamos dentro do Dashboard que controla via activeTab
+        // O path será usado pelo stepper para determinar qual componente renderizar
+        
         setProcessoId(newProcessoId);
+        
+        toast.success('Processo iniciado com sucesso!');
       } catch (error: any) {
-        console.error('Erro ao criar processo:', error);
+        console.error('❌ Erro ao criar processo:', error);
         toast.error(error?.message || 'Erro ao inicializar processo');
       } finally {
         setIsInitializing(false);
@@ -64,9 +111,13 @@ export default function InscricaoWizard() {
     };
 
     initializeProcesso();
-  }, []);
+  }, [setWorkflowInstance, setProcessIdInStore]);
 
   const handleStepClick = (step: number) => {
+    // ⚠️ DEPRECATED: Não usar mais setCurrentStep manual
+    // O fluxo agora é controlado pelo workflow engine
+    // TODO: Integrar com completeStep() do workflowApi
+    console.warn('⚠️ handleStepClick ainda usando setCurrentStep manual - migrar para workflow engine');
     setCurrentStep(step);
   };
 
@@ -97,6 +148,9 @@ export default function InscricaoWizard() {
   };
 
   const renderCurrentStep = () => {
+    // ℹ️ TRANSIÇÃO: Este switch ainda usa currentStep numérico (1,2,3...)
+    // TODO: Migrar para usar currentStepKey do workflow engine
+    // Exemplo: currentStepKey === 'PARTICIPANTES' -> <ParticipantesPage />
     switch (currentStep) {
       case 1:
         return <ParticipantesPage />;
@@ -115,7 +169,7 @@ export default function InscricaoWizard() {
     }
   };
 
-  if (isInitializing) {
+  if (isInitializing || !processoId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -127,20 +181,21 @@ export default function InscricaoWizard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
+    <InscricaoProvider processoId={processoId}>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
+              {processoId && (
+                <p className="text-sm text-gray-500">Processo #{processoId}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
-            {processoId && (
-              <p className="text-sm text-gray-500">Processo #{processoId}</p>
-            )}
-          </div>
-        </div>
 
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
           <button
@@ -214,6 +269,7 @@ export default function InscricaoWizard() {
         confirmText="Sim, Iniciar Nova"
         cancelText="Cancelar"
       />
-    </div>
+      </div>
+    </InscricaoProvider>
   );
 }

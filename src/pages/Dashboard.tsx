@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import GeoVisualization from '../components/geo/GeoVisualization';
 import InscricaoWizard from '../components/InscricaoWizard';
+import InscricaoWizardMotor from '../components/InscricaoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
@@ -103,6 +104,8 @@ export default function Dashboard() {
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [showWizardInInscricoes, setShowWizardInInscricoes] = useState(false);
+  const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN (botão verde no header)
+  const [showWizardInProcessesMotor, setShowWizardInProcessesMotor] = useState(false); // Controla wizard na aba Processos Motor
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -332,7 +335,8 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    //{ id: 'processes', name: 'Processos', icon: FileText }
+    { id: 'processes', name: 'Processos', icon: FileText },
+    { id: 'processesmotor', name: 'Processos Motor', icon: FileText }
   ];
 
   const otherNavigation = [
@@ -366,7 +370,35 @@ export default function Dashboard() {
     <div className="w-5 h-5 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
   );
 
-  const renderDashboard = () => (
+  const renderDashboard = () => {
+    // Se o wizard do Motor estiver aberto, renderiza ele ao invés do dashboard
+    if (showWizardMotor) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+            <button
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardMotor(false)}
+              title="Voltar ao Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Voltar</span>
+            </button>
+          </div>
+          <InscricaoWizardMotor
+            asModal={false}
+            onClose={() => {
+              setShowWizardMotor(false);
+              loadProcesses();
+              loadStats();
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
     <div className="space-y-6">
       {/* ============================================ */}
       {/* CABEÇALHO COM AÇÕES FIXO ACIMA DAS ESTATÍSTICAS */}
@@ -374,114 +406,120 @@ export default function Dashboard() {
       <div className="sticky top-0 z-30 bg-white pb-2 pt-2 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Painel de Controle</h1>
-          <div className="flex space-x-2 sm:space-x-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => {
-                setActiveTab('inscricoes');
-                setShowWizardInInscricoes(true);
-              }}
-              title="Iniciar nova solicitação"
+              onClick={() => setShowWizardMotor(true)}
+              title="Nova solicitação com Workflow Engine (Motor BPMN)"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Nova Solicitação</span>
               <span className="xs:hidden">Solicitação</span>
             </button>
+            
+            {/* Botão para testar Workflow Engine (Motor BPMN) - OCULTO */}
+            <button
+              className="hidden bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardMotor(true)}
+              title="Nova solicitação com Workflow Engine (Motor BPMN)"
+            >
+              <FilePlus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Motor BPMN</span>
+              <span className="sm:hidden">Motor</span>
+            </button>
           </div>
         </div>
       </div>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => handleFilterStatus(undefined)}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
+  {/* Painel de Estatísticas - Layout Aprovado (Único Painel Horizontal) */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-[56px] z-30">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Total de Processos */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === undefined ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => handleFilterStatus(undefined)}
+          >
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Total de Processos</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
-          onClick={() => handleFilterStatus('1')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-yellow-50/50 rounded-lg flex-shrink-0">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400/60" />
+          {/* Pendentes */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
+            onClick={() => handleFilterStatus('1')}
+          >
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Pendentes</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendentes}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
-          onClick={() => handleFilterStatus('2')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
+          {/* Em Análise */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => handleFilterStatus('2')}
+          >
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Em Análise</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.em_analise}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => handleFilterStatus('3')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-green-50/50 rounded-lg flex-shrink-0">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400/60" />
+          {/* Aprovados */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
+            onClick={() => handleFilterStatus('3')}
+          >
+            <div className="p-2 bg-green-50 rounded-lg">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Aprovadas</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.aprovados}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
-          onClick={() => handleFilterStatus('4')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-red-50/50 rounded-lg flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400/60" />
+          {/* Rejeitados */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
+            onClick={() => handleFilterStatus('4')}
+          >
+            <div className="p-2 bg-red-50 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Rejeitadas</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
               )}
             </div>
           </div>
@@ -648,7 +686,8 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderProcesses = () => (
     <div className="space-y-6">
@@ -767,6 +806,142 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
+    const renderProcessesMotor = () => {
+    // Se o wizard está aberto, renderiza apenas ele
+    if (showWizardInProcessesMotor) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+            <button
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardInProcessesMotor(false)}
+              title="Voltar para lista de processos"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Voltar</span>
+            </button>
+          </div>
+          <InscricaoWizardMotor
+            asModal={false}
+            onClose={() => {
+              setShowWizardInProcessesMotor(false);
+              loadProcesses();
+              loadStats();
+            }}
+          />
+        </div>
+      );
+    }
+
+    // Lista de processos normal
+    return (
+    <div className="space-y-6">
+      {/* ============================================ */}
+      {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
+      {/* ============================================ */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Processos de Licenciamento - Motor BPMN</h1>
+        <div className="flex space-x-2 sm:space-x-3">
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowWizardInProcessesMotor(true)}
+            title="Criar novo processo com Motor BPMN"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Novo Processo Motor</span>
+            <span className="xs:hidden">Novo</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-effect rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar por empresa ou atividade..."
+                className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-400" />
+            <select
+              className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">Todos os Status</option>
+              <option value="submitted">Submetida</option>
+              <option value="em_analise">Em Análise</option>
+              <option value="documentacao_pendente">Documentação Pendente</option>
+              <option value="aprovado">Aprovada</option>
+              <option value="rejeitado">Rejeitada</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-effect rounded-lg">
+        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Processos</h2>
+          {loadingProcesses && (
+            <div className="text-green-600 text-sm mt-2">Carregando processos...</div>
+          )}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protocolo Interno</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número do Processo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome/Razão Social</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPF/CNPJ</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Potencial Poluidor</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Criação</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredProcessos.map((proc) => (
+                <tr
+                  key={proc.id}
+                  className="hover:bg-green-50 hover:bg-opacity-50 cursor-pointer transition-all duration-200"
+                  onClick={() => handleProcessClick(proc)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.protocolo_interno || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.numero_processo_externo || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.tipo_pessoa || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.razao_social || proc.nome_fantasia || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.cpf || proc.cnpj || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.potencial_poluidor || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(proc.status)}`}>
+                      {getStatusText(proc.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{proc.created_at ? new Date(proc.created_at).toLocaleString('pt-BR') : '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button className="text-blue-600 hover:underline mr-2" onClick={(e) => { e.stopPropagation(); handleProcessClick(proc); }}>Ver Detalhes</button>
+                    <button className="text-green-600 hover:underline" onClick={(e) => { e.stopPropagation(); /* handleEditProcess(proc); */ }}>Editar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    );
+  };
 
   const renderInscricoes = () => {
     // Se o wizard está aberto, renderiza apenas ele
@@ -916,6 +1091,7 @@ export default function Dashboard() {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
+      case 'processesmotor': return renderProcessesMotor();
       case 'inscricoes': return renderInscricoes();
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (

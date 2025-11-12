@@ -141,7 +141,7 @@ export default function InscricaoLayout() {
     window.location.reload();
   };
 
-  if (isInitializing) {
+  if (isInitializing || !processoId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -208,20 +208,21 @@ export default function InscricaoLayout() {
         </div>
       </header>
 
-      {/* Stepper */}
-      <InscricaoStepper 
-        currentStep={currentStep} 
-        onStepClick={handleStepClick}
-      />
+      {/* Provider envolve TUDO que usa contexto (Stepper + Pages) */}
+      <InscricaoProvider processoId={processoId}>
+        {/* Stepper */}
+        <InscricaoStepper 
+          currentStep={currentStep} 
+          onStepClick={handleStepClick}
+        />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
-          <InscricaoProvider processoId={processoId}>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
             <Outlet />
-          </InscricaoProvider>
-        </div>
-      </main>
+          </div>
+        </main>
+      </InscricaoProvider>
 
       {/* Process Info Footer */}
       {processoId && (

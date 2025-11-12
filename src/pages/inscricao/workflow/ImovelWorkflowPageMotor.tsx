@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useInscricaoStore } from '../../lib/store/inscricao';
-import { useInscricaoContext } from '../../contexts/InscricaoContext';
-import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
+import { useInscricaoStore } from '../../../lib/store/inscricao';
+import { searchImoveis, SearchImovelResult } from '../../../lib/api/property';
 import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search, Eye } from 'lucide-react';
-import ImovelGeoPanel from '../../components/ImovelGeoPanel';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import { completeStep } from '../../services/workflowApi';
+import ImovelGeoPanel from '../../../components/ImovelGeoPanel';
+import ConfirmDialog from '../../../components/ConfirmDialog';
+import { completeStep } from '../../../services/workflowApi';
 
 type ModalStep = 'search' | 'confirm';
 
-export default function ImovelPage() {
+/**
+ * Página Imóvel para Workflow Engine (Motor BPMN)
+ * 
+ * 🔄 Cópia EXATA da ImovelPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
+ */
+export default function ImovelWorkflowPageMotor() {
   const navigate = useNavigate();
-  const { 
-    processoId,
+  
+  // Zustand store - pega TODOS os dados (processo + workflow)
+  const {
+    processId: processoId,
     workflowInstanceId,
     currentStepId,
-    currentStepKey
-  } = useInscricaoContext();
-  const {
+    currentStepKey,
     property,
     propertyId,
     setProperty,
@@ -716,16 +725,16 @@ export default function ImovelPage() {
       // 4. Verificar se workflow finalizou
       if (response.status === 'FINISHED' || !response.nextStep) {
         toast.success('Processo finalizado!');
-        navigate('/inscricao/revisao');
         return;
       }
 
-      // 5. Atualizar contexto com próximo step
+      // 5. Atualizar Zustand store com próximo step retornado pelo backend
+      // InscricaoWizardMotor vai detectar a mudança e renderizar próximo componente
       setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
 
-      // 6. Navegar para próxima rota definida pelo backend
-      console.log('🧭 Navegando para:', response.nextStep.path);
-      navigate(response.nextStep.path);
+      // ✅ Motor BPMN: NÃO navega via Router, apenas atualiza store
+      // O InscricaoWizardMotor monitora mudanças no store e renderiza o próximo step
+      console.log('🧭 Próximo step atualizado no store:', response.nextStep.key);
       
       toast.success(`Avançando para: ${response.nextStep.label}`);
     } catch (error: any) {

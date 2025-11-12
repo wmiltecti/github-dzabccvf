@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useInscricaoStore } from '../../lib/store/inscricao';
-import { useInscricaoContext } from '../../contexts/InscricaoContext';
-import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
+import { useInscricaoStore } from '../../../lib/store/inscricao';
+import { searchImoveis, SearchImovelResult } from '../../../lib/api/property';
 import { Home, MapPin, ArrowLeft, ArrowRight, Plus, Trash2, AlertTriangle, X, Search, Eye } from 'lucide-react';
-import ImovelGeoPanel from '../../components/ImovelGeoPanel';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import { completeStep } from '../../services/workflowApi';
+import ImovelGeoPanel from '../../../components/ImovelGeoPanel';
+import ConfirmDialog from '../../../components/ConfirmDialog';
+import { completeStep } from '../../../services/workflowApi';
 
 type ModalStep = 'search' | 'confirm';
 
-export default function ImovelPage() {
+/**
+ * Página Imóvel para Workflow Engine (Motor BPMN)
+ * 
+ * 🔄 Cópia EXATA da ImovelPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
+ */
+export default function ImovelWorkflowPage() {
   const navigate = useNavigate();
-  const { 
-    processoId,
+  
+  // Zustand store - pega TODOS os dados (processo + workflow)
+  const {
+    processId: processoId,
     workflowInstanceId,
     currentStepId,
-    currentStepKey
-  } = useInscricaoContext();
-  const {
+    currentStepKey,
     property,
     propertyId,
     setProperty,

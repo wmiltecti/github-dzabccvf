@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { useInscricaoContext } from '../../contexts/InscricaoContext';
-import { useInscricaoStore } from '../../lib/store/inscricao';
-import FormWizard from '../../components/FormWizard';
-import { getStepSubprocess, completeSubprocessStep, WorkflowStep } from '../../services/workflowApi';
+import { useInscricaoStore } from '../../../lib/store/inscricao';
+import FormWizard from '../../../components/FormWizard';
+import { getStepSubprocess, completeSubprocessStep, WorkflowStep } from '../../../services/workflowApi';
 
-export default function FormularioPage() {
+/**
+ * Página Formulário para Workflow Engine (Motor BPMN)
+ * 
+ * 🔄 Cópia EXATA da FormularioPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * - Suporta subprocess (Aba1-6 do formulário)
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
+ */
+export default function FormularioWorkflowPage() {
   const navigate = useNavigate();
+  
+  // Zustand store - pega TODOS os dados (processo + workflow + subprocess)
   const { 
-    processoId, 
+    processId: processoId,
     workflowInstanceId, 
     currentStepId,
-    subprocessInstanceId: contextSubprocessId 
-  } = useInscricaoContext();
-  const { 
+    subprocessInstanceId: contextSubprocessId,
     setCurrentStep, 
     setSubprocessInstance, 
     clearSubprocess,
@@ -175,7 +185,7 @@ export default function FormularioPage() {
 
       {/* FormWizard integrado */}
       <FormWizard 
-        processoId={processoId}
+        processoId={processoId ? String(processoId) : undefined}
         onComplete={handleComplete}
         // Futuros props para controle de subprocesso (opcional):
         // subprocessInstanceId={localSubprocessId}

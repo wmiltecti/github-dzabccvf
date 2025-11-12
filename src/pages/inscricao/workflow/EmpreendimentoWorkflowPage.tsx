@@ -1,23 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInscricaoStore } from '../../lib/store/inscricao';
-import { useInscricaoContext } from '../../contexts/InscricaoContext';
+import { useInscricaoStore } from '../../../lib/store/inscricao';
 import { Building, ArrowLeft, ArrowRight, Upload, MapPin, AlertTriangle, FileText, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
-import EnterpriseSearch from '../../components/enterprise/EnterpriseSearch';
-import { useEnterprise } from '../../contexts/EnterpriseContext';
-import useSystemConfig from '../../hooks/useSystemConfig';
-import { getEnterpriseName, getEnterpriseDocument } from '../../services/enterpriseService';
-import { completeStep } from '../../services/workflowApi';
+import EnterpriseSearch from '../../../components/enterprise/EnterpriseSearch';
+import { useEnterprise } from '../../../contexts/EnterpriseContext';
+import useSystemConfig from '../../../hooks/useSystemConfig';
+import { getEnterpriseName, getEnterpriseDocument } from '../../../services/enterpriseService';
+import { completeStep } from '../../../services/workflowApi';
 
-export default function EmpreendimentoPage() {
+/**
+ * Página Empreendimento para Workflow Engine (Motor BPMN)
+ * 
+ * 🔄 Cópia EXATA da EmpreendimentoPage.tsx original com adaptações mínimas:
+ * - Usa APENAS useInscricaoStore (remove useInscricaoContext)
+ * - handleNext() já chama completeStep() do workflow engine
+ * - Mantém 100% do layout e funcionalidades aprovadas em produção
+ * 
+ * ✅ Layout validado pelo usuário e já em produção
+ */
+export default function EmpreendimentoWorkflowPage() {
   const navigate = useNavigate();
-  const { 
+  
+  // Zustand store - pega TODOS os dados (processo + workflow)
+  const {
     workflowInstanceId,
     currentStepId,
-    currentStepKey
-  } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
+    currentStepKey,
+    setCurrentStep,
+    setCurrentStepFromEngine
+  } = useInscricaoStore();
   
   // Contexto e configurações
   const { selectedEnterprise, isNewEnterprise, searchPerformed, setNewEnterprise } = useEnterprise();
