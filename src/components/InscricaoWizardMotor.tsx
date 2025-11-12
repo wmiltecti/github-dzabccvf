@@ -351,21 +351,6 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
    */
   const wizardContent = (
     <div className="space-y-6">
-      {/* Primeira linha: Título e Botão Voltar */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
-        {!asModal && onClose && (
-          <button
-            onClick={onClose}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            title="Voltar ao Dashboard"
-          >
-            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Voltar</span>
-          </button>
-        )}
-      </div>
-
       {/* Header Actions */}
       <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">

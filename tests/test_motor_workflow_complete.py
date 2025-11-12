@@ -104,7 +104,7 @@ def main():
         print("\n➕ ETAPA 3: CRIAR NOVO PROCESSO")
         print("-" * 60)
         print("   ⚠️  IMPORTANTE: Cada clique cria um NOVO processo no banco")
-        print("   ⚠️  Evita erro 409 (Conflict) ao adicionar participante duplicado")
+        print("   ⚠️  Clicando APENAS 1 VEZ para evitar erro 409")
         
         print("1. Procurando botão 'Novo Processo Motor'...")
         novo_processo_btn = wait.until(
@@ -115,26 +115,27 @@ def main():
         )
         print(f"   Botão encontrado: {novo_processo_btn.text}")
         
-        print("2. Clicando em 'Novo Processo Motor'... (cria processo novo)")
-        novo_processo_btn.click()
-        time.sleep(3)
+        print("2. Clicando UMA VEZ em 'Novo Processo Motor'... (cria processo novo)")
+        driver.execute_script("arguments[0].click();", novo_processo_btn)
+        print("   ✅ Botão clicado! Aguardando workflow inicializar...")
+        time.sleep(5)  # Aguarda mais tempo para garantir inicialização completa
         
         print("3. Verificando se wizard inline abriu...")
         # Wizard abre INLINE (não em modal) quando vem da aba Processos Motor
         try:
+            # Espera o loading sumir E o wizard aparecer
+            print("   Aguardando 'Inicializando processo com Motor BPMN...' aparecer...")
+            time.sleep(2)
+            
+            print("   Aguardando wizard finalizar carregamento...")
             wizard_title = wait.until(
-                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Novo Processo de Licenciamento') or contains(text(), 'Inicializando processo com Motor BPMN')]"))
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Novo Processo de Licenciamento')]"))
             )
-            # Re-buscar elemento para evitar stale reference
-            time.sleep(1)
-            wizard_titles = driver.find_elements(By.XPATH, "//*[contains(text(), 'Novo Processo de Licenciamento')]")
-            if len(wizard_titles) > 0:
-                print(f"   ✅ Wizard aberto!")
-            else:
-                print(f"   ✅ Wizard carregando...")
+            print(f"   ✅ Wizard aberto: {wizard_title.text}")
+            time.sleep(2)  # Aguarda renderização completa
         except TimeoutException:
-            print("   ⚠️  Wizard não encontrado, verificando se está carregando...")
-            time.sleep(5)
+            print("   ⚠️  Timeout aguardando wizard, verificando estado...")
+            time.sleep(3)
         
         # Verificar se está na página Participantes
         print("4. Verificando se chegou em Participantes...")

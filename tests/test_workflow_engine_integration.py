@@ -280,17 +280,17 @@ class WorkflowEngineTestSuite:
             motor_btn.click()
             time.sleep(5)  # Aguarda inicialização do workflow (cria processo + inicia motor)
             
-            # O wizard do motor ABRE EM MODAL
+            # O wizard do motor ABRE EM MODAL (asModal=true)
             # Verificar se o modal do wizard apareceu
             print(f"  {Colors.CYAN}→ Aguardando modal do Workflow Engine...{Colors.END}")
             modal = self.wait.until(
                 EC.presence_of_element_located((
                     By.XPATH, 
-                    "//*[contains(text(), 'Nova Inscrição (Motor BPMN)') or contains(text(), 'Inicializando Workflow')]"
+                    "//*[contains(text(), 'Novo Processo de Licenciamento') or contains(text(), 'Inicializando processo com Motor BPMN') or contains(@class, 'fixed') and contains(@class, 'inset-0') and contains(@class, 'bg-black')]"
                 ))
             )
             
-            print(f"  {Colors.CYAN}→ Modal do Workflow Engine aberto{Colors.END}")
+            print(f"  {Colors.CYAN}→ Modal/Wizard do Workflow Engine aberto{Colors.END}")
             
             # Aguarda inicialização completar e página Participantes aparecer
             print(f"  {Colors.CYAN}→ Aguardando wizard inicializar...{Colors.END}")

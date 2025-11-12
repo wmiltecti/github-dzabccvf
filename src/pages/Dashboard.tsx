@@ -370,7 +370,35 @@ export default function Dashboard() {
     <div className="w-5 h-5 border-2 border-gray-300 border-t-green-600 rounded-full animate-spin"></div>
   );
 
-  const renderDashboard = () => (
+  const renderDashboard = () => {
+    // Se o wizard do Motor estiver aberto, renderiza ele ao invés do dashboard
+    if (showWizardMotor) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
+            <button
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardMotor(false)}
+              title="Voltar ao Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Voltar</span>
+            </button>
+          </div>
+          <InscricaoWizardMotor
+            asModal={false}
+            onClose={() => {
+              setShowWizardMotor(false);
+              loadProcesses();
+              loadStats();
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
     <div className="space-y-6">
       {/* ============================================ */}
       {/* CABEÇALHO COM AÇÕES FIXO ACIMA DAS ESTATÍSTICAS */}
@@ -381,20 +409,17 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => {
-                setActiveTab('inscricoes');
-                setShowWizardInInscricoes(true);
-              }}
-              title="Iniciar nova solicitação (fluxo manual)"
+              onClick={() => setShowWizardMotor(true)}
+              title="Nova solicitação com Workflow Engine (Motor BPMN)"
             >
               <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="hidden xs:inline">Nova Solicitação</span>
               <span className="xs:hidden">Solicitação</span>
             </button>
             
-            {/* Botão para testar Workflow Engine (Motor BPMN) */}
+            {/* Botão para testar Workflow Engine (Motor BPMN) - OCULTO */}
             <button
-              className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              className="hidden bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
               onClick={() => setShowWizardMotor(true)}
               title="Nova solicitação com Workflow Engine (Motor BPMN)"
             >
@@ -406,97 +431,95 @@ export default function Dashboard() {
         </div>
       </div>
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4 sticky top-[56px] z-30 bg-white pb-2 pt-2 shadow-sm">
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === undefined ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => handleFilterStatus(undefined)}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
+  {/* Painel de Estatísticas - Layout Aprovado (Único Painel Horizontal) */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sticky top-[56px] z-30">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Total de Processos */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === undefined ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => handleFilterStatus(undefined)}
+          >
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total de Processos</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Total de Processos</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
-          onClick={() => handleFilterStatus('1')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-yellow-50/50 rounded-lg flex-shrink-0">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400/60" />
+          {/* Pendentes */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '1' ? 'ring-2 ring-yellow-500' : ''}`}
+            onClick={() => handleFilterStatus('1')}
+          >
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pendentes</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Pendentes</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pendentes}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendentes}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
-          onClick={() => handleFilterStatus('2')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-blue-50/50 rounded-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400/60" />
+          {/* Em Análise */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '2' ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => handleFilterStatus('2')}
+          >
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Em Análise</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Em Análise</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.em_analise}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.em_analise}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
-          onClick={() => handleFilterStatus('3')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-green-50/50 rounded-lg flex-shrink-0">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-400/60" />
+          {/* Aprovados */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '3' ? 'ring-2 ring-green-500' : ''}`}
+            onClick={() => handleFilterStatus('3')}
+          >
+            <div className="p-2 bg-green-50 rounded-lg">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Aprovadas</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Aprovadas</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.aprovados}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.aprovados}</p>
               )}
             </div>
           </div>
-        </div>
 
-        <div
-          className={`stat-card p-4 sm:p-6 rounded-lg cursor-pointer transition-all ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
-          onClick={() => handleFilterStatus('4')}
-        >
-          <div className="flex items-center min-w-0">
-            <div className="p-2 bg-red-50/50 rounded-lg flex-shrink-0">
-              <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-400/60" />
+          {/* Rejeitados */}
+          <div
+            className={`flex items-center gap-3 cursor-pointer transition-all p-2 rounded-lg hover:bg-gray-50 ${filterStatus === '4' ? 'ring-2 ring-red-500' : ''}`}
+            onClick={() => handleFilterStatus('4')}
+          >
+            <div className="p-2 bg-red-50 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
             </div>
-            <div className="ml-3 sm:ml-4 min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Rejeitadas</p>
+            <div>
+              <p className="text-xs font-medium text-gray-600">Rejeitadas</p>
               {loadingStats ? (
                 <Spinner />
               ) : (
-                <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.rejeitados}</p>
               )}
             </div>
           </div>
@@ -663,7 +686,8 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderProcesses = () => (
     <div className="space-y-6">
@@ -789,7 +813,7 @@ export default function Dashboard() {
       return (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Novo Processo - Motor BPMN</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Nova Solicitação</h1>
             <button
               className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
               onClick={() => setShowWizardInProcessesMotor(false)}
@@ -1361,18 +1385,6 @@ export default function Dashboard() {
         process={selectedProcess}
         onUpdateProcess={handleUpdateProcess}
       />
-
-      {/* Wizard do Motor BPMN (Workflow Engine) - Botão verde no header */}
-      {showWizardMotor && (
-        <InscricaoWizardMotor
-          asModal={true}
-          onClose={() => {
-            setShowWizardMotor(false);
-            loadProcesses();
-            loadStats();
-          }}
-        />
-      )}
     </div>
   );
 }
