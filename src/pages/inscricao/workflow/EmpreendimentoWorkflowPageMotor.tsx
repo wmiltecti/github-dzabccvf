@@ -173,16 +173,16 @@ export default function EmpreendimentoWorkflowPageMotor() {
       // 4. Verificar se workflow finalizou
       if (response.status === 'FINISHED' || !response.nextStep) {
         toast.success('Processo finalizado!');
-        navigate('/inscricao/revisao');
         return;
       }
 
-      // 5. Atualizar contexto com próximo step
+      // 5. Atualizar Zustand store com próximo step retornado pelo backend
+      // InscricaoWizardMotor vai detectar a mudança e renderizar próximo componente
       setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
 
-      // 6. Navegar para próxima rota definida pelo backend
-      console.log('🧭 Navegando para:', response.nextStep.path);
-      navigate(response.nextStep.path);
+      // ✅ Motor BPMN: NÃO navega via Router, apenas atualiza store
+      // O InscricaoWizardMotor monitora mudanças no store e renderiza o próximo step
+      console.log('🧭 Próximo step atualizado no store:', response.nextStep.key);
       
       toast.success(`Avançando para: ${response.nextStep.label}`);
     } catch (error: any) {

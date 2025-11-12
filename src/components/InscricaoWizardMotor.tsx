@@ -7,6 +7,9 @@ import {
   completeStep,
   WorkflowStep 
 } from '../services/workflowApi';
+import http from '../lib/api/http';
+import { getUserId } from '../utils/authToken';
+import { criarProcesso } from '../services/processosService';
 import { EnterpriseProvider } from '../contexts/EnterpriseContext';
 import InscricaoStepperMotor from './InscricaoStepperMotor';
 import ConfirmDialog from './ConfirmDialog';
@@ -79,31 +82,42 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
     setWorkflowError(null);
 
     try {
-      console.log('� Iniciando workflow...');
+      console.log('🔧 Iniciando workflow...');
       
-      // Chama backend para iniciar workflow
-      // Backend cria o processo automaticamente se não existir
-      const workflowResponse = await startWorkflowForLicense(processoId || 'new');
+      // 1. Criar o processo de licenciamento NO BANCO primeiro
+      const userId = getUserId();
+      if (!userId) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      console.log('📝 Criando processo no banco...');
+      const newProcessoId = await criarProcesso(userId);
+      console.log('✅ Processo criado:', newProcessoId);
+
+      // 2. Criar dados gerais iniciais
+      console.log('📝 Criando dados gerais iniciais...');
+      await http.put(`/processos/${newProcessoId}/dados-gerais`, {
+        processo_id: newProcessoId
+      });
+      console.log('✅ Dados gerais criados');
+
+      // 3. Iniciar o workflow engine com o ID do processo real
+      console.log('🔧 Iniciando workflow engine...');
+      const workflowResponse = await startWorkflowForLicense(newProcessoId);
 
       console.log('✅ Workflow iniciado:', workflowResponse);
 
-      // Extrai processo_id da resposta se vier (pode estar em qualquer campo)
-      const processId = (workflowResponse as any).processId || 
-                       (workflowResponse as any).processo_id || 
-                       workflowResponse.instanceId;
-      
+      // Usa o processo que criamos (não precisa extrair da resposta)
       setWorkflowInstanceId(workflowResponse.instanceId);
       setCurrentStep(workflowResponse.currentStep);
-      setCurrentProcessoId(processId);
+      setCurrentProcessoId(newProcessoId);
       
       // Salva no Zustand store (workflow + processo)
       setWorkflowInstance(workflowResponse.instanceId, workflowResponse.currentStep.id, workflowResponse.currentStep.key);
       
       // ✅ CRÍTICO: Salva processId no store para as páginas acessarem
-      if (processId) {
-        console.log('📝 Salvando processId no store:', processId);
-        setProcessId(String(processId));
-      }
+      console.log('📝 Salvando processId no store:', newProcessoId);
+      setProcessId(String(newProcessoId));
 
       toast.success('Workflow iniciado com sucesso!');
     } catch (error: any) {

@@ -103,12 +103,13 @@ export default function FormularioWorkflowPageMotor() {
         // Backend automaticamente completa o passo pai FORMULARIO
         // e retorna o próximo passo
         if (response.nextStep) {
+          // ✅ Motor BPMN: NÃO navega via Router, apenas atualiza store
+          // O InscricaoWizardMotor monitora mudanças no store e renderiza o próximo step
           setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
-          navigate(response.nextStep.path);
+          console.log('🧭 Próximo step atualizado no store:', response.nextStep.key);
         } else if (response.status === 'FINISHED') {
           console.log('🎉 [FormularioPage] Workflow finalizado!');
-          // Navega para página de conclusão ou dashboard
-          navigate('/dashboard');
+          // Motor BPMN: Workflow finalizado, não navega
         }
 
         // Limpa o subprocesso do estado

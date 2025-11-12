@@ -25,7 +25,8 @@ export default function InscricaoWizard() {
     setCurrentStep, 
     reset, 
     startNewInscricao,
-    setWorkflowInstance 
+    setWorkflowInstance,
+    setProcessId: setProcessIdInStore
   } = useInscricaoStore();
 
   const [processoId, setProcessoId] = useState<string | null>(null);
@@ -37,13 +38,18 @@ export default function InscricaoWizard() {
 
   useEffect(() => {
     const initializeProcesso = async () => {
-      if (processoId) return;
+      if (processoId) {
+        console.log('✅ [InscricaoWizard] Processo já existe:', processoId);
+        setIsInitializing(false);
+        return;
+      }
 
       if (isCreatingProcesso.current) {
         console.log('🔒 [InscricaoWizard] Já está criando processo, aguardando...');
         return;
       }
 
+      console.log('🚀 [InscricaoWizard] Iniciando criação de novo processo...');
       setIsInitializing(true);
       isCreatingProcesso.current = true;
 
@@ -51,9 +57,14 @@ export default function InscricaoWizard() {
         // 1. Criar o processo de licenciamento
         const userId = getUserId();
         if (!userId) {
+          console.error('❌ [InscricaoWizard] Usuário não autenticado');
           toast.error('Usuário não autenticado');
+          setIsInitializing(false);
+          isCreatingProcesso.current = false;
           return;
         }
+        
+        console.log('👤 [InscricaoWizard] UserId:', userId);
         
         const newProcessoId = await criarProcesso(userId);
         console.log('✅ Processo criado na API (id remoto):', newProcessoId);
@@ -78,7 +89,11 @@ export default function InscricaoWizard() {
         );
         console.log('✅ Workflow instance salva no store');
 
-        // 5. Navegar para o primeiro step definido pelo engine
+        // 5. Salvar processoId no store (CRÍTICO para as páginas acessarem)
+        setProcessIdInStore(String(newProcessoId));
+        console.log('✅ ProcessId salvo no store:', newProcessoId);
+
+        // 6. Navegar para o primeiro step definido pelo engine
         console.log('🧭 Navegando para:', workflowResponse.currentStep.path);
         // Não navegamos aqui pois estamos dentro do Dashboard que controla via activeTab
         // O path será usado pelo stepper para determinar qual componente renderizar
@@ -96,7 +111,7 @@ export default function InscricaoWizard() {
     };
 
     initializeProcesso();
-  }, [setWorkflowInstance]);
+  }, [setWorkflowInstance, setProcessIdInStore]);
 
   const handleStepClick = (step: number) => {
     // ⚠️ DEPRECATED: Não usar mais setCurrentStep manual
@@ -154,7 +169,7 @@ export default function InscricaoWizard() {
     }
   };
 
-  if (isInitializing) {
+  if (isInitializing || !processoId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -166,20 +181,21 @@ export default function InscricaoWizard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-            <FileText className="w-5 h-5 text-white" />
+    <InscricaoProvider processoId={processoId}>
+      <div className="space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
+              {processoId && (
+                <p className="text-sm text-gray-500">Processo #{processoId}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">Nova Inscrição</h1>
-            {processoId && (
-              <p className="text-sm text-gray-500">Processo #{processoId}</p>
-            )}
-          </div>
-        </div>
 
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
           <button
@@ -253,6 +269,7 @@ export default function InscricaoWizard() {
         confirmText="Sim, Iniciar Nova"
         cancelText="Cancelar"
       />
-    </div>
+      </div>
+    </InscricaoProvider>
   );
 }
