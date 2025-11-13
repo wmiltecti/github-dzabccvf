@@ -17,7 +17,7 @@ export interface EmpreendimentoDadosGerais {
   nome_empreendimento?: string;
   descricao?: string;
   tipo?: string;
-  porte?: string;
+  porte?: string; // Mantido aqui para compatibilidade com store
   investimento?: number;
   // ... outros campos conforme necessário
 }

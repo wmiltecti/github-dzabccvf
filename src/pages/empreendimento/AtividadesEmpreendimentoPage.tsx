@@ -11,13 +11,14 @@ interface AtividadesEmpreendimentoPageProps {
 /**
  * Página 3: Atividades do Empreendimento
  */
-export default function AtividadesEmpreendimentoPage({ 
-  onNext, 
-  onPrevious 
+export default function AtividadesEmpreendimentoPage({
+  onNext,
+  onPrevious
 }: AtividadesEmpreendimentoPageProps) {
-  const { atividades, setAtividades, addAtividade, removeAtividade } = useEmpreendimentoStore();
-  
+  const { atividades, setAtividades, addAtividade, removeAtividade, dadosGerais, setDadosGerais } = useEmpreendimentoStore();
+
   const [showForm, setShowForm] = useState(false);
+  const [porte, setPorte] = useState(dadosGerais?.porte || '');
   const [formData, setFormData] = useState({
     nome: '',
     tipo: '',
@@ -63,7 +64,15 @@ export default function AtividadesEmpreendimentoPage({
       return;
     }
 
-    onNext({ atividades });
+    if (!porte) {
+      toast.error('Selecione o porte do empreendimento');
+      return;
+    }
+
+    // Salva o porte nos dados gerais
+    setDadosGerais({ ...dadosGerais, porte });
+
+    onNext({ atividades, porte });
   };
 
   return (
@@ -77,6 +86,27 @@ export default function AtividadesEmpreendimentoPage({
         <p className="text-gray-600 text-sm">
           Cadastre as atividades que serão desenvolvidas no empreendimento
         </p>
+      </div>
+
+      {/* Campo Porte */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-300">
+        <div className="max-w-md">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Porte do Empreendimento <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={porte}
+            onChange={(e) => setPorte(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Selecione...</option>
+            <option value="micro">Micro</option>
+            <option value="pequeno">Pequeno</option>
+            <option value="medio">Médio</option>
+            <option value="grande">Grande</option>
+            <option value="excepcional">Excepcional</option>
+          </select>
+        </div>
       </div>
 
       {/* Botão Adicionar */}
