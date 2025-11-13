@@ -6,20 +6,18 @@ import { getTemplateSteps, getInstanceStepHistory, WorkflowStep } from '../servi
 
 // ⚠️ FALLBACK: Steps hardcoded para uso quando backend não estiver disponível
 const FALLBACK_STEPS = [
-  { id: '1', key: 'PARTICIPANTES', label: 'Participantes', path: '/inscricao/participantes' },
-  { id: '2', key: 'IMOVEL', label: 'Imóvel', path: '/inscricao/imovel' },
-  { id: '3', key: 'EMPREENDIMENTO', label: 'Empreendimento', path: '/inscricao/empreendimento' },
-  { id: '4', key: 'FORMULARIO', label: 'Formulário', path: '/inscricao/formulario' },
-  { id: '5', key: 'DOCUMENTACAO', label: 'Documentação', path: '/inscricao/documentacao' },
-  { id: '6', key: 'REVISAO', label: 'Revisão', path: '/inscricao/revisao' }
+  { id: '1', key: 'EMPREENDIMENTO', label: 'Empreendimento', path: '/inscricao/empreendimento' },
+  { id: '2', key: 'PARTICIPANTES', label: 'Partícipes', path: '/inscricao/participantes' },
+  { id: '3', key: 'LICENCA', label: 'Licença solicitada', path: '/inscricao/licenca' },
+  { id: '4', key: 'DOCUMENTACAO', label: 'Documentação', path: '/inscricao/documentacao' },
+  { id: '5', key: 'REVISAO', label: 'Revisão', path: '/inscricao/revisao' }
 ];
 
 // Mapeamento de keys para ícones
 const STEP_ICONS: Record<string, React.ComponentType<any>> = {
-  'PARTICIPANTES': Users,
-  'IMOVEL': Home,
   'EMPREENDIMENTO': Building,
-  'FORMULARIO': FileText,
+  'PARTICIPANTES': Users,
+  'LICENCA': FileText,
   'DOCUMENTACAO': Upload,
   'REVISAO': FileCheck
 };
@@ -41,7 +39,7 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
   useEffect(() => {
     const loadSteps = async () => {
       try {
-        // 1. Buscar steps do template
+        // 1. Tentar buscar steps do template (opcional)
         const templateSteps = await getTemplateSteps('LICENCIAMENTO_AMBIENTAL_COMPLETO');
         setSteps(templateSteps);
         console.log('✅ Steps carregados do backend:', templateSteps);
@@ -53,7 +51,7 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
           console.log('✅ Histórico de steps:', history);
         }
       } catch (error) {
-        console.warn('⚠️ Falha ao carregar steps do backend, usando fallback:', error);
+        console.warn('⚠️ Workflow engine não disponível, usando modo manual:', error);
         setSteps(FALLBACK_STEPS);
       } finally {
         setLoading(false);

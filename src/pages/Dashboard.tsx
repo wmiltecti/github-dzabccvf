@@ -36,6 +36,7 @@ import {
 import GeoVisualization from '../components/geo/GeoVisualization';
 import InscricaoWizard from '../components/InscricaoWizard';
 import InscricaoWizardMotor from '../components/InscricaoWizardMotor';
+import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
@@ -106,6 +107,7 @@ export default function Dashboard() {
   const [showWizardInInscricoes, setShowWizardInInscricoes] = useState(false);
   const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN (botão verde no header)
   const [showWizardInProcessesMotor, setShowWizardInProcessesMotor] = useState(false); // Controla wizard na aba Processos Motor
+  const [showWizardEmpreendimento, setShowWizardEmpreendimento] = useState(false); // Controla wizard na aba Empreendimento
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -335,7 +337,8 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    { id: 'processesmotor', name: 'Processos', icon: FileText }
+    { id: 'processesmotor', name: 'Processos', icon: FileText },
+    { id: 'empreendimento', name: 'Empreendimento', icon: Building2 }
   ];
 
   const otherNavigation = [
@@ -942,6 +945,132 @@ export default function Dashboard() {
     );
   };
 
+  const renderEmpreendimento = () => {
+    // Se o wizard está aberto, renderiza apenas ele
+    if (showWizardEmpreendimento) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Novo Empreendimento</h1>
+            <button
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+              onClick={() => setShowWizardEmpreendimento(false)}
+              title="Voltar para lista de empreendimentos"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Voltar</span>
+            </button>
+          </div>
+          <EmpreendimentoWizardMotor
+            asModal={false}
+            onClose={() => {
+              setShowWizardEmpreendimento(false);
+              loadProcesses();
+              loadStats();
+            }}
+          />
+        </div>
+      );
+    }
+
+    // Lista de empreendimentos
+    return (
+      <div className="space-y-6">
+        {/* Cabeçalho */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Empreendimentos</h1>
+          <button
+            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            onClick={() => setShowWizardEmpreendimento(true)}
+            title="Criar novo empreendimento"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Novo Empreendimento</span>
+            <span className="xs:hidden">Novo</span>
+          </button>
+        </div>
+
+        {/* Filtros */}
+        <div className="glass-effect rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome, tipo ou localização..."
+                  className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Todos os Status</option>
+                <option value="em_cadastro">Em Cadastro</option>
+                <option value="ativo">Ativo</option>
+                <option value="em_analise">Em Análise</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="suspenso">Suspenso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista de Empreendimentos */}
+        <div className="glass-effect rounded-lg">
+          <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Empreendimentos</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Tipo
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                    Localização
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                    Criado em
+                  </th>
+                  <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {/* Mensagem de lista vazia */}
+                <tr>
+                  <td colSpan={6} className="px-4 sm:px-6 py-8 text-center">
+                    <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600 mb-2">Nenhum empreendimento cadastrado</p>
+                    <p className="text-sm text-gray-500">
+                      Clique em "Novo Empreendimento" para começar
+                    </p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderInscricoes = () => {
     // Se o wizard está aberto, renderiza apenas ele
     if (showWizardInInscricoes) {
@@ -1091,6 +1220,7 @@ export default function Dashboard() {
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
       case 'processesmotor': return renderProcessesMotor();
+      case 'empreendimento': return renderEmpreendimento();
       case 'inscricoes': return renderInscricoes();
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (

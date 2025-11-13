@@ -43,6 +43,7 @@ UI/UX Aprovado: Layout idêntico ao design aprovado pela PO
 Performance: Navegação instantânea entre steps, sem delays
 Manutenibilidade: Código isolado, fácil de manter e evoluir
 📝 Próximos Passos (Sugestão)
+Treinamento do time no contexto de uso
 Implementar DocumentacaoWorkflowPageMotor
 Implementar RevisaoWorkflowPageMotor
 Testar fluxo completo end-to-end
