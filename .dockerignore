@@ -29,9 +29,10 @@ coverage
 *~
 
 # Documentação
+documentos
 Docs
 README*.md
-*.md
+DEPLOY_PORTAINER.md
 
 # Git
 .git
