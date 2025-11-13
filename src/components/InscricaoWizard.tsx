@@ -9,10 +9,9 @@ import InscricaoStepper from './InscricaoStepper';
 import { FileText, Save, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import http from '../lib/api/http';
+import EmpreendimentoPageNew from '../pages/inscricao/EmpreendimentoPageNew';
 import ParticipantesPage from '../pages/inscricao/ParticipantesPage';
-import ImovelPage from '../pages/inscricao/ImovelPage';
-import EmpreendimentoPage from '../pages/inscricao/EmpreendimentoPage';
-import FormularioPage from '../pages/inscricao/FormularioPage';
+import LicencaSolicitadaPage from '../pages/inscricao/LicencaSolicitadaPage';
 import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
 import ConfirmDialog from './ConfirmDialog';
@@ -76,27 +75,27 @@ export default function InscricaoWizard() {
         });
         console.log('✅ Dados gerais criados');
 
-        // 3. Iniciar o workflow engine
-        console.log('🔧 Iniciando workflow engine...');
-        const workflowResponse = await startWorkflowForLicense(newProcessoId);
-        console.log('✅ Workflow iniciado:', workflowResponse);
+        // 3. Tentar iniciar o workflow engine (opcional)
+        console.log('🔧 Tentando iniciar workflow engine...');
+        try {
+          const workflowResponse = await startWorkflowForLicense(newProcessoId);
+          console.log('✅ Workflow iniciado:', workflowResponse);
 
-        // 4. Salvar instância do workflow no store
-        setWorkflowInstance(
-          workflowResponse.instanceId,
-          workflowResponse.currentStep.id,
-          workflowResponse.currentStep.key
-        );
-        console.log('✅ Workflow instance salva no store');
+          // Salvar instância do workflow no store
+          setWorkflowInstance(
+            workflowResponse.instanceId,
+            workflowResponse.currentStep.id,
+            workflowResponse.currentStep.key
+          );
+          console.log('✅ Workflow instance salva no store');
+        } catch (workflowError: any) {
+          console.warn('⚠️ Workflow engine não disponível, continuando em modo manual:', workflowError.message);
+          // Continua sem workflow engine - modo manual
+        }
 
-        // 5. Salvar processoId no store (CRÍTICO para as páginas acessarem)
+        // 4. Salvar processoId no store (CRÍTICO para as páginas acessarem)
         setProcessIdInStore(String(newProcessoId));
         console.log('✅ ProcessId salvo no store:', newProcessoId);
-
-        // 6. Navegar para o primeiro step definido pelo engine
-        console.log('🧭 Navegando para:', workflowResponse.currentStep.path);
-        // Não navegamos aqui pois estamos dentro do Dashboard que controla via activeTab
-        // O path será usado pelo stepper para determinar qual componente renderizar
         
         setProcessoId(newProcessoId);
         
@@ -148,24 +147,20 @@ export default function InscricaoWizard() {
   };
 
   const renderCurrentStep = () => {
-    // ℹ️ TRANSIÇÃO: Este switch ainda usa currentStep numérico (1,2,3...)
-    // TODO: Migrar para usar currentStepKey do workflow engine
-    // Exemplo: currentStepKey === 'PARTICIPANTES' -> <ParticipantesPage />
+    // Nova ordem: Empreendimento → Partícipes → Licença solicitada → Documentação → Revisão
     switch (currentStep) {
       case 1:
-        return <ParticipantesPage />;
+        return <EmpreendimentoPageNew />;
       case 2:
-        return <ImovelPage />;
+        return <ParticipantesPage />;
       case 3:
-        return <EmpreendimentoPage />;
+        return <LicencaSolicitadaPage />;
       case 4:
-        return <FormularioPage />;
-      case 5:
         return <DocumentacaoPage />;
-      case 6:
+      case 5:
         return <RevisaoPage />;
       default:
-        return <ParticipantesPage />;
+        return <EmpreendimentoPageNew />;
     }
   };
 
