@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  frontend:
+    container_name: licenciamento-ambiental-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: licenciamento-ambiental-frontend:latest
+    ports:
+      - "80:80"
+      # OU use outra porta se 80 já estiver em uso:
+      # - "8080:80"
+    environment:
+      # Variáveis de ambiente para o frontend
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+    restart: unless-stopped
+    networks:
+      - licenciamento-network
+
+networks:
+  licenciamento-network:
+    driver: bridge
