@@ -335,8 +335,7 @@ export default function Dashboard() {
   const navigation = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    { id: 'processes', name: 'Processos', icon: FileText },
-    { id: 'processesmotor', name: 'Processos Motor', icon: FileText }
+    { id: 'processesmotor', name: 'Processos', icon: FileText }
   ];
 
   const otherNavigation = [
@@ -842,15 +841,15 @@ export default function Dashboard() {
       {/* CABEÇALHO COM AÇÕES - NOVA FUNCIONALIDADE   */}
       {/* ============================================ */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Processos de Licenciamento - Motor BPMN</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Processos de Licenciamento</h1>
         <div className="flex space-x-2 sm:space-x-3">
           <button
-            className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
+            className="hidden bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
             onClick={() => setShowWizardInProcessesMotor(true)}
             title="Criar novo processo com Motor BPMN"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Novo Processo Motor</span>
+            <span className="hidden xs:inline">Novo Processo</span>
             <span className="xs:hidden">Novo</span>
           </button>
         </div>

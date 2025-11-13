@@ -4,9 +4,7 @@
  * Responsável por buscar e atualizar configurações armazenadas no Supabase
  */
 
-import axios from 'axios';
-
-const API_BASE_URL = '/api/v1/system-config';
+import { supabase } from '../lib/supabaseClient';
 
 /**
  * Interface para estrutura de configuração do sistema
@@ -22,51 +20,32 @@ export interface SystemConfig {
 }
 
 /**
- * Interface para resposta de lista de configurações
- */
-export interface SystemConfigsResponse {
-  success: boolean;
-  data: SystemConfig[];
-  message?: string;
-}
-
-/**
- * Interface para resposta de configuração única
- */
-export interface SystemConfigResponse {
-  success: boolean;
-  data: SystemConfig;
-  message?: string;
-}
-
-/**
- * Interface para atualização de configuração
- */
-export interface UpdateConfigPayload {
-  config_value: boolean;
-}
-
-/**
  * Busca todas as configurações ativas do sistema
  * @returns Promise com array de configurações
  * @throws Error em caso de falha na requisição
  */
 export async function getAllSystemConfigs(): Promise<SystemConfig[]> {
   try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get<SystemConfigsResponse>(API_BASE_URL, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    console.log('[systemConfigService] Iniciando busca de configurações...');
+    
+    const { data, error } = await supabase
+      .from('system_configurations')
+      .select('*')
+      .eq('is_active', true)
+      .order('config_key');
 
-    if (response.data.success) {
-      return response.data.data;
+    console.log('[systemConfigService] Resposta do Supabase:', { data, error });
+
+    if (error) {
+      console.error('[systemConfigService] Erro Supabase:', error);
+      throw new Error(error.message || 'Erro ao buscar configurações do sistema');
     }
 
-    throw new Error(response.data.message || 'Erro ao buscar configurações do sistema');
+    console.log('[systemConfigService] Configurações encontradas:', data?.length || 0);
+    return data || [];
   } catch (error: any) {
     console.error('[systemConfigService] Erro ao buscar configurações:', error);
     throw new Error(
-      error.response?.data?.message || 
       error.message || 
       'Erro ao buscar configurações do sistema'
     );
@@ -81,20 +60,26 @@ export async function getAllSystemConfigs(): Promise<SystemConfig[]> {
  */
 export async function getSystemConfigByKey(key: string): Promise<SystemConfig> {
   try {
-    const token = localStorage.getItem('auth_token');
-    const response = await axios.get<SystemConfigResponse>(`${API_BASE_URL}/${key}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const { data, error } = await supabase
+      .from('system_configurations')
+      .select('*')
+      .eq('config_key', key)
+      .eq('is_active', true)
+      .single();
 
-    if (response.data.success) {
-      return response.data.data;
+    if (error) {
+      console.error(`[systemConfigService] Erro Supabase ao buscar '${key}':`, error);
+      throw new Error(error.message || `Configuração '${key}' não encontrada`);
     }
 
-    throw new Error(response.data.message || `Configuração '${key}' não encontrada`);
+    if (!data) {
+      throw new Error(`Configuração '${key}' não encontrada`);
+    }
+
+    return data;
   } catch (error: any) {
     console.error(`[systemConfigService] Erro ao buscar configuração '${key}':`, error);
     throw new Error(
-      error.response?.data?.message || 
       error.message || 
       `Erro ao buscar configuração '${key}'`
     );
@@ -113,37 +98,35 @@ export async function updateSystemConfig(
   value: boolean
 ): Promise<SystemConfig> {
   try {
-    const token = localStorage.getItem('auth_token');
-    
-    if (!token) {
-      throw new Error('Usuário não autenticado');
-    }
+    const { data, error } = await supabase
+      .from('system_configurations')
+      .update({ 
+        config_value: value,
+        updated_at: new Date().toISOString()
+      })
+      .eq('config_key', key)
+      .select()
+      .single();
 
-    const payload: UpdateConfigPayload = { config_value: value };
-    
-    const response = await axios.put<SystemConfigResponse>(
-      `${API_BASE_URL}/${key}`,
-      payload,
-      {
-        headers: { Authorization: `Bearer ${token}` },
+    if (error) {
+      console.error(`[systemConfigService] Erro Supabase ao atualizar '${key}':`, error);
+      
+      // Tratamento especial para erros de permissão
+      if (error.code === 'PGRST301' || error.code === '42501') {
+        throw new Error('Você não tem permissão para alterar configurações do sistema');
       }
-    );
-
-    if (response.data.success) {
-      return response.data.data;
+      
+      throw new Error(error.message || 'Erro ao atualizar configuração');
     }
 
-    throw new Error(response.data.message || 'Erro ao atualizar configuração');
+    if (!data) {
+      throw new Error(`Configuração '${key}' não encontrada para atualização`);
+    }
+
+    return data;
   } catch (error: any) {
     console.error(`[systemConfigService] Erro ao atualizar configuração '${key}':`, error);
-    
-    // Tratamento especial para erros de permissão
-    if (error.response?.status === 403 || error.response?.status === 401) {
-      throw new Error('Você não tem permissão para alterar configurações do sistema');
-    }
-    
     throw new Error(
-      error.response?.data?.message || 
       error.message || 
       'Erro ao atualizar configuração do sistema'
     );
