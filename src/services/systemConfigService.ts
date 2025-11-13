@@ -26,17 +26,22 @@ export interface SystemConfig {
  */
 export async function getAllSystemConfigs(): Promise<SystemConfig[]> {
   try {
+    console.log('[systemConfigService] Iniciando busca de configurações...');
+    
     const { data, error } = await supabase
       .from('system_configurations')
       .select('*')
       .eq('is_active', true)
       .order('config_key');
 
+    console.log('[systemConfigService] Resposta do Supabase:', { data, error });
+
     if (error) {
       console.error('[systemConfigService] Erro Supabase:', error);
       throw new Error(error.message || 'Erro ao buscar configurações do sistema');
     }
 
+    console.log('[systemConfigService] Configurações encontradas:', data?.length || 0);
     return data || [];
   } catch (error: any) {
     console.error('[systemConfigService] Erro ao buscar configurações:', error);

@@ -39,7 +39,9 @@ export default function SystemConfigSettings() {
       setLoading(true);
       setError(null);
       
+      console.log('[SystemConfigSettings] Iniciando carregamento de configs...');
       const allConfigs = await getAllSystemConfigs();
+      console.log('[SystemConfigSettings] Configs recebidas do service:', allConfigs);
       
       // Mapeia para estrutura de toggle
       const toggleConfigs: ConfigToggle[] = allConfigs.map(config => ({
@@ -49,7 +51,9 @@ export default function SystemConfigSettings() {
         value: config.config_value
       }));
       
+      console.log('[SystemConfigSettings] Configs mapeadas:', toggleConfigs);
       setConfigs(toggleConfigs);
+      console.log('[SystemConfigSettings] Total de configs carregadas:', toggleConfigs.length);
     } catch (err: any) {
       console.error('[SystemConfigSettings] Erro ao carregar configs:', err);
       setError(err.message || 'Erro ao carregar configurações');
@@ -142,13 +146,22 @@ export default function SystemConfigSettings() {
    * Renderiza lista vazia
    */
   if (configs.length === 0) {
+    console.log('[SystemConfigSettings] Renderizando "Nenhuma configuração" - configs.length:', configs.length);
     return (
       <div className="flex flex-col items-center justify-center h-96">
         <Settings className="w-12 h-12 text-gray-400 mb-4" />
         <p className="text-gray-600">Nenhuma configuração disponível</p>
+        <button
+          onClick={loadConfigs}
+          className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          Recarregar Configurações
+        </button>
       </div>
     );
   }
+
+  console.log('[SystemConfigSettings] Renderizando lista de configs:', configs.length, 'itens');
 
   return (
     <div className="max-w-4xl mx-auto">
