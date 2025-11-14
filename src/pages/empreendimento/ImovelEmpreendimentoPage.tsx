@@ -1,240 +1,371 @@
-import React, { useState } from 'react';
-import { Home, ArrowRight, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, ArrowRight, Search, CheckCircle, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
+import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
 
 interface ImovelEmpreendimentoPageProps {
   onNext: (data?: any) => void;
   onPrevious?: () => void;
 }
 
-/**
- * Página 1: Imóvel do Empreendimento
- * Permite buscar e selecionar ou criar novo imóvel
- */
+type SearchType = 'car' | 'matricula' | 'documento';
+
 export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelEmpreendimentoPageProps) {
   const { property, setProperty, setPropertyId } = useEmpreendimentoStore();
-  
+
+  const [searchType, setSearchType] = useState<SearchType>('car');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    nome: '',
-    matricula: '',
-    area: '',
-    endereco: '',
-    municipio: '',
-    bairro: '',
-    cep: ''
-  });
+  const [searchResults, setSearchResults] = useState<SearchImovelResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<SearchImovelResult | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const handleSearch = () => {
-    // TODO: Implementar busca no backend
-    toast.info('Busca de imóveis em desenvolvimento');
+  const getSearchPlaceholder = () => {
+    switch (searchType) {
+      case 'car':
+        return 'Digite o número do CAR...';
+      case 'matricula':
+        return 'Digite o número da matrícula...';
+      case 'documento':
+        return 'Digite o CPF ou CNPJ do proprietário...';
+      default:
+        return 'Digite para buscar...';
+    }
   };
 
-  const handleCreateNew = () => {
-    setShowForm(true);
-  };
-
-  const handleSaveImovel = () => {
-    if (!formData.nome || !formData.endereco) {
-      toast.error('Preencha os campos obrigatórios');
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      toast.error('Digite algo para buscar');
       return;
     }
 
-    // Salva no store
+    if (searchTerm.trim().length < 3) {
+      toast.error('Digite pelo menos 3 caracteres');
+      return;
+    }
+
+    try {
+      setSearching(true);
+      setShowResults(true);
+
+      const { data, error } = await searchImoveis(searchTerm.trim());
+
+      if (error) {
+        toast.error(error.message || 'Erro ao buscar imóveis');
+        setSearchResults([]);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        toast.info('Nenhum imóvel encontrado');
+        setSearchResults([]);
+        return;
+      }
+
+      setSearchResults(data);
+      toast.success(`${data.length} imóvel(is) encontrado(s)`);
+    } catch (err: any) {
+      console.error('Erro na busca:', err);
+      toast.error('Erro ao realizar busca');
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectProperty = (imovel: SearchImovelResult) => {
+    setSelectedResult(imovel);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSelection = () => {
+    if (!selectedResult) return;
+
     setProperty({
-      nome: formData.nome,
-      matricula: formData.matricula,
-      area: parseFloat(formData.area) || 0,
-      endereco: formData.endereco,
-      municipio: formData.municipio,
-      bairro: formData.bairro
+      id: selectedResult.id,
+      nome: selectedResult.nome || 'Imóvel selecionado',
+      matricula: selectedResult.matricula,
+      area: selectedResult.areatotal,
+      endereco: [
+        selectedResult.logradouro,
+        selectedResult.numero,
+        selectedResult.bairro
+      ].filter(Boolean).join(', ') || 'Endereço não informado',
+      municipio: selectedResult.municipio || selectedResult.municipio_sede,
+      bairro: selectedResult.bairro,
+      car_codigo: selectedResult.car_codigo
     });
 
-    toast.success('Imóvel salvo!');
+    setPropertyId(selectedResult.id);
+    toast.success('Imóvel selecionado com sucesso!');
+    setShowConfirmModal(false);
+    setShowResults(false);
+    setSearchResults([]);
+    setSearchTerm('');
+  };
+
+  const handleClearProperty = () => {
+    setProperty(null);
+    setPropertyId(null);
+    setSearchTerm('');
+    setSearchResults([]);
+    setShowResults(false);
   };
 
   const handleNext = () => {
     if (!property || !property.nome) {
-      toast.error('Selecione ou cadastre um imóvel');
+      toast.error('Selecione um imóvel antes de continuar');
       return;
     }
 
     onNext({ property });
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Home className="w-5 h-5 text-green-600" />
           <h2 className="text-xl font-bold text-gray-800">Imóvel do Empreendimento</h2>
         </div>
         <p className="text-gray-600 text-sm">
-          Busque um imóvel existente ou cadastre um novo
+          Busque um imóvel cadastrado no sistema
         </p>
       </div>
 
-      {/* Busca de Imóvel */}
-      {!showForm && !property && (
-        <div className="space-y-4 mb-6">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por nome, matrícula ou endereço..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button
-              onClick={handleSearch}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-            >
-              <Search className="w-4 h-4" />
-              Buscar
-            </button>
+      {!property && (
+        <>
+          <div className="bg-white rounded-lg border border-gray-300 p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Buscar Imóvel</h3>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Busca
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchType('car');
+                    setSearchTerm('');
+                    setSearchResults([]);
+                    setShowResults(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchType === 'car'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Número CAR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchType('matricula');
+                    setSearchTerm('');
+                    setSearchResults([]);
+                    setShowResults(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchType === 'matricula'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Matrícula
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchType('documento');
+                    setSearchTerm('');
+                    setSearchResults([]);
+                    setShowResults(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    searchType === 'documento'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  CPF/CNPJ
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder={getSearchPlaceholder()}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <button
+                onClick={handleSearch}
+                disabled={searching || searchTerm.trim().length < 3}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {searching ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    Buscar
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              {searchType === 'car' && '💡 Digite o código do Cadastro Ambiental Rural (CAR)'}
+              {searchType === 'matricula' && '💡 Digite o número de matrícula do imóvel'}
+              {searchType === 'documento' && '💡 Digite o CPF ou CNPJ do proprietário do imóvel'}
+            </div>
           </div>
 
-          <div className="text-center py-4">
-            <p className="text-gray-600 mb-2">Ou</p>
-            <button
-              onClick={handleCreateNew}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Cadastrar Novo Imóvel
-            </button>
-          </div>
-        </div>
+          {showResults && (
+            <div className="bg-white rounded-lg border border-gray-300 p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  Resultados da Busca {searchResults.length > 0 && `(${searchResults.length})`}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowResults(false);
+                    setSearchResults([]);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {searchResults.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Home className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhum imóvel encontrado</p>
+                  <p className="text-sm mt-1">Tente buscar com outros termos</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {searchResults.map((imovel) => (
+                    <div
+                      key={imovel.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-green-400 hover:bg-green-50 transition-all cursor-pointer"
+                      onClick={() => handleSelectProperty(imovel)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">
+                              {imovel.kind || 'N/D'}
+                            </span>
+                            {imovel.car_codigo && (
+                              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                                CAR: {imovel.car_codigo}
+                              </span>
+                            )}
+                            {imovel.matricula && (
+                              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
+                                Mat: {imovel.matricula}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            {imovel.municipio_sede && (
+                              <div>
+                                <span className="font-medium text-gray-700">Município:</span>{' '}
+                                <span className="text-gray-900">{imovel.municipio_sede}</span>
+                              </div>
+                            )}
+                            {imovel.areatotal && (
+                              <div>
+                                <span className="font-medium text-gray-700">Área:</span>{' '}
+                                <span className="text-gray-900">{imovel.areatotal} ha</span>
+                              </div>
+                            )}
+                            {imovel.logradouro && (
+                              <div className="col-span-2">
+                                <span className="font-medium text-gray-700">Endereço:</span>{' '}
+                                <span className="text-gray-900">
+                                  {[imovel.logradouro, imovel.numero, imovel.bairro].filter(Boolean).join(', ')}
+                                </span>
+                              </div>
+                            )}
+                            {(imovel.utm_lat || imovel.dms_lat) && (
+                              <div className="col-span-2">
+                                <span className="font-medium text-gray-700">Coordenadas:</span>{' '}
+                                <span className="text-gray-900 text-xs">
+                                  {imovel.utm_lat && imovel.utm_long ? `UTM: ${imovel.utm_lat}, ${imovel.utm_long}` : ''}
+                                  {imovel.dms_lat && imovel.dms_long ? `DMS: ${imovel.dms_lat}, ${imovel.dms_long}` : ''}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          className="ml-4 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 flex items-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectProperty(imovel);
+                          }}
+                        >
+                          Selecionar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Formulário de Novo Imóvel */}
-      {showForm && !property && (
-        <div className="bg-gray-50 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4">Cadastrar Novo Imóvel</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome do Imóvel <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: Fazenda Santa Maria"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Matrícula
-              </label>
-              <input
-                type="text"
-                value={formData.matricula}
-                onChange={(e) => setFormData({ ...formData, matricula: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: 12345"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Área (hectares)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.area}
-                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: 100.50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                CEP
-              </label>
-              <input
-                type="text"
-                value={formData.cep}
-                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: 12345-678"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Endereço <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.endereco}
-                onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: Rodovia BR-101, Km 50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Município
-              </label>
-              <input
-                type="text"
-                value={formData.municipio}
-                onChange={(e) => setFormData({ ...formData, municipio: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: São Paulo"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bairro
-              </label>
-              <input
-                type="text"
-                value={formData.bairro}
-                onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: Centro"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2 mt-6">
-            <button
-              onClick={handleSaveImovel}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Salvar Imóvel
-            </button>
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Imóvel Selecionado */}
       {property && (
         <div className="bg-green-50 rounded-lg p-6 mb-6 border border-green-200">
-          <h3 className="text-lg font-semibold mb-4 text-green-800">Imóvel Selecionado</h3>
-          
+          <div className="flex items-start justify-between mb-4">
+            <h3 className="text-lg font-semibold text-green-800 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Imóvel Selecionado
+            </h3>
+            <button
+              onClick={handleClearProperty}
+              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+            >
+              Trocar Imóvel
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Nome:</span>
-              <p className="text-gray-900">{property.nome}</p>
+              <p className="text-gray-900">{property.nome || 'N/D'}</p>
             </div>
+            {property.car_codigo && (
+              <div>
+                <span className="font-medium text-gray-700">CAR:</span>
+                <p className="text-gray-900 font-mono text-xs">{property.car_codigo}</p>
+              </div>
+            )}
             {property.matricula && (
               <div>
                 <span className="font-medium text-gray-700">Matrícula:</span>
@@ -247,7 +378,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
                 <p className="text-gray-900">{property.area} ha</p>
               </div>
             )}
-            <div>
+            <div className="col-span-2">
               <span className="font-medium text-gray-700">Endereço:</span>
               <p className="text-gray-900">{property.endereco}</p>
             </div>
@@ -258,20 +389,69 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
               </div>
             )}
           </div>
-
-          <button
-            onClick={() => {
-              setProperty(null);
-              setShowForm(false);
-            }}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
-          >
-            Remover e Buscar Outro
-          </button>
         </div>
       )}
 
-      {/* Botões de Navegação */}
+      {showConfirmModal && selectedResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Confirmar Seleção de Imóvel</h3>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">Confirma a seleção deste imóvel para o empreendimento?</p>
+
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex gap-2">
+                  {selectedResult.kind && (
+                    <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">
+                      {selectedResult.kind}
+                    </span>
+                  )}
+                  {selectedResult.car_codigo && (
+                    <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded">
+                      CAR: {selectedResult.car_codigo}
+                    </span>
+                  )}
+                </div>
+                {selectedResult.municipio_sede && (
+                  <p><strong>Município:</strong> {selectedResult.municipio_sede}</p>
+                )}
+                {selectedResult.areatotal && (
+                  <p><strong>Área Total:</strong> {selectedResult.areatotal} ha</p>
+                )}
+                {selectedResult.logradouro && (
+                  <p><strong>Endereço:</strong> {[selectedResult.logradouro, selectedResult.numero, selectedResult.bairro].filter(Boolean).join(', ')}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmSelection}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Confirmar Seleção
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between pt-6 border-t border-gray-200">
         <div>
           {onPrevious && (

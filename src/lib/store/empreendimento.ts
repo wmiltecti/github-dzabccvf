@@ -10,7 +10,7 @@ export interface EmpreendimentoProperty {
   endereco?: string;
   municipio?: string;
   bairro?: string;
-  // ... outros campos conforme necessário
+  car_codigo?: string;
 }
 
 export interface EmpreendimentoDadosGerais {
