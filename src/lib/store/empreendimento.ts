@@ -10,14 +10,14 @@ export interface EmpreendimentoProperty {
   endereco?: string;
   municipio?: string;
   bairro?: string;
-  // ... outros campos conforme necessário
+  car_codigo?: string;
 }
 
 export interface EmpreendimentoDadosGerais {
   nome_empreendimento?: string;
   descricao?: string;
   tipo?: string;
-  porte?: string;
+  porte?: string; // Mantido aqui para compatibilidade com store
   investimento?: number;
   // ... outros campos conforme necessário
 }

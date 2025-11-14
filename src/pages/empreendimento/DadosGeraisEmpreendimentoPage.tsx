@@ -21,7 +21,6 @@ export default function DadosGeraisEmpreendimentoPage({
     nome_empreendimento: dadosGerais?.nome_empreendimento || '',
     descricao: dadosGerais?.descricao || '',
     tipo: dadosGerais?.tipo || '',
-    porte: dadosGerais?.porte || '',
     investimento: dadosGerais?.investimento || 0,
     objetivo: '',
     prazo_implantacao: '',
@@ -88,45 +87,25 @@ export default function DadosGeraisEmpreendimentoPage({
           />
         </div>
 
-        {/* Tipo e Porte */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tipo de Empreendimento
-            </label>
-            <select
-              value={formData.tipo}
-              onChange={(e) => handleChange('tipo', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Selecione...</option>
-              <option value="industrial">Industrial</option>
-              <option value="comercial">Comercial</option>
-              <option value="residencial">Residencial</option>
-              <option value="agropecuario">Agropecuário</option>
-              <option value="servicos">Serviços</option>
-              <option value="infraestrutura">Infraestrutura</option>
-              <option value="outro">Outro</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Porte
-            </label>
-            <select
-              value={formData.porte}
-              onChange={(e) => handleChange('porte', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Selecione...</option>
-              <option value="micro">Micro</option>
-              <option value="pequeno">Pequeno</option>
-              <option value="medio">Médio</option>
-              <option value="grande">Grande</option>
-              <option value="excepcional">Excepcional</option>
-            </select>
-          </div>
+        {/* Tipo */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tipo de Empreendimento
+          </label>
+          <select
+            value={formData.tipo}
+            onChange={(e) => handleChange('tipo', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Selecione...</option>
+            <option value="industrial">Industrial</option>
+            <option value="comercial">Comercial</option>
+            <option value="residencial">Residencial</option>
+            <option value="agropecuario">Agropecuário</option>
+            <option value="servicos">Serviços</option>
+            <option value="infraestrutura">Infraestrutura</option>
+            <option value="outro">Outro</option>
+          </select>
         </div>
 
         {/* Investimento e Prazo */}

@@ -118,16 +118,19 @@ export default function EmpreendimentoStepper({
                     </div>
                   </li>
 
-                  {/* Connector Line */}
+                  {/* Connector Arrow */}
                   {stepIdx < EMPREENDIMENTO_STEPS.length - 1 && (
                     <li className="flex items-center">
-                      <div
+                      <span
                         className={`
-                          h-0.5 w-4 sm:w-8
+                          text-lg sm:text-xl
                           transition-all duration-200
-                          ${status === 'completed' ? 'bg-green-600' : 'bg-gray-300'}
+                          ${status === 'completed' ? 'text-green-700' : 'text-gray-300'}
                         `}
-                      />
+                        style={{ color: status === 'completed' ? 'darkgreen' : undefined }}
+                      >
+                        ➤
+                      </span>
                     </li>
                   )}
                 </React.Fragment>
