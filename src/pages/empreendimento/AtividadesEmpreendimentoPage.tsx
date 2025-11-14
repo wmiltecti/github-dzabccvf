@@ -27,7 +27,6 @@ export default function AtividadesEmpreendimentoPage({
 }: AtividadesEmpreendimentoPageProps) {
   const { atividades, setAtividades, dadosGerais, setDadosGerais } = useEmpreendimentoStore();
 
-  const [porte, setPorte] = useState(dadosGerais?.porte || '');
   const [availableActivities, setAvailableActivities] = useState<ActivityType[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<ActivityType[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
@@ -134,8 +133,9 @@ export default function AtividadesEmpreendimentoPage({
       return;
     }
 
-    if (!porte) {
-      toast.error('Selecione o porte do empreendimento');
+    const atividadesSemPorte = selectedActivities.filter(a => !a.enterpriseSize);
+    if (atividadesSemPorte.length > 0) {
+      toast.error('Existem atividades sem porte definido. Entre em contato com o administrador para configurar o porte das atividades.');
       return;
     }
 
@@ -150,9 +150,8 @@ export default function AtividadesEmpreendimentoPage({
     }));
 
     setAtividades(atividadesForStore);
-    setDadosGerais({ ...dadosGerais, porte });
 
-    onNext({ atividades: atividadesForStore, porte });
+    onNext({ atividades: atividadesForStore });
   };
 
   return (
@@ -163,28 +162,8 @@ export default function AtividadesEmpreendimentoPage({
           <h2 className="text-xl font-bold text-gray-800">Atividades do Empreendimento</h2>
         </div>
         <p className="text-gray-600 text-sm">
-          Selecione as atividades que serão desenvolvidas no empreendimento
+          Selecione as atividades que serão desenvolvidas no empreendimento. O porte de cada atividade é definido automaticamente.
         </p>
-      </div>
-
-      <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-300">
-        <div className="max-w-md">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Porte do Empreendimento <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={porte}
-            onChange={(e) => setPorte(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="">Selecione...</option>
-            <option value="micro">Micro</option>
-            <option value="pequeno">Pequeno</option>
-            <option value="medio">Médio</option>
-            <option value="grande">Grande</option>
-            <option value="excepcional">Excepcional</option>
-          </select>
-        </div>
       </div>
 
       {!showActivitySelector && (
@@ -291,11 +270,31 @@ export default function AtividadesEmpreendimentoPage({
             Atividades Selecionadas ({selectedActivities.length})
           </h3>
 
-          {selectedActivities.map((activity, index) => (
+          {selectedActivities.map((activity, index) => {
+            const getPorteColor = (porte?: string) => {
+              if (!porte) return 'bg-gray-100 text-gray-700 border-gray-300';
+              const porteLower = porte.toLowerCase();
+              if (porteLower.includes('micro') || porteLower.includes('pequeno')) return 'bg-green-100 text-green-700 border-green-300';
+              if (porteLower.includes('médio') || porteLower.includes('medio')) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+              if (porteLower.includes('grande')) return 'bg-orange-100 text-orange-700 border-orange-300';
+              if (porteLower.includes('excepcional')) return 'bg-red-100 text-red-700 border-red-300';
+              return 'bg-blue-100 text-blue-700 border-blue-300';
+            };
+
+            const getPotencialColor = (potencial?: string) => {
+              if (!potencial) return 'bg-gray-100 text-gray-700 border-gray-300';
+              const potencialLower = potencial.toLowerCase();
+              if (potencialLower.includes('baixo')) return 'bg-green-100 text-green-700 border-green-300';
+              if (potencialLower.includes('médio') || potencialLower.includes('medio')) return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+              if (potencialLower.includes('alto')) return 'bg-red-100 text-red-700 border-red-300';
+              return 'bg-gray-100 text-gray-700 border-gray-300';
+            };
+
+            return (
             <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded">
                       Cód. {activity.code}
                     </span>
@@ -304,6 +303,32 @@ export default function AtividadesEmpreendimentoPage({
                   {activity.description && (
                     <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                   )}
+
+                  <div className="flex gap-2 mt-3">
+                    <div className="flex-1">
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Porte do Empreendimento
+                      </label>
+                      <div className={`px-3 py-2 border rounded-lg text-sm font-medium ${getPorteColor(activity.enterpriseSize)}`}>
+                        {activity.enterpriseSize || (
+                          <span className="text-red-600 flex items-center gap-1">
+                            <span>⚠️</span>
+                            Não definido
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {activity.pollutionPotential && (
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Potencial Poluidor
+                        </label>
+                        <div className={`px-3 py-2 border rounded-lg text-sm font-medium ${getPotencialColor(activity.pollutionPotential)}`}>
+                          {activity.pollutionPotential}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => handleRemoveActivity(index)}
@@ -356,7 +381,7 @@ export default function AtividadesEmpreendimentoPage({
                 </div>
               </div>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
@@ -380,7 +405,7 @@ export default function AtividadesEmpreendimentoPage({
         </button>
         <button
           onClick={handleNext}
-          disabled={selectedActivities.length === 0 || !porte}
+          disabled={selectedActivities.length === 0}
           className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
         >
           Próximo
