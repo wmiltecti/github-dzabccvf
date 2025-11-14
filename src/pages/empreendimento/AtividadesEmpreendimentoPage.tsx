@@ -342,19 +342,6 @@ export default function AtividadesEmpreendimentoPage({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-gray-200">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    {activity.unidade ? `Quantidade (${activity.unidade})` : 'Quantidade'}
-                  </label>
-                  <input
-                    type="number"
-                    value={activity.quantidade || ''}
-                    onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder={activity.unidade ? "Ex: 100" : "Informe a quantidade"}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Unidade de Medida
                   </label>
                   <input
@@ -369,6 +356,19 @@ export default function AtividadesEmpreendimentoPage({
                     }`}
                     placeholder={activity.unidade ? "Pré-definida pela atividade" : "Ex: ton/mês"}
                     title={activity.unidade ? "Esta unidade foi definida no cadastro da atividade" : "Informe a unidade de medida"}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    {activity.unidade ? `Quantidade (${activity.unidade})` : 'Quantidade'}
+                  </label>
+                  <input
+                    type="number"
+                    value={activity.quantidade || ''}
+                    onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder={activity.unidade ? "Ex: 100" : "Informe a quantidade"}
                   />
                 </div>
 
