@@ -24,6 +24,7 @@ export default function DadosGeraisEmpreendimentoPage({
   } = useEmpreendimentoStore();
 
   const [formData, setFormData] = useState({
+    identificacao_empreendimento: dadosGerais?.identificacao_empreendimento || '',
     nome_empreendimento: dadosGerais?.nome_empreendimento || '',
     nome_fantasia: dadosGerais?.nome_fantasia || '',
     situacao: dadosGerais?.situacao || ('' as SituacaoEmpreendimento | ''),
@@ -114,6 +115,19 @@ export default function DadosGeraisEmpreendimentoPage({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Informações Básicas</h3>
 
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Identificação do Empreendimento
+              </label>
+              <input
+                type="text"
+                value={formData.identificacao_empreendimento}
+                onChange={(e) => handleChange('identificacao_empreendimento', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="Ex: S.2025.1"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nome / Nome Fantasia <span className="text-red-500">*</span>
