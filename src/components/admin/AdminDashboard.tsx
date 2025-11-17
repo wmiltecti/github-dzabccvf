@@ -248,30 +248,12 @@ const entityConfigs = {
       { key: 'code', label: 'Código', type: 'number' as const },
       { key: 'name', label: 'Nome', type: 'text' as const },
       { 
-        key: 'enterprise_sizes', 
-        label: 'Porte', 
-        type: 'text' as const,
-        render: (value: any) => value?.name || '-'
-      },
-      { 
         key: 'pollution_potentials', 
         label: 'Potencial Poluidor', 
         type: 'text' as const,
         render: (value: any) => value?.name || '-'
       },
-      { key: 'measurement_unit', label: 'Unidade', type: 'text' as const },
-      { 
-        key: 'range_start', 
-        label: 'Faixa Inicial', 
-        type: 'number' as const,
-        render: (value: number) => value ? value.toLocaleString('pt-BR') : '-'
-      },
-      { 
-        key: 'range_end', 
-        label: 'Faixa Final', 
-        type: 'number' as const,
-        render: (value: number) => value ? value.toLocaleString('pt-BR') : '-'
-      }
+      { key: 'measurement_unit', label: 'Unidade', type: 'text' as const }
     ],
     formFields: [] // Will use custom form
   },

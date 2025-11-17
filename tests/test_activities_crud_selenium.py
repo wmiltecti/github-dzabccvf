@@ -26,12 +26,16 @@ PASSWORD = os.getenv('TEST_PASSWORD', 'Senh@01!')
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:5173')
 CHROMEDRIVER_PATH = r'C:\chromedriver\chromedriver.exe'
 
-# Dados da nova atividade
-TIMESTAMP = datetime.now().strftime("%H%M%S")
+# Dados da nova atividade (código único com timestamp completo + microsegundos)
+now = datetime.now()
+TIMESTAMP = now.strftime("%H%M%S")
+MICROSECONDS = now.microsecond // 1000  # Pegar apenas 3 dígitos dos microsegundos
+UNIQUE_CODE = f'{TIMESTAMP}{MICROSECONDS}'  # Ex: 152030456 (HH:MM:SS:mmm)
+
 NEW_ACTIVITY = {
-    'code': f'99{TIMESTAMP[-2:]}',  # Código único: 99 + últimos 2 dígitos do timestamp
-    'name': f'Teste Automático {TIMESTAMP}',
-    'description': f'Atividade criada automaticamente pelo teste em {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}'
+    'code': f'{int(UNIQUE_CODE) % 10000}',  # Código único: últimos 4 dígitos para não ficar muito grande
+    'name': f'Teste Automático {TIMESTAMP}-{MICROSECONDS}',
+    'description': f'Atividade criada automaticamente pelo teste em {now.strftime("%d/%m/%Y %H:%M:%S")}.{MICROSECONDS}'
 }
 
 print(f"👤 CPF: {CPF}")
@@ -195,25 +199,115 @@ try:
     except Exception as e:
         print(f"  ⚠️ Campo Descrição não preenchido: {e}")
     
-    # Preencher selects se existirem (Porte e Potencial Poluidor)
+    # Preencher campos select (Unidade, Potencial)
     try:
-        selects = driver.find_elements(By.CSS_SELECTOR, 'select')
+        # Esperar um pouco para garantir que o formulário carregou completamente
+        time.sleep(1)
+        
+        selects = modal_element.find_elements(By.CSS_SELECTOR, 'select')
         print(f"  ℹ️ Encontrados {len(selects)} campos select")
         
+        selects_preenchidos = 0
         for i, select_elem in enumerate(selects):
-            if select_elem.is_displayed():
-                try:
+            try:
+                # Scroll para o select
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", select_elem)
+                time.sleep(0.3)
+                
+                if select_elem.is_displayed() and select_elem.is_enabled():
                     select = Select(select_elem)
                     options = select.options
                     if len(options) > 1:  # Pular placeholder
                         select.select_by_index(1)  # Selecionar primeira opção real
                         selected_text = select.first_selected_option.text
                         print(f"  ✓ Select {i+1}: {selected_text}")
+                        selects_preenchidos += 1
                         time.sleep(0.3)
-                except Exception as e:
-                    print(f"  ⚠️ Erro ao preencher select {i+1}: {e}")
+                else:
+                    print(f"  ⚠️ Select {i+1} não está visível ou habilitado")
+            except Exception as e:
+                print(f"  ⚠️ Erro ao preencher select {i+1}: {e}")
+        
+        print(f"  ℹ️ Total de selects preenchidos: {selects_preenchidos}")
     except Exception as e:
         print(f"  ℹ️ Campos select não preenchidos: {e}")
+    
+    # Preencher Porte do Empreendimento (seção de faixas)
+    try:
+        # Buscar pela label "Porte do Empreendimento" e encontrar o select associado
+        porte_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Porte do Empreendimento')]")
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", porte_label)
+        time.sleep(0.5)
+        
+        # Encontrar o select logo após essa label
+        porte_container = porte_label.find_element(By.XPATH, "./following-sibling::select")
+        select_porte = Select(porte_container)
+        
+        if len(select_porte.options) > 1:
+            select_porte.select_by_index(1)  # Selecionar primeiro porte disponível
+            selected_porte = select_porte.first_selected_option.text
+            print(f"  ✓ Porte do Empreendimento: {selected_porte}")
+        else:
+            print(f"  ⚠️ Nenhum porte disponível no select")
+            
+        # Preencher campos de faixa (range_start e range_end)
+        time.sleep(0.5)
+        
+        # Buscar pela label "Faixa Inicial"
+        faixa_inicial_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Faixa Inicial')]")
+        faixa_inicial_input = faixa_inicial_label.find_element(By.XPATH, "./following-sibling::input")
+        faixa_inicial_input.clear()
+        faixa_inicial_input.send_keys("0")
+        print(f"  ✓ Faixa Inicial: 0")
+        
+        # Buscar pela label "Faixa Final"
+        faixa_final_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Faixa Final')]")
+        faixa_final_input = faixa_final_label.find_element(By.XPATH, "./following-sibling::input")
+        faixa_final_input.clear()
+        faixa_final_input.send_keys("1000")
+        print(f"  ✓ Faixa Final: 1000")
+        
+        # Adicionar segundo porte
+        time.sleep(0.5)
+        add_porte_button = modal_element.find_element(By.XPATH, "//button[contains(., 'Adicionar outro porte')]")
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_porte_button)
+        time.sleep(0.3)
+        driver.execute_script("arguments[0].click();", add_porte_button)
+        time.sleep(0.5)
+        print(f"  ✓ Botão 'Adicionar outro porte' clicado")
+        
+        # Preencher segundo porte
+        porte_labels = modal_element.find_elements(By.XPATH, "//label[contains(text(), 'Porte do Empreendimento')]")
+        if len(porte_labels) >= 2:
+            # Segundo porte
+            porte_container_2 = porte_labels[1].find_element(By.XPATH, "./following-sibling::select")
+            select_porte_2 = Select(porte_container_2)
+            
+            if len(select_porte_2.options) > 2:
+                select_porte_2.select_by_index(2)  # Selecionar segundo porte disponível
+                selected_porte_2 = select_porte_2.first_selected_option.text
+                print(f"  ✓ Porte do Empreendimento 2: {selected_porte_2}")
+            
+            # Faixas do segundo porte
+            faixa_inicial_labels = modal_element.find_elements(By.XPATH, "//label[contains(text(), 'Faixa Inicial')]")
+            faixa_final_labels = modal_element.find_elements(By.XPATH, "//label[contains(text(), 'Faixa Final')]")
+            
+            if len(faixa_inicial_labels) >= 2:
+                faixa_inicial_input_2 = faixa_inicial_labels[1].find_element(By.XPATH, "./following-sibling::input")
+                faixa_inicial_input_2.clear()
+                faixa_inicial_input_2.send_keys("1001")
+                print(f"  ✓ Faixa Inicial 2: 1001")
+            
+            if len(faixa_final_labels) >= 2:
+                faixa_final_input_2 = faixa_final_labels[1].find_element(By.XPATH, "./following-sibling::input")
+                faixa_final_input_2.clear()
+                faixa_final_input_2.send_keys("5000")
+                print(f"  ✓ Faixa Final 2: 5000")
+                
+            print(f"  ✅ Segundo porte adicionado com sucesso")
+        
+    except Exception as e:
+        print(f"  ❌ Erro ao preencher Porte/Faixas: {e}")
     
     # Marcar pelo menos 1 tipo de licença (OBRIGATÓRIO)
     try:
@@ -365,6 +459,11 @@ try:
         driver.save_screenshot('tests/screenshots/activities_verification_error.png')
     
     time.sleep(3)
+    
+    # Pausar antes de fechar para análise do console
+    print("\n⏸️  TESTE FINALIZADO - Navegador permanecerá aberto para análise")
+    print("    Verifique o console do navegador (DevTools) para erros")
+    input("    Pressione ENTER para fechar o navegador e finalizar...")
 
 except Exception as e:
     print(f"\n❌ ERRO DURANTE TESTE: {e}")

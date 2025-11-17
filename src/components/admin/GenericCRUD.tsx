@@ -64,7 +64,6 @@ export default function GenericCRUD({
           .from(tableName)
           .select(`
             *,
-            enterprise_sizes(id, name),
             pollution_potentials(id, name)
           `);
       } else {
