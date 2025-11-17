@@ -50,11 +50,12 @@ service = Service(executable_path=CHROMEDRIVER_PATH)
 options = webdriver.ChromeOptions()
 options.add_argument('--start-maximized')
 options.add_argument('--disable-blink-features=AutomationControlled')
+options.add_argument('--auto-open-devtools-for-tabs')  # Abre DevTools automaticamente
 
 print("\n📦 Inicializando ChromeDriver...")
 driver = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(driver, 10)
-print("✅ ChromeDriver iniciado com sucesso")
+print("✅ ChromeDriver iniciado com sucesso (DevTools aberto)")
 
 try:
     # 1. FAZER LOGIN
@@ -74,19 +75,24 @@ try:
     
     login_button = driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
     login_button.click()
-    time.sleep(5)
+    time.sleep(8)  # Aguardar redirecionamento completo
     print("✅ Login realizado")
     
     # 2. NAVEGAR PARA ADMINISTRAÇÃO
     print("\n📂 [2/7] Navegando para Administração...")
-    driver.get(f"{BASE_URL}/dashboard")
-    time.sleep(3)
+    # Aguardar estar no dashboard
+    WebDriverWait(driver, 15).until(
+        EC.url_contains("/dashboard")
+    )
+    time.sleep(3)  # Aguardar renderização completa
     
-    admin_menu = wait.until(
+    # Aumentar timeout para encontrar botão Administração
+    admin_wait = WebDriverWait(driver, 20)
+    admin_menu = admin_wait.until(
         EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Administração')]"))
     )
     admin_menu.click()
-    time.sleep(1)
+    time.sleep(2)
     print("✅ Menu Administração aberto")
     
     # 3. ACESSAR ATIVIDADES
@@ -364,6 +370,11 @@ except Exception as e:
     driver.save_screenshot('tests/screenshots/activities_exception_error.png')
     import traceback
     traceback.print_exc()
+    
+    # Pausar antes de fechar para análise
+    print("\n⏸️  ERRO CAPTURADO - Navegador permanecerá aberto para análise")
+    print("    Verifique o console do navegador (DevTools)")
+    input("    Pressione ENTER para fechar o navegador e finalizar...")
 
 finally:
     print("\n🔚 Fechando navegador...")
