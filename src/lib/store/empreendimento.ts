@@ -27,9 +27,7 @@ export interface EmpreendimentoParticipe {
 }
 
 export interface EmpreendimentoDadosGerais {
-  identificacao_empreendimento?: string;
   nome_empreendimento?: string;
-  nome_fantasia?: string;
   situacao?: SituacaoEmpreendimento;
   numero_empregados?: number;
   horario_funcionamento?: string;

@@ -24,9 +24,7 @@ export default function DadosGeraisEmpreendimentoPage({
   } = useEmpreendimentoStore();
 
   const [formData, setFormData] = useState({
-    identificacao_empreendimento: dadosGerais?.identificacao_empreendimento || '',
     nome_empreendimento: dadosGerais?.nome_empreendimento || '',
-    nome_fantasia: dadosGerais?.nome_fantasia || '',
     situacao: dadosGerais?.situacao || ('' as SituacaoEmpreendimento | ''),
     numero_empregados: dadosGerais?.numero_empregados || 0,
     horario_funcionamento: dadosGerais?.horario_funcionamento || '',
@@ -117,20 +115,7 @@ export default function DadosGeraisEmpreendimentoPage({
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Identificação do Empreendimento
-              </label>
-              <input
-                type="text"
-                value={formData.identificacao_empreendimento}
-                onChange={(e) => handleChange('identificacao_empreendimento', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: S.2025.1"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome / Nome Fantasia <span className="text-red-500">*</span>
+                Nome <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -138,19 +123,6 @@ export default function DadosGeraisEmpreendimentoPage({
                 onChange={(e) => handleChange('nome_empreendimento', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="Ex: Complexo Industrial XYZ"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome Fantasia
-              </label>
-              <input
-                type="text"
-                value={formData.nome_fantasia}
-                onChange={(e) => handleChange('nome_fantasia', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: XYZ Indústria"
               />
             </div>
 
