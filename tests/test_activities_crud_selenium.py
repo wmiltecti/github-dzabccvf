@@ -80,9 +80,9 @@ try:
     
     # 2. NAVEGAR PARA ADMINISTRAÇÃO
     print("\n📂 [2/7] Navegando para Administração...")
-    # Aguardar estar no dashboard
+    # Aguardar o dashboard carregar (verificando elemento ao invés de URL)
     WebDriverWait(driver, 15).until(
-        EC.url_contains("/dashboard")
+        EC.presence_of_element_located((By.XPATH, "//button[contains(., 'Administração')]"))
     )
     time.sleep(3)  # Aguardar renderização completa
     
@@ -115,15 +115,19 @@ try:
     
     # 4. ABRIR MODAL DE CADASTRO
     print("\n➕ [4/7] Abrindo modal de cadastro...")
+    # Aguardar botão Novo estar visível e clicável
     new_button = wait.until(
-        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Novo')]"))
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'bg-blue-600') and contains(., 'Novo')]"))
     )
+    # Scroll para o botão caso necessário
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", new_button)
+    time.sleep(1)
     new_button.click()
-    time.sleep(2)
+    time.sleep(3)  # Aguardar animação do modal
     
-    # Verificar se modal abriu
-    modal = wait.until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, '[role="dialog"]'))
+    # Verificar se modal abriu e guardar referência
+    modal_element = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, '.bg-white.rounded-lg.shadow-lg'))
     )
     print("✅ Modal aberto")
     
@@ -135,9 +139,7 @@ try:
     
     # Campo Código (número)
     try:
-        code_input = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="number"]'))
-        )
+        code_input = modal_element.find_element(By.CSS_SELECTOR, 'input[type="number"]')
         code_input.clear()
         code_input.send_keys(NEW_ACTIVITY['code'])
         print(f"  ✓ Código: {NEW_ACTIVITY['code']}")
@@ -149,7 +151,6 @@ try:
     # Campo Nome (procurar por placeholder)
     try:
         # Procurar input com placeholder que contenha "Extração"
-        modal_element = driver.find_element(By.CSS_SELECTOR, '[role="dialog"]')
         name_input = modal_element.find_element(By.CSS_SELECTOR, 'input[placeholder*="Extração"]')
         
         # Limpar e preencher usando send_keys

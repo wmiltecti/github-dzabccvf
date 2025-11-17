@@ -194,7 +194,7 @@ export default function ActivityForm({
       // Load documents for this activity
       const { data: activityDocuments, error: documentsError } = await supabase
         .from('activity_documents')
-        .select('documentation_template_id, is_required')
+        .select('template_id, is_required')
         .eq('activity_id', activityId);
 
       if (documentsError) throw documentsError;
@@ -281,7 +281,7 @@ export default function ActivityForm({
   const handleDocumentToggle = (documentId: string) => {
     setFormData(prev => {
       const existingIndex = prev.documents.findIndex(
-        (doc: any) => doc.documentation_template_id === documentId
+        (doc: any) => doc.template_id === documentId
       );
       
       if (existingIndex >= 0) {
@@ -289,7 +289,7 @@ export default function ActivityForm({
         return {
           ...prev,
           documents: prev.documents.filter(
-            (doc: any) => doc.documentation_template_id !== documentId
+            (doc: any) => doc.template_id !== documentId
           )
         };
       } else {
@@ -298,7 +298,7 @@ export default function ActivityForm({
           ...prev,
           documents: [
             ...prev.documents,
-            { documentation_template_id: documentId, is_required: true }
+            { template_id: documentId, is_required: true }
           ]
         };
       }
@@ -309,7 +309,7 @@ export default function ActivityForm({
     setFormData(prev => ({
       ...prev,
       documents: prev.documents.map((doc: any) =>
-        doc.documentation_template_id === documentId
+        doc.template_id === documentId
           ? { ...doc, is_required: !doc.is_required }
           : doc
       )
@@ -437,7 +437,7 @@ export default function ActivityForm({
       if (formData.documents.length > 0) {
         const documentRelations = formData.documents.map((doc: any) => ({
           activity_id: activityId,
-          documentation_template_id: doc.documentation_template_id,
+          template_id: doc.template_id,
           is_required: doc.is_required
         }));
 
@@ -695,7 +695,7 @@ export default function ActivityForm({
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
               {documentTemplates.map(document => {
                 const selectedDoc = formData.documents.find(
-                  (doc: any) => doc.documentation_template_id === document.id
+                  (doc: any) => doc.template_id === document.id
                 );
                 const isSelected = !!selectedDoc;
                 
