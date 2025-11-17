@@ -13,13 +13,29 @@ export interface EmpreendimentoProperty {
   car_codigo?: string;
 }
 
+export type SituacaoEmpreendimento = 'Planejado' | 'Operando' | 'Instalado';
+
+export interface EmpreendimentoParticipe {
+  id: string;
+  pessoa_id: number;
+  pessoa_nome: string;
+  pessoa_cpf_cnpj: string;
+  pessoa_tipo: number;
+  papel: 'Procurador' | 'Requerente' | 'Responsável Técnico';
+  pessoa_email?: string;
+  pessoa_telefone?: string;
+}
+
 export interface EmpreendimentoDadosGerais {
   nome_empreendimento?: string;
+  situacao?: SituacaoEmpreendimento;
+  numero_empregados?: number;
+  horario_funcionamento?: string;
   descricao?: string;
-  tipo?: string;
-  porte?: string; // Mantido aqui para compatibilidade com store
-  investimento?: number;
-  // ... outros campos conforme necessário
+  porte?: string;
+  prazo_implantacao?: string;
+  area_construida?: string;
+  capacidade_producao?: string;
 }
 
 export interface EmpreendimentoAtividade {
@@ -43,6 +59,7 @@ export interface EmpreendimentoState {
   propertyId: number | null;
   property: EmpreendimentoProperty | null;
   dadosGerais: EmpreendimentoDadosGerais | null;
+  participes: EmpreendimentoParticipe[];
   atividades: EmpreendimentoAtividade[];
   caracterizacao: EmpreendimentoCaracterizacao | null;
   currentStep: number;
@@ -60,6 +77,9 @@ interface EmpreendimentoStore extends EmpreendimentoState {
   setPropertyId: (id: number) => void;
   setProperty: (property: EmpreendimentoProperty) => void;
   setDadosGerais: (dados: EmpreendimentoDadosGerais) => void;
+  setParticipes: (participes: EmpreendimentoParticipe[]) => void;
+  addParticipe: (participe: EmpreendimentoParticipe) => void;
+  removeParticipe: (participeId: string) => void;
   setAtividades: (atividades: EmpreendimentoAtividade[]) => void;
   addAtividade: (atividade: EmpreendimentoAtividade) => void;
   removeAtividade: (index: number) => void;
@@ -80,6 +100,7 @@ const initialState: EmpreendimentoState = {
   propertyId: null,
   property: null,
   dadosGerais: null,
+  participes: [],
   atividades: [],
   caracterizacao: null,
   currentStep: 1,
@@ -109,6 +130,16 @@ export const useEmpreendimentoStore = create<EmpreendimentoStore>()(
       setProperty: (property: EmpreendimentoProperty) => set({ property }),
 
       setDadosGerais: (dados: EmpreendimentoDadosGerais) => set({ dadosGerais: dados }),
+
+      setParticipes: (participes: EmpreendimentoParticipe[]) => set({ participes }),
+
+      addParticipe: (participe: EmpreendimentoParticipe) =>
+        set(state => ({ participes: [...state.participes, participe] })),
+
+      removeParticipe: (participeId: string) =>
+        set(state => ({
+          participes: state.participes.filter(p => p.id !== participeId)
+        })),
 
       setAtividades: (atividades: EmpreendimentoAtividade[]) => set({ atividades }),
 
@@ -174,6 +205,7 @@ export const useEmpreendimentoStore = create<EmpreendimentoStore>()(
         propertyId: state.propertyId,
         property: state.property,
         dadosGerais: state.dadosGerais,
+        participes: state.participes,
         atividades: state.atividades,
         caracterizacao: state.caracterizacao,
         currentStep: state.currentStep,
