@@ -32,10 +32,7 @@ export interface EmpreendimentoDadosGerais {
   numero_empregados?: number;
   horario_funcionamento?: string;
   descricao?: string;
-  tipo?: string;
   porte?: string;
-  investimento?: number;
-  objetivo?: string;
   prazo_implantacao?: string;
   area_construida?: string;
   capacidade_producao?: string;

@@ -29,9 +29,6 @@ export default function DadosGeraisEmpreendimentoPage({
     numero_empregados: dadosGerais?.numero_empregados || 0,
     horario_funcionamento: dadosGerais?.horario_funcionamento || '',
     descricao: dadosGerais?.descricao || '',
-    tipo: dadosGerais?.tipo || '',
-    investimento: dadosGerais?.investimento || 0,
-    objetivo: dadosGerais?.objetivo || '',
     prazo_implantacao: dadosGerais?.prazo_implantacao || '',
     area_construida: dadosGerais?.area_construida || '',
     capacidade_producao: dadosGerais?.capacidade_producao || ''
@@ -184,41 +181,7 @@ export default function DadosGeraisEmpreendimentoPage({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Empreendimento
-              </label>
-              <select
-                value={formData.tipo}
-                onChange={(e) => handleChange('tipo', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Selecione...</option>
-                <option value="industrial">Industrial</option>
-                <option value="comercial">Comercial</option>
-                <option value="residencial">Residencial</option>
-                <option value="agropecuario">Agropecuário</option>
-                <option value="servicos">Serviços</option>
-                <option value="infraestrutura">Infraestrutura</option>
-                <option value="outro">Outro</option>
-              </select>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Investimento Estimado (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.investimento}
-                  onChange={(e) => handleChange('investimento', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 5000000.00"
-                />
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Prazo de Implantação (meses)
@@ -231,9 +194,7 @@ export default function DadosGeraisEmpreendimentoPage({
                   placeholder="Ex: 24"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Área Construída (m²)
@@ -246,31 +207,18 @@ export default function DadosGeraisEmpreendimentoPage({
                   placeholder="Ex: 5000.00"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Capacidade de Produção
-                </label>
-                <input
-                  type="text"
-                  value={formData.capacidade_producao}
-                  onChange={(e) => handleChange('capacidade_producao', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 1000 ton/mês"
-                />
-              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Objetivo do Empreendimento
+                Capacidade de Produção
               </label>
-              <textarea
-                value={formData.objetivo}
-                onChange={(e) => handleChange('objetivo', e.target.value)}
-                rows={3}
+              <input
+                type="text"
+                value={formData.capacidade_producao}
+                onChange={(e) => handleChange('capacidade_producao', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Descreva os objetivos..."
+                placeholder="Ex: 1000 ton/mês"
               />
             </div>
           </div>
