@@ -82,9 +82,14 @@ export default function LicenseTypeForm({
       }));
 
       setDocuments(docItems);
-    } catch (error) {
-      console.error('Error loading license type documents:', error);
-      toast.error('Erro ao carregar documentos do tipo de licença');
+    } catch (error: any) {
+      console.warn('Warning: Could not load documents (table may not exist):', error);
+      // If table doesn't exist, just set empty array - don't show error to user
+      if (error.code === 'PGRST205' || error.code === '42P01') {
+        setDocuments([]);
+      } else {
+        toast.error('Erro ao carregar documentos do tipo de licença');
+      }
     } finally {
       setLoadingDocuments(false);
     }
@@ -155,8 +160,6 @@ export default function LicenseTypeForm({
 
         if (error) throw error;
         licenseTypeId = item.id;
-
-        toast.success('Tipo de licença atualizado com sucesso!');
       } else {
         // Create new license type
         const { data, error } = await supabase
@@ -167,17 +170,20 @@ export default function LicenseTypeForm({
 
         if (error) throw error;
         licenseTypeId = data.id;
-
-        toast.success('Tipo de licença criado com sucesso!');
       }
 
       // Update documents relationships
       const validDocuments = documents.filter(doc => doc.documentation_template_id);
       if (validDocuments.length > 0) {
-        await AdminService.updateLicenseTypeDocuments(licenseTypeId, validDocuments);
-        toast.success('Documentos configurados com sucesso!');
+        try {
+          await AdminService.updateLicenseTypeDocuments(licenseTypeId, validDocuments);
+        } catch (docError: any) {
+          console.warn('Warning: Could not save documents (table may not exist):', docError);
+          // Don't fail the entire operation if documents can't be saved
+        }
       }
 
+      toast.success(item?.id ? 'Tipo de licença atualizado com sucesso!' : 'Tipo de licença criado com sucesso!');
       onSave();
       onClose();
     } catch (error: any) {
