@@ -491,54 +491,53 @@ export class AdminService {
 
   // License Type Documents Management
   static async getLicenseTypeDocuments(licenseTypeId: string): Promise<LicenseTypeDocument[]> {
-    // WORKAROUND: Use JSON field from license_types instead of license_type_documents table
-    // due to PostgREST cache issue (PGRST205)
-    const { data: licenseType, error: licenseError } = await supabase
-      .from('license_types')
-      .select('required_documents')
-      .eq('id', licenseTypeId)
-      .single();
+    const { data, error } = await supabase
+      .from('license_type_documents')
+      .select(`
+        id,
+        license_type_id,
+        documentation_template_id,
+        is_required,
+        created_at,
+        updated_at,
+        documentation_templates(*)
+      `)
+      .eq('license_type_id', licenseTypeId);
 
-    if (licenseError) {
-      console.error('Error fetching license type:', licenseError);
-      throw licenseError;
+    if (error) {
+      console.error('Error fetching license type documents:', error);
+      throw error;
     }
 
-    const documents = (licenseType?.required_documents as any[]) || [];
-
-    // Fetch documentation template details for each document
-    if (documents.length > 0) {
-      const templateIds = documents.map(d => d.documentation_template_id);
-      const { data: templates, error: templatesError } = await supabase
-        .from('documentation_templates')
-        .select('*')
-        .in('id', templateIds);
-
-      if (!templatesError && templates) {
-        return documents.map(doc => ({
-          ...doc,
-          documentation_templates: templates.find(t => t.id === doc.documentation_template_id)
-        }));
-      }
-    }
-
-    return documents;
+    return data || [];
   }
 
   static async updateLicenseTypeDocuments(
     licenseTypeId: string,
     documents: { documentation_template_id: string; is_required: boolean }[]
   ): Promise<void> {
-    // WORKAROUND: Store documents in JSON field of license_types table
-    // due to PostgREST cache issue (PGRST205) with license_type_documents
-    const { error } = await supabase
-      .from('license_types')
-      .update({ required_documents: documents })
-      .eq('id', licenseTypeId);
+    // Remove existing relationships
+    await supabase
+      .from('license_type_documents')
+      .delete()
+      .eq('license_type_id', licenseTypeId);
 
-    if (error) {
-      console.error('Error updating license type documents:', error);
-      throw error;
+    // Add new relationships
+    if (documents.length > 0) {
+      const relationships = documents.map(doc => ({
+        license_type_id: licenseTypeId,
+        documentation_template_id: doc.documentation_template_id,
+        is_required: doc.is_required
+      }));
+
+      const { error } = await supabase
+        .from('license_type_documents')
+        .insert(relationships);
+
+      if (error) {
+        console.error('Error updating license type documents:', error);
+        throw error;
+      }
     }
   }
 }
