@@ -339,7 +339,7 @@ export default function Dashboard() {
     { id: 'notificacoes', name: 'Notificações', icon: Bell },
     // { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    { id: 'processesmotor', name: 'Processos', icon: FileText },
+    // { id: 'processesmotor', name: 'Processos', icon: FileText },
     { id: 'empreendimento', name: 'Empreendimento', icon: Building2 }
   ];
 
