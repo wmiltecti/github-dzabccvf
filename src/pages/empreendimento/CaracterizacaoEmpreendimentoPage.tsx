@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, ArrowRight, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { BarChart3, ArrowRight, ArrowLeft, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import Step2RecursosEnergia from '../../components/Step2RecursosEnergia';
@@ -222,8 +222,8 @@ export default function CaracterizacaoEmpreendimentoPage({
           onClick={handleNext}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium shadow-sm"
         >
-          Próximo
-          <ArrowRight className="w-4 h-4" />
+          Finalizar
+          <CheckCircle className="w-4 h-4" />
         </button>
       </div>
     </div>
