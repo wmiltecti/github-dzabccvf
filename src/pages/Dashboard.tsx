@@ -39,6 +39,7 @@ import InscricaoWizardMotor from '../components/InscricaoWizardMotor';
 import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
+import Notificacoes from './Notificacoes';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -80,7 +81,7 @@ export default function Dashboard() {
   }
   const navigate = useNavigate();
   const { user, userMetadata, signOut, loading, isConfigured, isSupabaseReady } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('notificacoes');
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [generalExpanded, setGeneralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -335,9 +336,10 @@ export default function Dashboard() {
   });
 
   const navigation = [
-    { id: 'dashboard', name: 'Notificações', icon: Home },
+    { id: 'notificacoes', name: 'Notificações', icon: Bell },
+    // { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
-    { id: 'processesmotor', name: 'Processos', icon: FileText },
+    // { id: 'processesmotor', name: 'Processos', icon: FileText },
     { id: 'empreendimento', name: 'Empreendimento', icon: Building2 }
   ];
 
@@ -1025,9 +1027,6 @@ export default function Dashboard() {
 
         {/* Lista de Empreendimentos */}
         <div className="glass-effect rounded-lg">
-          <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Empreendimentos</h2>
-          </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -1144,9 +1143,6 @@ export default function Dashboard() {
       </div>
 
       <div className="glass-effect rounded-lg">
-        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Inscrições</h2>
-        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
@@ -1217,6 +1213,7 @@ export default function Dashboard() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'notificacoes': return <Notificacoes />;
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
       case 'processesmotor': return renderProcessesMotor();
@@ -1285,7 +1282,7 @@ export default function Dashboard() {
             />
             <button
               onClick={() => {
-                setActiveTab('dashboard');
+                setActiveTab('notificacoes');
                 setSidebarOpen(false);
               }}
               className="hidden sm:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
