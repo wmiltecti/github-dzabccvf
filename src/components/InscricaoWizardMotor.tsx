@@ -18,7 +18,6 @@ import ConfirmDialog from './ConfirmDialog';
 import ParticipantesWorkflowPageMotor from '../pages/inscricao/workflow/ParticipantesWorkflowPageMotor';
 import ImovelWorkflowPageMotor from '../pages/inscricao/workflow/ImovelWorkflowPageMotor';
 import EmpreendimentoWorkflowPageMotor from '../pages/inscricao/workflow/EmpreendimentoWorkflowPageMotor';
-import FormularioWorkflowPageMotor from '../pages/inscricao/workflow/FormularioWorkflowPageMotor';
 // import DocumentacaoWorkflowPageMotor from '../pages/inscricao/workflow/DocumentacaoWorkflowPageMotor';
 // import RevisaoWorkflowPageMotor from '../pages/inscricao/workflow/RevisaoWorkflowPageMotor';
 
@@ -244,9 +243,6 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
             <EmpreendimentoWorkflowPageMotor />
           </EnterpriseProvider>
         );
-
-      case 'formulario':
-        return <FormularioWorkflowPageMotor />;
 
       // case 'documentacao':
       //   return <DocumentacaoWorkflowPage />;

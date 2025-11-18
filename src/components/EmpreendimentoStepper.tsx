@@ -2,12 +2,14 @@ import React from 'react';
 import { Home, FileText, Activity, BarChart3, Upload, CheckCircle } from 'lucide-react';
 
 // Steps do fluxo de Empreendimento
+// NOTA: Documentação foi comentada - Caracterização é agora a última etapa
 const EMPREENDIMENTO_STEPS = [
   { id: 1, key: 'imovel', label: 'Imóvel', icon: Home },
   { id: 2, key: 'dados-gerais', label: 'Dados Gerais', icon: FileText },
   { id: 3, key: 'atividades', label: 'Atividades', icon: Activity },
   { id: 4, key: 'caracterizacao', label: 'Caracterização', icon: BarChart3 },
-  { id: 5, key: 'documentacao', label: 'Documentação', icon: Upload }
+  // COMENTADO: Documentação não faz mais parte do fluxo
+  // { id: 5, key: 'documentacao', label: 'Documentação', icon: Upload }
 ];
 
 interface EmpreendimentoStepperProps {
