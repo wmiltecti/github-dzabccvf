@@ -47,20 +47,16 @@ export default function ActivityForm({
     pollution_potential_id: '',
     measurement_unit: '',
     license_types: [],
-    documents: []
+    documents: [],
+    ranges: [{
+      enterprise_size_id: '',
+      range_name: 'Porte 1',
+      range_start: null,
+      range_end: null
+    }]
   });
 
-  const [enterpriseSizeRanges, setEnterpriseSizeRanges] = useState<Array<{
-    id: string;
-    enterprise_size_id: string;
-    range_start: string;
-    range_end: string;
-  }>>([{
-    id: crypto.randomUUID(),
-    enterprise_size_id: '',
-    range_start: '',
-    range_end: ''
-  }]);
+  const [enterpriseSizeRangesCounter, setEnterpriseSizeRangesCounter] = useState(1);
   
   const [loading, setLoading] = useState(false);
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
@@ -86,6 +82,7 @@ export default function ActivityForm({
   useEffect(() => {
     if (isOpen) {
       loadDropdownData();
+      loadEnterpriseSizes();
     }
   }, [isOpen]);
 
@@ -98,18 +95,14 @@ export default function ActivityForm({
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
         license_types: [],
-        documents: []
+        documents: [],
+        ranges: [{
+          enterprise_size_id: '',
+          range_name: 'Porte 1',
+          range_start: null,
+          range_end: null
+        }]
       });
-
-      // Se tiver dados de porte/faixa no item, carregar
-      if (item.enterprise_size_id) {
-        setEnterpriseSizeRanges([{
-          id: crypto.randomUUID(),
-          enterprise_size_id: item.enterprise_size_id,
-          range_start: item.range_start?.toString() || '',
-          range_end: item.range_end?.toString() || ''
-        }]);
-      }
 
       if (item.id) {
         loadActivityRelationships(item.id);
@@ -122,16 +115,52 @@ export default function ActivityForm({
         pollution_potential_id: '',
         measurement_unit: '',
         license_types: [],
-        documents: []
+        documents: [],
+        ranges: [{
+          enterprise_size_id: '',
+          range_name: 'Porte 1',
+          range_start: null,
+          range_end: null
+        }]
       });
-      setEnterpriseSizeRanges([{
-        id: crypto.randomUUID(),
-        enterprise_size_id: '',
-        range_start: '',
-        range_end: ''
-      }]);
+      setEnterpriseSizeRangesCounter(1);
     }
   }, [item]);
+
+  const loadEnterpriseSizes = async () => {
+    try {
+      // Tentar carregar da API primeiro
+      const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      console.log('🔍 Carregando portes da API:', `${apiUrl}/enterprise-sizes`);
+      
+      const response = await fetch(`${apiUrl}/enterprise-sizes`);
+      if (response.ok) {
+        const portes = await response.json();
+        console.log('✅ Portes carregados da API:', portes);
+        setEnterpriseSizes(portes);
+      } else {
+        throw new Error(`API retornou status ${response.status}`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao carregar portes da API, usando Supabase como fallback:', error);
+      
+      // Fallback: Carregar do Supabase
+      try {
+        const { data: enterpriseSizesData, error: enterpriseSizesError } = await supabase
+          .from('enterprise_sizes')
+          .select('id, name')
+          .eq('is_active', true)
+          .order('name');
+
+        if (enterpriseSizesError) throw enterpriseSizesError;
+        console.log('✅ Portes carregados do Supabase:', enterpriseSizesData);
+        setEnterpriseSizes(enterpriseSizesData || []);
+      } catch (supabaseError) {
+        console.error('❌ Erro ao carregar portes do Supabase:', supabaseError);
+        toast.error('Erro ao carregar portes do empreendimento');
+      }
+    }
+  };
 
   const loadDropdownData = async () => {
     try {
@@ -154,16 +183,6 @@ export default function ActivityForm({
 
       if (documentsError) throw documentsError;
       setDocumentTemplates(documentsData || []);
-
-      // Load enterprise sizes
-      const { data: enterpriseSizesData, error: enterpriseSizesError } = await supabase
-        .from('enterprise_sizes')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-
-      if (enterpriseSizesError) throw enterpriseSizesError;
-      setEnterpriseSizes(enterpriseSizesData || []);
 
       // Load pollution potentials
       const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
@@ -194,16 +213,39 @@ export default function ActivityForm({
       // Load documents for this activity
       const { data: activityDocuments, error: documentsError } = await supabase
         .from('activity_documents')
-        .select('documentation_template_id, is_required')
+        .select('template_id, is_required')
         .eq('activity_id', activityId);
 
       if (documentsError) throw documentsError;
 
+      // Load ranges from API
+      const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      const rangesResponse = await fetch(`${apiUrl}/activities/${activityId}/ranges`);
+      let ranges = [];
+      
+      if (rangesResponse.ok) {
+        ranges = await rangesResponse.json();
+      }
+
+      // Se não houver ranges, inicializar com uma faixa vazia
+      if (ranges.length === 0) {
+        ranges = [{
+          enterprise_size_id: '',
+          range_name: 'Porte 1',
+          range_start: null,
+          range_end: null
+        }];
+      }
+
       setFormData(prev => ({
         ...prev,
         license_types: activityLicenseTypes || [],
-        documents: activityDocuments || []
+        documents: activityDocuments || [],
+        ranges: ranges
       }));
+
+      // Atualizar contador baseado no número de ranges carregados
+      setEnterpriseSizeRangesCounter(ranges.length);
 
     } catch (error) {
       console.error('Error loading activity relationships:', error);
@@ -215,31 +257,44 @@ export default function ActivityForm({
   };
 
   const handleAddEnterpriseSizeRange = () => {
-    setEnterpriseSizeRanges(prev => [...prev, {
-      id: crypto.randomUUID(),
-      enterprise_size_id: '',
-      range_start: '',
-      range_end: ''
-    }]);
+    const newCounter = enterpriseSizeRangesCounter + 1;
+    setEnterpriseSizeRangesCounter(newCounter);
+    
+    setFormData((prev: any) => ({
+      ...prev,
+      ranges: [...prev.ranges, {
+        enterprise_size_id: '',
+        range_name: `Porte ${newCounter}`,
+        range_start: null,
+        range_end: null
+      }]
+    }));
   };
 
-  const handleRemoveEnterpriseSizeRange = (id: string) => {
-    if (enterpriseSizeRanges.length === 1) {
+  const handleRemoveEnterpriseSizeRange = (index: number) => {
+    if (formData.ranges.length === 1) {
       toast.warning('Deve haver pelo menos um porte configurado');
       return;
     }
-    setEnterpriseSizeRanges(prev => prev.filter(range => range.id !== id));
+    
+    setFormData((prev: any) => ({
+      ...prev,
+      ranges: prev.ranges.filter((_: any, i: number) => i !== index)
+    }));
   };
 
-  const handleEnterpriseSizeRangeChange = (id: string, field: string, value: string) => {
-    setEnterpriseSizeRanges(prev => prev.map(range =>
-      range.id === id ? { ...range, [field]: value } : range
-    ));
+  const handleEnterpriseSizeRangeChange = (index: number, field: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      ranges: prev.ranges.map((range: any, i: number) =>
+        i === index ? { ...range, [field]: value } : range
+      )
+    }));
   };
 
   const validateRanges = (): boolean => {
-    for (const range of enterpriseSizeRanges) {
-      if (range.range_start && range.range_end) {
+    for (const range of formData.ranges) {
+      if (range.range_start !== null && range.range_end !== null) {
         const start = parseFloat(range.range_start);
         const end = parseFloat(range.range_end);
         if (end < start) {
@@ -281,7 +336,7 @@ export default function ActivityForm({
   const handleDocumentToggle = (documentId: string) => {
     setFormData(prev => {
       const existingIndex = prev.documents.findIndex(
-        (doc: any) => doc.documentation_template_id === documentId
+        (doc: any) => doc.template_id === documentId
       );
       
       if (existingIndex >= 0) {
@@ -289,7 +344,7 @@ export default function ActivityForm({
         return {
           ...prev,
           documents: prev.documents.filter(
-            (doc: any) => doc.documentation_template_id !== documentId
+            (doc: any) => doc.template_id !== documentId
           )
         };
       } else {
@@ -298,7 +353,7 @@ export default function ActivityForm({
           ...prev,
           documents: [
             ...prev.documents,
-            { documentation_template_id: documentId, is_required: true }
+            { template_id: documentId, is_required: true }
           ]
         };
       }
@@ -309,7 +364,7 @@ export default function ActivityForm({
     setFormData(prev => ({
       ...prev,
       documents: prev.documents.map((doc: any) =>
-        doc.documentation_template_id === documentId
+        doc.template_id === documentId
           ? { ...doc, is_required: !doc.is_required }
           : doc
       )
@@ -335,7 +390,7 @@ export default function ActivityForm({
     }
 
     // Validar portes/faixas
-    const hasValidRange = enterpriseSizeRanges.some(range => range.enterprise_size_id);
+    const hasValidRange = formData.ranges.some((range: any) => range.enterprise_size_id);
     if (!hasValidRange) {
       toast.error('Configure pelo menos um porte do empreendimento');
       return false;
@@ -355,21 +410,16 @@ export default function ActivityForm({
 
     setLoading(true);
     try {
-      // Usar o primeiro porte/faixa para manter compatibilidade com o banco atual
-      const firstRange = enterpriseSizeRanges[0];
-
       const activityData = {
         code: parseFloat(formData.code),
         name: formData.name,
         description: formData.description || null,
-        enterprise_size_id: firstRange.enterprise_size_id,
         pollution_potential_id: formData.pollution_potential_id,
-        measurement_unit: formData.measurement_unit || null,
-        range_start: firstRange.range_start ? parseFloat(firstRange.range_start) : null,
-        range_end: firstRange.range_end ? parseFloat(firstRange.range_end) : null
+        measurement_unit: formData.measurement_unit || null
       };
 
       let activityId: string;
+      const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
       if (item?.id) {
         // Update existing activity
@@ -408,6 +458,59 @@ export default function ActivityForm({
         toast.success('Atividade criada com sucesso!');
       }
 
+      // Salvar faixas usando endpoint /bulk com fallback para Supabase
+      console.log('📤 Enviando ranges para API:', formData.ranges);
+      
+      try {
+        const rangesPayload = { 
+          activity_id: activityId,
+          ranges: formData.ranges 
+        };
+        console.log('📦 Payload completo:', JSON.stringify(rangesPayload, null, 2));
+        
+        const rangesResponse = await fetch(`${apiUrl}/activities/${activityId}/ranges/bulk`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rangesPayload)
+        });
+
+        if (!rangesResponse.ok) {
+          throw new Error(`API falhou com status ${rangesResponse.status}`);
+        }
+        
+        console.log('✅ Ranges salvos na API com sucesso');
+      } catch (apiError) {
+        console.warn('⚠️ Erro ao salvar ranges na API, usando Supabase como fallback:', apiError);
+        
+        // Fallback: salvar diretamente no Supabase
+        // Primeiro, deletar ranges existentes
+        await supabase
+          .from('activity_enterprise_size_ranges')
+          .delete()
+          .eq('activity_id', activityId);
+        
+        // Inserir novos ranges
+        if (formData.ranges.length > 0) {
+          const rangesForSupabase = formData.ranges.map((range: any) => ({
+            activity_id: activityId,
+            enterprise_size_id: range.enterprise_size_id,
+            range_name: range.range_name,
+            range_start: range.range_start,
+            range_end: range.range_end
+          }));
+          
+          const { error: rangesError } = await supabase
+            .from('activity_enterprise_size_ranges')
+            .insert(rangesForSupabase);
+          
+          if (rangesError) {
+            throw new Error(`Erro ao salvar ranges no Supabase: ${rangesError.message}`);
+          }
+          
+          console.log('✅ Ranges salvos no Supabase com sucesso');
+        }
+      }
+
       // Update license types relationships
       await supabase
         .from('activity_license_types')
@@ -437,7 +540,7 @@ export default function ActivityForm({
       if (formData.documents.length > 0) {
         const documentRelations = formData.documents.map((doc: any) => ({
           activity_id: activityId,
-          documentation_template_id: doc.documentation_template_id,
+          template_id: doc.template_id,
           is_required: doc.is_required
         }));
 
@@ -452,7 +555,10 @@ export default function ActivityForm({
       onClose();
     } catch (error) {
       console.error('Error saving activity:', error);
-      toast.error('Erro ao salvar atividade: ' + (error as Error).message);
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'string' ? error : 
+                          JSON.stringify(error);
+      toast.error('Erro ao salvar atividade: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -571,16 +677,16 @@ export default function ActivityForm({
               </label>
             </div>
 
-            {enterpriseSizeRanges.map((range, index) => (
-              <div key={range.id} className="border border-gray-300 rounded-lg p-4 bg-gray-50">
+            {formData.ranges.map((range: any, index: number) => (
+              <div key={index} className="border border-gray-300 rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-700">
-                    Porte {index + 1}
+                    {range.range_name}
                   </span>
-                  {enterpriseSizeRanges.length > 1 && (
+                  {formData.ranges.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveEnterpriseSizeRange(range.id)}
+                      onClick={() => handleRemoveEnterpriseSizeRange(index)}
                       className="text-red-600 hover:text-red-800 p-1"
                       title="Remover porte"
                     >
@@ -596,7 +702,7 @@ export default function ActivityForm({
                     </label>
                     <select
                       value={range.enterprise_size_id}
-                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'enterprise_size_id', e.target.value)}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(index, 'enterprise_size_id', e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       required
                     >
@@ -616,8 +722,8 @@ export default function ActivityForm({
                     <input
                       type="number"
                       step="0.01"
-                      value={range.range_start}
-                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'range_start', e.target.value)}
+                      value={range.range_start || ''}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(index, 'range_start', e.target.value ? parseFloat(e.target.value) : null)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="Ex: 0"
                     />
@@ -630,8 +736,8 @@ export default function ActivityForm({
                     <input
                       type="number"
                       step="0.01"
-                      value={range.range_end}
-                      onChange={(e) => handleEnterpriseSizeRangeChange(range.id, 'range_end', e.target.value)}
+                      value={range.range_end || ''}
+                      onChange={(e) => handleEnterpriseSizeRangeChange(index, 'range_end', e.target.value ? parseFloat(e.target.value) : null)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="Ex: 1000"
                     />
@@ -695,7 +801,7 @@ export default function ActivityForm({
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
               {documentTemplates.map(document => {
                 const selectedDoc = formData.documents.find(
-                  (doc: any) => doc.documentation_template_id === document.id
+                  (doc: any) => doc.template_id === document.id
                 );
                 const isSelected = !!selectedDoc;
                 
