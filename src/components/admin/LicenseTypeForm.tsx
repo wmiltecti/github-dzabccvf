@@ -194,29 +194,20 @@ export default function LicenseTypeForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <button
           onClick={onClose}
-        />
+          className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-        {/* Modal panel */}
-        <div className="inline-block w-full max-w-4xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Sigla/Abreviação */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -315,32 +306,30 @@ export default function LicenseTypeForm({
                 onChange={setDocuments}
               />
             )}
-          </form>
+      </form>
 
-          {/* Footer */}
-          <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
-              {loading ? 'Salvando...' : 'Salvar'}
-            </button>
-          </div>
-        </div>
+      {/* Footer */}
+      <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          disabled={loading}
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+        >
+          {loading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          {loading ? 'Salvando...' : 'Salvar'}
+        </button>
       </div>
     </div>
   );
