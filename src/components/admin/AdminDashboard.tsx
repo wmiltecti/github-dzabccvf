@@ -5,6 +5,7 @@ import GenericCRUD from './GenericCRUD';
 import GenericForm from './GenericForm';
 import BillingConfigurationForm from './BillingConfigurationForm';
 import ActivityForm from './ActivityForm';
+import LicenseTypeForm from './LicenseTypeForm';
 import SystemConfigSettings from './SystemConfigSettings';
 
 // Form field configurations for each entity
@@ -437,6 +438,36 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
               isOpen={showForm}
               onClose={() => setShowForm(false)}
               title={`${editingItem ? 'Editar' : 'Nova'} ${currentConfig.title.slice(0, -1)}`}
+              item={editingItem}
+              onSave={handleFormSave}
+            />
+          )}
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Special handling for license types
+  if (activeSection === 'license-types') {
+    return (
+      <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
+        <div className="p-6 h-full overflow-y-auto">
+          {!showForm ? (
+            <GenericCRUD
+              key={`${activeSection}-${refreshKey}`}
+              title={currentConfig.title}
+              tableName={currentConfig.tableName}
+              columns={currentConfig.columns}
+              searchFields={['name', 'abbreviation']}
+              onCreate={handleCreate}
+              onEdit={handleEdit}
+              onView={handleView}
+            />
+          ) : (
+            <LicenseTypeForm
+              isOpen={showForm}
+              onClose={() => setShowForm(false)}
+              title={`${editingItem ? 'Editar' : 'Novo'} Tipo de Licença`}
               item={editingItem}
               onSave={handleFormSave}
             />
