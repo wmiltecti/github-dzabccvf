@@ -20,10 +20,6 @@ export default function CaracterizacaoEmpreendimentoPage({
   const { caracterizacao, setCaracterizacao } = useEmpreendimentoStore();
 
   const [formData, setFormData] = useState({
-    recursos_hidricos: caracterizacao?.recursos_hidricos || false,
-    area_preservacao: caracterizacao?.area_preservacao || false,
-    impacto_ambiental: caracterizacao?.impacto_ambiental || '',
-    medidas_mitigadoras: caracterizacao?.medidas_mitigadoras || '',
     uso_agua: false,
     fonte_agua: '',
     vazao_estimada: '',
@@ -47,7 +43,6 @@ export default function CaracterizacaoEmpreendimentoPage({
   const [outrasInfoData, setOutrasInfoData] = useState({});
 
   const [sectionsExpanded, setSectionsExpanded] = useState({
-    aspectosGerais: true,
     recursosEnergia: true,
     combustiveis: true,
     usoAgua: true,
@@ -67,11 +62,6 @@ export default function CaracterizacaoEmpreendimentoPage({
   };
 
   const handleNext = () => {
-    if (!formData.impacto_ambiental) {
-      toast.error('Descreva os impactos ambientais do empreendimento');
-      return;
-    }
-
     const allData = {
       ...formData,
       recursosEnergia: recursosEnergiaData,
@@ -98,77 +88,6 @@ export default function CaracterizacaoEmpreendimentoPage({
       </div>
 
       <div className="space-y-6">
-        {/* Aspectos Gerais */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-          <button
-            onClick={() => toggleSection('aspectosGerais')}
-            className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-          >
-            <h3 className="text-lg font-semibold text-gray-800">Aspectos Gerais</h3>
-            {sectionsExpanded.aspectosGerais ? (
-              <ChevronUp className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
-
-          {sectionsExpanded.aspectosGerais && (
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="recursos_hidricos"
-                  checked={formData.recursos_hidricos}
-                  onChange={(e) => handleChange('recursos_hidricos', e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-                <label htmlFor="recursos_hidricos" className="text-sm font-medium text-gray-700">
-                  Utiliza recursos hídricos (rios, lagos, aquíferos)
-                </label>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="area_preservacao"
-                  checked={formData.area_preservacao}
-                  onChange={(e) => handleChange('area_preservacao', e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-                <label htmlFor="area_preservacao" className="text-sm font-medium text-gray-700">
-                  Localizado em área de preservação ambiental ou próximo a ela
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descrição dos Impactos Ambientais <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.impacto_ambiental}
-                  onChange={(e) => handleChange('impacto_ambiental', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Descreva os principais impactos ambientais do empreendimento..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Medidas Mitigadoras
-                </label>
-                <textarea
-                  value={formData.medidas_mitigadoras}
-                  onChange={(e) => handleChange('medidas_mitigadoras', e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Descreva as medidas para reduzir/compensar os impactos..."
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Recursos e Energia */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
           <button
