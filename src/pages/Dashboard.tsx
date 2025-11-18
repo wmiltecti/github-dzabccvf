@@ -39,6 +39,7 @@ import InscricaoWizardMotor from '../components/InscricaoWizardMotor';
 import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
+import Notificacoes from './Notificacoes';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -80,7 +81,7 @@ export default function Dashboard() {
   }
   const navigate = useNavigate();
   const { user, userMetadata, signOut, loading, isConfigured, isSupabaseReady } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('notificacoes');
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [generalExpanded, setGeneralExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -335,6 +336,7 @@ export default function Dashboard() {
   });
 
   const navigation = [
+    { id: 'notificacoes', name: 'Notificações', icon: Bell },
     { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
     { id: 'processesmotor', name: 'Processos', icon: FileText },
@@ -1211,6 +1213,7 @@ export default function Dashboard() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'notificacoes': return <Notificacoes />;
       case 'dashboard': return renderDashboard();
       case 'processes': return renderProcesses();
       case 'processesmotor': return renderProcessesMotor();
