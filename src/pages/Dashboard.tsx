@@ -337,7 +337,7 @@ export default function Dashboard() {
 
   const navigation = [
     { id: 'notificacoes', name: 'Notificações', icon: Bell },
-    { id: 'dashboard', name: 'Dashboard', icon: Home },
+    // { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
     { id: 'processesmotor', name: 'Processos', icon: FileText },
     { id: 'empreendimento', name: 'Empreendimento', icon: Building2 }
@@ -1282,7 +1282,7 @@ export default function Dashboard() {
             />
             <button
               onClick={() => {
-                setActiveTab('dashboard');
+                setActiveTab('notificacoes');
                 setSidebarOpen(false);
               }}
               className="hidden sm:flex items-center space-x-2 text-gray-300 hover:text-white transition-colors"
