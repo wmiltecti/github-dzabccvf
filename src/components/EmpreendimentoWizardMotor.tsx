@@ -10,7 +10,8 @@ import ImovelEmpreendimentoPage from '../pages/empreendimento/ImovelEmpreendimen
 import DadosGeraisEmpreendimentoPage from '../pages/empreendimento/DadosGeraisEmpreendimentoPage';
 import AtividadesEmpreendimentoPage from '../pages/empreendimento/AtividadesEmpreendimentoPage';
 import CaracterizacaoEmpreendimentoPage from '../pages/empreendimento/CaracterizacaoEmpreendimentoPage';
-import DocumentacaoEmpreendimentoPage from '../pages/empreendimento/DocumentacaoEmpreendimentoPage';
+// COMENTADO: Documentação não faz mais parte do fluxo - Caracterização é a última aba
+// import DocumentacaoEmpreendimentoPage from '../pages/empreendimento/DocumentacaoEmpreendimentoPage';
 
 interface EmpreendimentoWizardMotorProps {
   onClose?: () => void;
@@ -20,9 +21,10 @@ interface EmpreendimentoWizardMotorProps {
 
 /**
  * Wizard de Empreendimento controlado por Workflow Engine
- * 
- * Fluxo: Imóvel → Dados Gerais → Atividades → Caracterização → Documentação
- * 
+ *
+ * Fluxo: Imóvel → Dados Gerais → Atividades → Caracterização (FINAL)
+ * NOTA: Documentação foi comentada - Caracterização é agora a última etapa
+ *
  * Segue o mesmo padrão do InscricaoWizardMotor
  */
 export default function EmpreendimentoWizardMotor({ 
@@ -106,8 +108,9 @@ export default function EmpreendimentoWizardMotor({
       // Por enquanto, apenas avança localmente
       toast.success(`Step ${currentStepNumber} salvo!`);
       
+      // NOTA: Step 4 (Caracterização) agora é o último - Documentação foi comentada
       // Se não for o último step, avança
-      if (currentStepNumber < 5) {
+      if (currentStepNumber < 4) {
         useEmpreendimentoStore.setState({ currentStep: currentStepNumber + 1 });
       } else {
         // Último step - finalizar
@@ -150,8 +153,9 @@ export default function EmpreendimentoWizardMotor({
         return <AtividadesEmpreendimentoPage onNext={handleNext} onPrevious={handlePrevious} />;
       case 4:
         return <CaracterizacaoEmpreendimentoPage onNext={handleNext} onPrevious={handlePrevious} />;
-      case 5:
-        return <DocumentacaoEmpreendimentoPage onNext={handleNext} onPrevious={handlePrevious} />;
+      // COMENTADO: Documentação não faz mais parte do fluxo - Caracterização é a última aba
+      // case 5:
+      //   return <DocumentacaoEmpreendimentoPage onNext={handleNext} onPrevious={handlePrevious} />;
       default:
         return (
           <div className="p-8 text-center">
