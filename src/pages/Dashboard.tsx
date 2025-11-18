@@ -1144,9 +1144,6 @@ export default function Dashboard() {
       </div>
 
       <div className="glass-effect rounded-lg">
-        <div className="p-4 sm:p-6 border-b border-gray-200 border-opacity-50">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Lista de Inscrições</h2>
-        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
