@@ -36,3 +36,7 @@ __pycache__/
 
 # Test screenshots
 tests/screenshots/*.png
+
+# Wheels
+wheels/
+wheels.zip
