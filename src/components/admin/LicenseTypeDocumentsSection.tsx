@@ -27,7 +27,7 @@ interface LicenseType {
 interface DocumentTemplate {
   id: string;
   name: string;
-  description: string;
+  description?: string;
 }
 
 interface StudyType {

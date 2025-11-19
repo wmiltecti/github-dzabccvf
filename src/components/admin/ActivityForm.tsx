@@ -3,6 +3,8 @@ import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import * as activityLicenseService from '../../services/activityLicenseService';
+import type { LicenseType, DocumentTemplate, StudyType } from '../../services/activityLicenseService';
+import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
 
 interface ActivityFormProps {
   isOpen: boolean;
@@ -10,18 +12,6 @@ interface ActivityFormProps {
   title: string;
   item?: any;
   onSave: () => void;
-}
-
-interface LicenseType {
-  id: string;
-  abbreviation: string;
-  name: string;
-}
-
-interface DocumentTemplate {
-  id: string;
-  name: string;
-  description?: string;
 }
 
 interface EnterpriseSize {
@@ -47,8 +37,7 @@ export default function ActivityForm({
     description: '',
     pollution_potential_id: '',
     measurement_unit: '',
-    license_types: [],
-    documents: [],
+    license_types: [], // Array de blocos: { license_type_id, documents[], studies[] }
     ranges: [{
       enterprise_size_id: '',
       range_name: 'Porte 1',
@@ -62,6 +51,7 @@ export default function ActivityForm({
   const [loading, setLoading] = useState(false);
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
   const [documentTemplates, setDocumentTemplates] = useState<DocumentTemplate[]>([]);
+  const [studyTypes, setStudyTypes] = useState<StudyType[]>([]);
   const [enterpriseSizes, setEnterpriseSizes] = useState<EnterpriseSize[]>([]);
   const [pollutionPotentials, setPollutionPotentials] = useState<PollutionPotential[]>([]);
 
@@ -96,7 +86,6 @@ export default function ActivityForm({
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
         license_types: [],
-        documents: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -116,7 +105,6 @@ export default function ActivityForm({
         pollution_potential_id: '',
         measurement_unit: '',
         license_types: [],
-        documents: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -166,13 +154,15 @@ export default function ActivityForm({
   const loadDropdownData = async () => {
     try {
       // Carregar dados em paralelo usando API REST
-      const [licenseTypesData, documentsData] = await Promise.all([
+      const [licenseTypesData, documentsData, studyTypesData] = await Promise.all([
         activityLicenseService.getLicenseTypes(),
         activityLicenseService.getDocumentTemplates(),
+        activityLicenseService.getStudyTypes(),
       ]);
 
       setLicenseTypes(licenseTypesData || []);
       setDocumentTemplates(documentsData || []);
+      setStudyTypes(studyTypesData || []);
 
       // Load pollution potentials (manter Supabase por enquanto)
       const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
@@ -195,16 +185,22 @@ export default function ActivityForm({
       // Usar endpoint combinado da API REST para carregar tudo de uma vez
       const config = await activityLicenseService.getActivityLicenseConfig(activityId);
 
-      // Transformar dados da API para o formato esperado pelo formulário
-      const licenseTypes = config.license_types.map(lt => ({
-        license_type_id: lt.license_type_id,
-        is_required: lt.is_required
-      }));
+      // Transformar dados da API para o formato esperado pelo LicenseTypeDocumentsSection
+      // Agrupar documentos por tipo de licença
+      const licenseTypeBlocks = config.license_types.map(lt => {
+        // Filtrar documentos deste tipo de licença (se houver associação)
+        // Por enquanto, todos os documentos vão para todos os tipos
+        const documents = config.documents.map(doc => ({
+          template_id: doc.template_id,
+          is_required: doc.is_required
+        }));
 
-      const documents = config.documents.map(doc => ({
-        template_id: doc.template_id,
-        is_required: doc.is_required
-      }));
+        return {
+          license_type_id: lt.license_type_id,
+          documents: documents,
+          studies: [] // Estudos serão carregados se houver suporte no backend
+        };
+      });
 
       // Load ranges from API
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -227,8 +223,7 @@ export default function ActivityForm({
 
       setFormData(prev => ({
         ...prev,
-        license_types: licenseTypes,
-        documents: documents,
+        license_types: licenseTypeBlocks,
         ranges: ranges
       }));
 
@@ -295,70 +290,7 @@ export default function ActivityForm({
     return true;
   };
 
-  const handleLicenseTypeToggle = (licenseTypeId: string) => {
-    setFormData(prev => {
-      const existingIndex = prev.license_types.findIndex(
-        (lt: any) => lt.license_type_id === licenseTypeId
-      );
-      
-      if (existingIndex >= 0) {
-        // Remove if exists
-        return {
-          ...prev,
-          license_types: prev.license_types.filter(
-            (lt: any) => lt.license_type_id !== licenseTypeId
-          )
-        };
-      } else {
-        // Add if doesn't exist
-        return {
-          ...prev,
-          license_types: [
-            ...prev.license_types,
-            { license_type_id: licenseTypeId, is_required: true }
-          ]
-        };
-      }
-    });
-  };
 
-  const handleDocumentToggle = (documentId: string) => {
-    setFormData(prev => {
-      const existingIndex = prev.documents.findIndex(
-        (doc: any) => doc.template_id === documentId
-      );
-      
-      if (existingIndex >= 0) {
-        // Remove if exists
-        return {
-          ...prev,
-          documents: prev.documents.filter(
-            (doc: any) => doc.template_id !== documentId
-          )
-        };
-      } else {
-        // Add if doesn't exist
-        return {
-          ...prev,
-          documents: [
-            ...prev.documents,
-            { template_id: documentId, is_required: true }
-          ]
-        };
-      }
-    });
-  };
-
-  const handleDocumentRequiredToggle = (documentId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.map((doc: any) =>
-        doc.template_id === documentId
-          ? { ...doc, is_required: !doc.is_required }
-          : doc
-      )
-    }));
-  };
 
   const validateForm = () => {
     if (!formData.code) {
@@ -500,50 +432,56 @@ export default function ActivityForm({
         }
       }
 
-      // Salvar tipos de licença usando API REST com bulk operation
+      // Salvar tipos de licença e documentos usando API REST
       try {
-        // Primeiro, deletar relacionamentos existentes via Supabase
-        // (A API ainda não tem endpoint para limpar tudo)
-        await supabase
-          .from('activity_license_types')
-          .delete()
-          .eq('activity_id', activityId);
+        // Limpar relacionamentos existentes
+        await Promise.all([
+          supabase.from('activity_license_types').delete().eq('activity_id', activityId),
+          supabase.from('activity_documents').delete().eq('activity_id', activityId),
+        ]);
 
-        // Depois, adicionar novos usando bulk API
+        // Processar cada bloco de tipo de licença
         if (formData.license_types.length > 0) {
-          const licenseTypesToAdd = formData.license_types.map((lt: any) => ({
-            license_type_id: lt.license_type_id,
-            is_required: lt.is_required
-          }));
+          // Extrair tipos de licença únicos
+          const licenseTypesToAdd = formData.license_types
+            .filter((block: any) => block.license_type_id)
+            .map((block: any) => ({
+              license_type_id: block.license_type_id,
+              is_required: true // Pode ser ajustado depois
+            }));
 
-          await activityLicenseService.addLicenseTypesBulk(activityId, licenseTypesToAdd);
-          console.log('✅ Tipos de licença salvos via API REST');
+          if (licenseTypesToAdd.length > 0) {
+            await activityLicenseService.addLicenseTypesBulk(activityId, licenseTypesToAdd);
+            console.log('✅ Tipos de licença salvos via API REST');
+          }
+
+          // Coletar todos os documentos de todos os blocos
+          const allDocuments: any[] = [];
+          formData.license_types.forEach((block: any) => {
+            if (block.documents && block.documents.length > 0) {
+              block.documents.forEach((doc: any) => {
+                if (doc.template_id) {
+                  allDocuments.push({
+                    template_id: doc.template_id,
+                    is_required: doc.is_required || false
+                  });
+                }
+              });
+            }
+          });
+
+          // Remover duplicados (se um documento aparece em múltiplos tipos)
+          const uniqueDocuments = allDocuments.filter((doc, index, self) =>
+            index === self.findIndex((d) => d.template_id === doc.template_id)
+          );
+
+          if (uniqueDocuments.length > 0) {
+            await activityLicenseService.addDocumentsBulk(activityId, uniqueDocuments);
+            console.log('✅ Documentos salvos via API REST');
+          }
         }
       } catch (apiError) {
-        console.error('❌ Erro ao salvar tipos de licença via API:', apiError);
-        throw apiError;
-      }
-
-      // Salvar documentos usando API REST com bulk operation
-      try {
-        // Primeiro, deletar relacionamentos existentes via Supabase
-        await supabase
-          .from('activity_documents')
-          .delete()
-          .eq('activity_id', activityId);
-
-        // Depois, adicionar novos usando bulk API
-        if (formData.documents.length > 0) {
-          const documentsToAdd = formData.documents.map((doc: any) => ({
-            template_id: doc.template_id,
-            is_required: doc.is_required
-          }));
-
-          await activityLicenseService.addDocumentsBulk(activityId, documentsToAdd);
-          console.log('✅ Documentos salvos via API REST');
-        }
-      } catch (apiError) {
-        console.error('❌ Erro ao salvar documentos via API:', apiError);
+        console.error('❌ Erro ao salvar tipos de licença e documentos via API:', apiError);
         throw apiError;
       }
 
@@ -752,97 +690,19 @@ export default function ActivityForm({
             </button>
           </div>
 
-          {/* License Types */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Tipos de Licença Aplicáveis <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {licenseTypes.map(licenseType => {
-                const isSelected = formData.license_types.some(
-                  (lt: any) => lt.license_type_id === licenseType.id
-                );
-                return (
-                  <label
-                    key={licenseType.id}
-                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleLicenseTypeToggle(licenseType.id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="ml-3">
-                      <span className="text-sm font-medium text-gray-900">
-                        {licenseType.abbreviation}
-                      </span>
-                      <p className="text-xs text-gray-500">{licenseType.name}</p>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Documents */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Documentos Exigidos
-            </label>
-            <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
-              {documentTemplates.map(document => {
-                const selectedDoc = formData.documents.find(
-                  (doc: any) => doc.template_id === document.id
-                );
-                const isSelected = !!selectedDoc;
-                
-                return (
-                  <div
-                    key={document.id}
-                    className={`flex items-center justify-between p-3 border rounded-lg ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    <label className="flex items-center cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleDocumentToggle(document.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="ml-3 flex-1">
-                        <span className="text-sm font-medium text-gray-900">
-                          {document.name}
-                        </span>
-                        <p className="text-xs text-gray-500">{document.description}</p>
-                      </div>
-                    </label>
-                    
-                    {isSelected && (
-                      <label className="flex items-center ml-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedDoc.is_required}
-                          onChange={() => handleDocumentRequiredToggle(document.id)}
-                          className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        />
-                        <span className="ml-2 text-xs text-red-600 font-medium">
-                          Obrigatório
-                        </span>
-                      </label>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* Tipos de Licença Aplicáveis com Documentos e Estudos */}
+          <LicenseTypeDocumentsSection
+            licenseTypes={licenseTypes}
+            documentTemplates={documentTemplates}
+            studyTypes={studyTypes}
+            value={formData.license_types}
+            onChange={(licenseTypeBlocks) => {
+              setFormData(prev => ({
+                ...prev,
+                license_types: licenseTypeBlocks
+              }));
+            }}
+          />
 
           {/* Warning */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
