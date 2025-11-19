@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, ArrowRight, ArrowLeft } from 'lucide-react';
+import { FileText, ArrowRight, ArrowLeft, Upload } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore, SituacaoEmpreendimento, EmpreendimentoParticipe } from '../../lib/store/empreendimento';
 import ParticipesManager, { Participe } from '../../components/ParticipesManager';
+import GeoUpload from '../../components/geo/GeoUpload';
 
 interface DadosGeraisEmpreendimentoPageProps {
   onNext: (data?: any) => void;
@@ -34,6 +35,9 @@ export default function DadosGeraisEmpreendimentoPage({
     capacidade_producao: dadosGerais?.capacidade_producao || ''
   });
 
+  const [showGeoUpload, setShowGeoUpload] = useState(false);
+  const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
+
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -55,6 +59,17 @@ export default function DadosGeraisEmpreendimentoPage({
 
   const handleRemoveParticipe = async (participeId: string): Promise<void> => {
     removeParticipe(participeId);
+  };
+
+  const handleGeoUpload = (data: any[], fileName: string) => {
+    setUploadedGeoFiles(prev => [...prev, fileName]);
+    toast.success(`Arquivo ${fileName} carregado com sucesso! ${data.length} registros processados.`);
+    setShowGeoUpload(false);
+  };
+
+  const handleRemoveGeoFile = (fileName: string) => {
+    setUploadedGeoFiles(prev => prev.filter(f => f !== fileName));
+    toast.info(`Arquivo ${fileName} removido.`);
   };
 
   const validateForm = (): boolean => {
@@ -225,6 +240,51 @@ export default function DadosGeraisEmpreendimentoPage({
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Dados Georreferenciados</h3>
+            <button
+              onClick={() => setShowGeoUpload(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              Upload de Arquivos Geo
+            </button>
+          </div>
+
+          {uploadedGeoFiles.length > 0 ? (
+            <div className="space-y-2">
+              {uploadedGeoFiles.map((fileName, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">{fileName}</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveGeoFile(fileName)}
+                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                  >
+                    Remover
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm">
+                Nenhum arquivo georreferenciado carregado
+              </p>
+              <p className="text-gray-500 text-xs mt-1">
+                Clique no botão acima para fazer upload de arquivos CSV, JSON, GeoJSON ou KML
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
           <ParticipesManager
             participes={participes}
             onAdd={handleAddParticipe}
@@ -232,6 +292,12 @@ export default function DadosGeraisEmpreendimentoPage({
           />
         </div>
       </div>
+
+      <GeoUpload
+        isOpen={showGeoUpload}
+        onClose={() => setShowGeoUpload(false)}
+        onUpload={handleGeoUpload}
+      />
 
       <div className="flex justify-between pt-6 mt-6 border-t border-gray-200">
         <button
