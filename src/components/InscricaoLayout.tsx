@@ -9,6 +9,8 @@ import { FileText, ArrowLeft, Save, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import http from '../lib/api/http';
 import ConfirmDialog from './ConfirmDialog';
+import NotificationBell from './notifications/NotificationBell';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function InscricaoLayout() {
   const navigate = useNavigate();
@@ -152,6 +154,8 @@ export default function InscricaoLayout() {
     );
   }
 
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -180,6 +184,9 @@ export default function InscricaoLayout() {
             </div>
             
             <div className="flex items-center space-x-3">
+              {/* Notificações */}
+              {user && <NotificationBell userId={user.id} />}
+              
               <button
                 onClick={handleNewInscricao}
                 className="px-4 py-2 text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2"
