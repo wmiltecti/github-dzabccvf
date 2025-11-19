@@ -1,10 +1,13 @@
 # Alterações - Tipos de Licença Aplicáveis e Documentos Exigidos
 
 ## Data: 2025-11-19
+## Versão: 2.0
 
 ## Resumo
 
 Modificada a estrutura do formulário de cadastro/edição de Atividades no menu "Atividades". A seção "Tipos de Licença Aplicáveis" e "Documentos Exigidos" foram reestruturadas conforme solicitado.
+
+**NOVA FUNCIONALIDADE:** Ao selecionar um tipo de licença, o sistema agora pré-carrega automaticamente os documentos que já estão vinculados a esse tipo de licença (vindos da tabela `license_type_documents`), permitindo adicionar ou remover conforme necessário.
 
 ---
 
@@ -28,15 +31,34 @@ Criado novo componente `LicenseTypeDocumentsSection.tsx` que implementa:
 - Adição/remoção de tipos de licença (blocos)
 - Para cada tipo de licença:
   - Seleção do tipo de licença
+  - **PRÉ-CARREGAMENTO AUTOMÁTICO** de documentos vinculados ao tipo de licença
   - Adição/remoção de documentos exigidos
   - Checkbox para marcar documento como obrigatório
   - Validação para evitar duplicação
 
-### 3. Modificações no Banco de Dados
+### 3. Separação de Tabelas
 
-#### Nova Tabela: `activity_license_type_documents`
+**IMPORTANTE:** O sistema possui DUAS tabelas distintas para documentos:
 
-Esta tabela substitui a estrutura anterior e permite associar documentos específicos a cada tipo de licença dentro de uma atividade.
+#### Tabela 1: `license_type_documents` (JÁ EXISTENTE)
+- Documentos **padrão** de um tipo de licença
+- Gerenciada no menu "Tipo de Licença"
+- Serve como template/padrão (Ex: LP sempre exige EIA/RIMA)
+
+#### Tabela 2: `activity_license_type_documents` (NOVA)
+- Documentos **específicos** para uma atividade + tipo de licença
+- Gerenciada no menu "Atividades"
+- Pode herdar documentos da Tabela 1, mas permite adicionar/remover
+
+### 4. Fluxo de Trabalho
+
+1. No menu "Tipo de Licença": Cadastrar documentos padrão → Salva em `license_type_documents`
+2. No menu "Atividades": Selecionar tipo de licença → Sistema carrega documentos de `license_type_documents`
+3. Usuário pode adicionar/remover documentos → Salva em `activity_license_type_documents`
+
+### 5. Nova Tabela: `activity_license_type_documents`
+
+Esta tabela permite associar documentos específicos a cada tipo de licença dentro de uma atividade.
 
 **Estrutura:**
 ```sql
@@ -72,17 +94,24 @@ CREATE TABLE activity_license_type_documents (
 
 2. **`src/components/admin/LicenseTypeDocumentsSection.tsx`** (NOVO)
    - Componente form repeater para gerenciar tipos de licença e documentos
+   - **PRÉ-CARREGAMENTO AUTOMÁTICO** ao selecionar tipo de licença
+   - Busca documentos da tabela `license_type_documents`
+   - Exibe notificação ao pré-carregar documentos
    - Validações para evitar duplicação
    - Interface responsiva e intuitiva
 
 ### Database
 
-3. **`SCRIPT_SQL_ACTIVITY_LICENSE_TYPE_DOCUMENTS.sql`** (NOVO)
+3. **`SCRIPT_SQL_ACTIVITY_LICENSE_TYPE_DOCUMENTS.sql`** (ATUALIZADO - v2.0)
    - Script completo para criar a nova tabela
+   - **Documentação sobre as duas tabelas distintas**
+   - **Explicação do fluxo de trabalho**
    - Índices para otimização de consultas
    - Políticas RLS para segurança
    - Triggers para atualização automática de timestamps
+   - Permissões adequadas (anon, authenticated)
    - Comentários sobre migração de dados (opcional)
+   - Exemplos de uso práticos
 
 ---
 
@@ -161,6 +190,7 @@ Se você já possui dados nas tabelas antigas (`activity_documents`), o script i
 3. Não é permitido duplicar tipos de licença
 4. Dentro de um mesmo tipo de licença, não é permitido duplicar documentos
 5. Todos os campos obrigatórios devem ser preenchidos
+6. Ao mudar o tipo de licença, documentos antigos são limpos e novos são carregados
 
 ---
 
@@ -172,12 +202,31 @@ Se você já possui dados nas tabelas antigas (`activity_documents`), o script i
 
 ---
 
+## Funcionalidades
+
+### Pré-carregamento de Documentos
+
+Quando você seleciona um tipo de licença em "Atividades":
+1. ✅ O sistema automaticamente busca documentos da tabela `license_type_documents`
+2. ✅ Exibe uma notificação informando quantos documentos foram carregados
+3. ✅ Permite adicionar mais documentos além dos pré-carregados
+4. ✅ Permite remover documentos pré-carregados
+5. ✅ Permite alterar a obrigatoriedade de cada documento
+
+### Independência das Tabelas
+
+- ✅ Tabela `license_type_documents` não é afetada por mudanças em "Atividades"
+- ✅ Tabela `activity_license_type_documents` é específica para cada atividade
+- ✅ Você pode ter documentos diferentes para a mesma licença em atividades diferentes
+
 ## Próximos Passos
 
 1. Execute o script SQL no banco de dados
-2. Teste o cadastro/edição de atividades
-3. Verifique se os dados são salvos corretamente
-4. Considere migrar dados antigos (se necessário)
+2. Cadastre documentos padrão no menu "Tipo de Licença"
+3. Teste o cadastro/edição de atividades
+4. Observe o pré-carregamento automático de documentos
+5. Verifique se os dados são salvos corretamente
+6. Considere migrar dados antigos (se necessário)
 
 ---
 

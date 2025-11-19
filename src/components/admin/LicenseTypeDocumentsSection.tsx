@@ -1,5 +1,7 @@
 import React from 'react';
 import { Plus, Trash2, FileText, AlertCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'react-toastify';
 
 interface DocumentItem {
   template_id: string;
@@ -50,12 +52,44 @@ export default function LicenseTypeDocumentsSection({
     onChange(newBlocks);
   };
 
-  const handleLicenseTypeChange = (index: number, licenseTypeId: string) => {
+  const handleLicenseTypeChange = async (index: number, licenseTypeId: string) => {
     const newBlocks = [...value];
-    newBlocks[index] = {
-      ...newBlocks[index],
-      license_type_id: licenseTypeId
-    };
+    const oldLicenseTypeId = newBlocks[index].license_type_id;
+
+    // Se mudou o tipo de licença, carregar documentos pré-definidos
+    if (licenseTypeId !== oldLicenseTypeId) {
+      newBlocks[index] = {
+        license_type_id: licenseTypeId,
+        documents: []
+      };
+
+      // Pré-carregar documentos associados ao tipo de licença
+      if (licenseTypeId) {
+        try {
+          const { data: licenseTypeDocs, error } = await supabase
+            .from('license_type_documents')
+            .select('documentation_template_id, is_required')
+            .eq('license_type_id', licenseTypeId);
+
+          if (error) {
+            console.warn('Aviso: Não foi possível carregar documentos do tipo de licença:', error);
+          } else if (licenseTypeDocs && licenseTypeDocs.length > 0) {
+            // Mapear documentos para o formato correto
+            newBlocks[index].documents = licenseTypeDocs.map(doc => ({
+              template_id: doc.documentation_template_id,
+              is_required: doc.is_required
+            }));
+
+            toast.info(`✓ ${licenseTypeDocs.length} documento(s) pré-carregado(s) do tipo de licença`, {
+              autoClose: 2000
+            });
+          }
+        } catch (err) {
+          console.error('Erro ao carregar documentos do tipo de licença:', err);
+        }
+      }
+    }
+
     onChange(newBlocks);
   };
 
