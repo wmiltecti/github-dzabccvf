@@ -37,6 +37,21 @@ export default function AtividadesEmpreendimentoPage({
   const [showGeoUpload, setShowGeoUpload] = useState(false);
   const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
 
+  const [sobreposicaoData, setSobreposicaoData] = useState({
+    unidades_conservacao_icmbio: { sobrepoe: false, documento: null as File | null },
+    unidades_conservacao_estaduais: { sobrepoe: false, documento: null as File | null },
+    zonas_amortecimento: { sobrepoe: false, documento: null as File | null },
+    unidades_conservacao_municipais: { sobrepoe: false, documento: null as File | null },
+    embargos_ibama: { sobrepoe: false, documento: null as File | null },
+    embargos_icmbio: { sobrepoe: false, documento: null as File | null },
+    embargos_estaduais: { sobrepoe: false, documento: null as File | null },
+    terras_indigenas: { sobrepoe: false, documento: null as File | null },
+    desmatamento_prodes: { sobrepoe: false, documento: null as File | null },
+    zonemaneto_ecologico: { sobrepoe: false, documento: null as File | null },
+    bacias_hidrograficas: { sobrepoe: false, documento: null as File | null },
+    sub_bacias: { sobrepoe: false, documento: null as File | null }
+  });
+
   useEffect(() => {
     loadActivities();
     loadSavedActivities();
@@ -139,6 +154,38 @@ export default function AtividadesEmpreendimentoPage({
   const handleRemoveGeoFile = (fileName: string) => {
     setUploadedGeoFiles(prev => prev.filter(f => f !== fileName));
     toast.info(`Arquivo ${fileName} removido.`);
+  };
+
+  const handleSobreposicaoChange = (campo: keyof typeof sobreposicaoData, sobrepoe: boolean) => {
+    setSobreposicaoData(prev => ({
+      ...prev,
+      [campo]: { ...prev[campo], sobrepoe }
+    }));
+  };
+
+  const handleDocumentoUpload = (campo: keyof typeof sobreposicaoData, file: File | null) => {
+    setSobreposicaoData(prev => ({
+      ...prev,
+      [campo]: { ...prev[campo], documento: file }
+    }));
+    if (file) {
+      toast.success(`Documento anexado: ${file.name}`);
+    }
+  };
+
+  const sobreposicaoLabels: Record<keyof typeof sobreposicaoData, string> = {
+    unidades_conservacao_icmbio: 'Unidades de Conservação ICMBio',
+    unidades_conservacao_estaduais: 'Unidades de Conservação Estaduais',
+    zonas_amortecimento: 'Zonas de Amortecimento de Unidades de Conservação Estaduais',
+    unidades_conservacao_municipais: 'Unidades de Conservação Municipais',
+    embargos_ibama: 'Embargos IBAMA',
+    embargos_icmbio: 'Embargos ICMBio',
+    embargos_estaduais: 'Embargos Estaduais',
+    terras_indigenas: 'Terras Indígenas',
+    desmatamento_prodes: 'Desmatamento PRODES',
+    zonemaneto_ecologico: 'Zonemaneto Ecológico Econômico',
+    bacias_hidrograficas: 'Bacias Hidrográficas',
+    sub_bacias: 'Sub Bacias'
   };
 
   const handleNext = () => {
@@ -414,6 +461,77 @@ export default function AtividadesEmpreendimentoPage({
           </p>
         </div>
       )}
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Inserir tabela de sobreposição e upload de documentos</h3>
+
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
+                  Tipo de Área
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-center text-sm font-semibold text-gray-700 w-32">
+                  Sobrepõe?
+                </th>
+                <th className="border border-gray-300 px-4 py-2 text-center text-sm font-semibold text-gray-700 w-48">
+                  Upload Documento
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(Object.keys(sobreposicaoData) as Array<keyof typeof sobreposicaoData>).map((campo) => (
+                <tr key={campo} className="hover:bg-gray-50">
+                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-700">
+                    {sobreposicaoLabels[campo]}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={sobreposicaoData[campo].sobrepoe}
+                      onChange={(e) => handleSobreposicaoChange(campo, e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    />
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        id={`file-${campo}`}
+                        onChange={(e) => handleDocumentoUpload(campo, e.target.files?.[0] || null)}
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      />
+                      <label
+                        htmlFor={`file-${campo}`}
+                        className="flex-1 cursor-pointer px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
+                      >
+                        {sobreposicaoData[campo].documento ? 'Trocar arquivo' : 'Escolher arquivo'}
+                      </label>
+                      {sobreposicaoData[campo].documento && (
+                        <div className="flex items-center gap-1">
+                          <FileText className="w-4 h-4 text-green-600" />
+                          <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                            {sobreposicaoData[campo].documento?.name}
+                          </span>
+                          <button
+                            onClick={() => handleDocumentoUpload(campo, null)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Remover documento"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
         <div className="flex items-center justify-between mb-4">
