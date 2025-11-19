@@ -8,9 +8,15 @@ interface DocumentItem {
   is_required: boolean;
 }
 
+interface StudyItem {
+  study_type_id: string;
+  is_required: boolean;
+}
+
 interface LicenseTypeBlock {
   license_type_id: string;
   documents: DocumentItem[];
+  studies: StudyItem[];
 }
 
 interface LicenseType {
@@ -25,9 +31,17 @@ interface DocumentTemplate {
   description: string;
 }
 
+interface StudyType {
+  id: string;
+  abbreviation: string;
+  name: string;
+  description?: string;
+}
+
 interface LicenseTypeDocumentsSectionProps {
   licenseTypes: LicenseType[];
   documentTemplates: DocumentTemplate[];
+  studyTypes: StudyType[];
   value: LicenseTypeBlock[];
   onChange: (blocks: LicenseTypeBlock[]) => void;
 }
@@ -35,6 +49,7 @@ interface LicenseTypeDocumentsSectionProps {
 export default function LicenseTypeDocumentsSection({
   licenseTypes,
   documentTemplates,
+  studyTypes,
   value,
   onChange
 }: LicenseTypeDocumentsSectionProps) {
@@ -42,7 +57,8 @@ export default function LicenseTypeDocumentsSection({
   const handleAddLicenseType = () => {
     const newBlock: LicenseTypeBlock = {
       license_type_id: '',
-      documents: []
+      documents: [],
+      studies: []
     };
     onChange([...value, newBlock]);
   };
@@ -60,7 +76,8 @@ export default function LicenseTypeDocumentsSection({
     if (licenseTypeId !== oldLicenseTypeId) {
       newBlocks[index] = {
         license_type_id: licenseTypeId,
-        documents: []
+        documents: [],
+        studies: []
       };
 
       // Pré-carregar documentos associados ao tipo de licença
@@ -117,6 +134,30 @@ export default function LicenseTypeDocumentsSection({
     onChange(newBlocks);
   };
 
+  const handleAddStudy = (blockIndex: number) => {
+    const newBlocks = [...value];
+    newBlocks[blockIndex].studies.push({
+      study_type_id: '',
+      is_required: false
+    });
+    onChange(newBlocks);
+  };
+
+  const handleRemoveStudy = (blockIndex: number, studyIndex: number) => {
+    const newBlocks = [...value];
+    newBlocks[blockIndex].studies = newBlocks[blockIndex].studies.filter((_, i) => i !== studyIndex);
+    onChange(newBlocks);
+  };
+
+  const handleStudyChange = (blockIndex: number, studyIndex: number, field: keyof StudyItem, fieldValue: any) => {
+    const newBlocks = [...value];
+    newBlocks[blockIndex].studies[studyIndex] = {
+      ...newBlocks[blockIndex].studies[studyIndex],
+      [field]: fieldValue
+    };
+    onChange(newBlocks);
+  };
+
   const getAvailableLicenseTypes = (currentLicenseTypeId?: string) => {
     const selectedIds = value
       .map(block => block.license_type_id)
@@ -146,6 +187,17 @@ export default function LicenseTypeDocumentsSection({
   const getDocumentName = (docId: string) => {
     const doc = documentTemplates.find(d => d.id === docId);
     return doc?.name || '';
+  };
+
+  const getAvailableStudies = (blockIndex: number, currentStudyId?: string) => {
+    const block = value[blockIndex];
+    const selectedIds = block.studies
+      .map(study => study.study_type_id)
+      .filter(id => id && id !== currentStudyId);
+
+    return studyTypes.filter(st =>
+      !selectedIds.includes(st.id) || st.id === currentStudyId
+    );
   };
 
   return (
@@ -316,12 +368,111 @@ export default function LicenseTypeDocumentsSection({
                   )}
                 </div>
 
+                {/* Tipos de Estudo Aplicáveis */}
+                <div className="ml-4 pl-4 border-l-2 border-gray-300 mt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-600">
+                      Tipos de Estudo Aplicáveis
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleAddStudy(blockIndex)}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                      disabled={!block.license_type_id}
+                    >
+                      <Plus className="w-3 h-3" />
+                      Adicionar Estudo
+                    </button>
+                  </div>
+
+                  {block.studies.length === 0 ? (
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center bg-gray-50">
+                      <p className="text-sm text-gray-500">Nenhum estudo adicionado</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {block.studies.map((study, studyIndex) => {
+                        const availableStudies = getAvailableStudies(blockIndex, study.study_type_id);
+                        const hasStudyError = !study.study_type_id;
+
+                        return (
+                          <div
+                            key={studyIndex}
+                            className={`border rounded-lg p-3 bg-gray-50 ${
+                              hasStudyError ? 'border-red-300' : 'border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1 space-y-2">
+                                {/* Seletor de Estudo */}
+                                <select
+                                  value={study.study_type_id}
+                                  onChange={(e) => handleStudyChange(blockIndex, studyIndex, 'study_type_id', e.target.value)}
+                                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-purple-500 text-sm ${
+                                    hasStudyError ? 'border-red-300' : 'border-gray-300'
+                                  }`}
+                                >
+                                  <option value="">Selecione o tipo de estudo...</option>
+                                  {availableStudies.map(st => (
+                                    <option key={st.id} value={st.id}>
+                                      {st.abbreviation} - {st.name}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Checkbox Obrigatório */}
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`study-required-${blockIndex}-${studyIndex}`}
+                                    checked={study.is_required}
+                                    onChange={(e) => handleStudyChange(blockIndex, studyIndex, 'is_required', e.target.checked)}
+                                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                                  />
+                                  <label
+                                    htmlFor={`study-required-${blockIndex}-${studyIndex}`}
+                                    className="text-xs text-gray-700 cursor-pointer select-none"
+                                  >
+                                    Estudo obrigatório
+                                  </label>
+                                  {study.is_required && (
+                                    <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded">
+                                      Obrigatório
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Botão Remover Estudo */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveStudy(blockIndex, studyIndex)}
+                                className="flex-shrink-0 p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                title="Remover estudo"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 {/* Resumo do Bloco */}
-                {block.license_type_id && block.documents.length > 0 && (
+                {block.license_type_id && (block.documents.length > 0 || block.studies.length > 0) && (
                   <div className="mt-3 bg-blue-50 border border-blue-200 rounded p-2">
                     <p className="text-xs text-blue-700">
                       {block.documents.length} documento(s) • {' '}
                       {block.documents.filter(d => d.is_required).length} obrigatório(s)
+                      {block.studies.length > 0 && (
+                        <>
+                          {' • '}
+                          {block.studies.length} estudo(s) • {' '}
+                          {block.studies.filter(s => s.is_required).length} obrigatório(s)
+                        </>
+                      )}
                     </p>
                   </div>
                 )}
@@ -342,6 +493,8 @@ export default function LicenseTypeDocumentsSection({
               </p>
               <p className="text-xs text-blue-700 mt-1">
                 Total de documentos: {value.reduce((sum, block) => sum + block.documents.length, 0)}
+                {' • '}
+                Total de estudos: {value.reduce((sum, block) => sum + block.studies.length, 0)}
               </p>
             </div>
           </div>

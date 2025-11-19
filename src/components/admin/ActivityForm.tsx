@@ -30,6 +30,10 @@ interface LicenseTypeBlock {
     template_id: string;
     is_required: boolean;
   }[];
+  studies: {
+    study_type_id: string;
+    is_required: boolean;
+  }[];
 }
 
 interface EnterpriseSize {
@@ -40,6 +44,13 @@ interface EnterpriseSize {
 interface PollutionPotential {
   id: string;
   name: string;
+}
+
+interface StudyType {
+  id: string;
+  abbreviation: string;
+  name: string;
+  description?: string;
 }
 
 export default function ActivityForm({
@@ -69,6 +80,7 @@ export default function ActivityForm({
   const [loading, setLoading] = useState(false);
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
   const [documentTemplates, setDocumentTemplates] = useState<DocumentTemplate[]>([]);
+  const [studyTypes, setStudyTypes] = useState<StudyType[]>([]);
   const [enterpriseSizes, setEnterpriseSizes] = useState<EnterpriseSize[]>([]);
   const [pollutionPotentials, setPollutionPotentials] = useState<PollutionPotential[]>([]);
 
@@ -200,6 +212,16 @@ export default function ActivityForm({
       if (pollutionPotentialsError) throw pollutionPotentialsError;
       setPollutionPotentials(pollutionPotentialsData || []);
 
+      // Load study types
+      const { data: studyTypesData, error: studyTypesError } = await supabase
+        .from('study_types')
+        .select('id, abbreviation, name, description')
+        .eq('is_active', true)
+        .order('abbreviation');
+
+      if (studyTypesError) throw studyTypesError;
+      setStudyTypes(studyTypesData || []);
+
     } catch (error) {
       console.error('Error loading dropdown data:', error);
       toast.error('Erro ao carregar dados: ' + (error as Error).message);
@@ -226,6 +248,16 @@ export default function ActivityForm({
         console.warn('Erro ao carregar documentos (pode não existir a tabela ainda):', documentsError);
       }
 
+      // Load studies for this activity with license type association
+      const { data: activityStudies, error: studiesError } = await supabase
+        .from('activity_license_type_studies')
+        .select('license_type_id, study_type_id, is_required')
+        .eq('activity_id', activityId);
+
+      if (studiesError) {
+        console.warn('Erro ao carregar estudos (pode não existir a tabela ainda):', studiesError);
+      }
+
       // Load ranges from API
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
       const rangesResponse = await fetch(`${apiUrl}/activities/${activityId}/ranges`);
@@ -245,17 +277,22 @@ export default function ActivityForm({
         }];
       }
 
-      // Agrupar documentos por tipo de licença
+      // Agrupar documentos e estudos por tipo de licença
       const licenseTypeBlocks: LicenseTypeBlock[] = [];
 
       if (activityLicenseTypes) {
         for (const lt of activityLicenseTypes) {
           const docs = activityDocuments?.filter(d => d.license_type_id === lt.license_type_id) || [];
+          const studies = activityStudies?.filter(s => s.license_type_id === lt.license_type_id) || [];
           licenseTypeBlocks.push({
             license_type_id: lt.license_type_id,
             documents: docs.map(d => ({
               template_id: d.template_id,
               is_required: d.is_required
+            })),
+            studies: studies.map(s => ({
+              study_type_id: s.study_type_id,
+              is_required: s.is_required
             }))
           });
         }
@@ -487,6 +524,11 @@ export default function ActivityForm({
         .delete()
         .eq('activity_id', activityId);
 
+      await supabase
+        .from('activity_license_type_studies')
+        .delete()
+        .eq('activity_id', activityId);
+
       // Inserir novos relacionamentos
       if (formData.license_type_blocks.length > 0) {
         // Inserir tipos de licença
@@ -524,6 +566,32 @@ export default function ActivityForm({
           if (documentsError) {
             console.error('Erro ao salvar documentos:', documentsError);
             toast.warning('Atividade salva, mas houve erro ao salvar os documentos. Verifique se a tabela activity_license_type_documents existe.');
+          }
+        }
+
+        // Inserir estudos associados aos tipos de licença
+        const studyRelations: any[] = [];
+        formData.license_type_blocks.forEach((block: LicenseTypeBlock) => {
+          block.studies?.forEach(study => {
+            if (study.study_type_id) {
+              studyRelations.push({
+                activity_id: activityId,
+                license_type_id: block.license_type_id,
+                study_type_id: study.study_type_id,
+                is_required: study.is_required
+              });
+            }
+          });
+        });
+
+        if (studyRelations.length > 0) {
+          const { error: studiesError } = await supabase
+            .from('activity_license_type_studies')
+            .insert(studyRelations);
+
+          if (studiesError) {
+            console.error('Erro ao salvar estudos:', studiesError);
+            toast.warning('Atividade salva, mas houve erro ao salvar os estudos. Verifique se a tabela activity_license_type_studies existe.');
           }
         }
       }
@@ -733,10 +801,11 @@ export default function ActivityForm({
             </button>
           </div>
 
-          {/* License Types with Documents */}
+          {/* License Types with Documents and Studies */}
           <LicenseTypeDocumentsSection
             licenseTypes={licenseTypes}
             documentTemplates={documentTemplates}
+            studyTypes={studyTypes}
             value={formData.license_type_blocks}
             onChange={(blocks) => handleInputChange('license_type_blocks', blocks)}
           />
