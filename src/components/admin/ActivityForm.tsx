@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
 
 interface ActivityFormProps {
   isOpen: boolean;
@@ -21,6 +22,14 @@ interface DocumentTemplate {
   id: string;
   name: string;
   description: string;
+}
+
+interface LicenseTypeBlock {
+  license_type_id: string;
+  documents: {
+    template_id: string;
+    is_required: boolean;
+  }[];
 }
 
 interface EnterpriseSize {
@@ -46,8 +55,7 @@ export default function ActivityForm({
     description: '',
     pollution_potential_id: '',
     measurement_unit: '',
-    license_types: [],
-    documents: [],
+    license_type_blocks: [],
     ranges: [{
       enterprise_size_id: '',
       range_name: 'Porte 1',
@@ -94,8 +102,7 @@ export default function ActivityForm({
         description: item.description || '',
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
-        license_types: [],
-        documents: [],
+        license_type_blocks: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -114,8 +121,7 @@ export default function ActivityForm({
         description: '',
         pollution_potential_id: '',
         measurement_unit: '',
-        license_types: [],
-        documents: [],
+        license_type_blocks: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -205,18 +211,20 @@ export default function ActivityForm({
       // Load license types for this activity
       const { data: activityLicenseTypes, error: licenseError } = await supabase
         .from('activity_license_types')
-        .select('license_type_id, is_required')
+        .select('license_type_id')
         .eq('activity_id', activityId);
 
       if (licenseError) throw licenseError;
 
-      // Load documents for this activity
+      // Load documents for this activity with license type association
       const { data: activityDocuments, error: documentsError } = await supabase
-        .from('activity_documents')
-        .select('template_id, is_required')
+        .from('activity_license_type_documents')
+        .select('license_type_id, template_id, is_required')
         .eq('activity_id', activityId);
 
-      if (documentsError) throw documentsError;
+      if (documentsError) {
+        console.warn('Erro ao carregar documentos (pode não existir a tabela ainda):', documentsError);
+      }
 
       // Load ranges from API
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -237,10 +245,25 @@ export default function ActivityForm({
         }];
       }
 
+      // Agrupar documentos por tipo de licença
+      const licenseTypeBlocks: LicenseTypeBlock[] = [];
+
+      if (activityLicenseTypes) {
+        for (const lt of activityLicenseTypes) {
+          const docs = activityDocuments?.filter(d => d.license_type_id === lt.license_type_id) || [];
+          licenseTypeBlocks.push({
+            license_type_id: lt.license_type_id,
+            documents: docs.map(d => ({
+              template_id: d.template_id,
+              is_required: d.is_required
+            }))
+          });
+        }
+      }
+
       setFormData(prev => ({
         ...prev,
-        license_types: activityLicenseTypes || [],
-        documents: activityDocuments || [],
+        license_type_blocks: licenseTypeBlocks,
         ranges: ranges
       }));
 
@@ -306,70 +329,6 @@ export default function ActivityForm({
     return true;
   };
 
-  const handleLicenseTypeToggle = (licenseTypeId: string) => {
-    setFormData(prev => {
-      const existingIndex = prev.license_types.findIndex(
-        (lt: any) => lt.license_type_id === licenseTypeId
-      );
-      
-      if (existingIndex >= 0) {
-        // Remove if exists
-        return {
-          ...prev,
-          license_types: prev.license_types.filter(
-            (lt: any) => lt.license_type_id !== licenseTypeId
-          )
-        };
-      } else {
-        // Add if doesn't exist
-        return {
-          ...prev,
-          license_types: [
-            ...prev.license_types,
-            { license_type_id: licenseTypeId, is_required: true }
-          ]
-        };
-      }
-    });
-  };
-
-  const handleDocumentToggle = (documentId: string) => {
-    setFormData(prev => {
-      const existingIndex = prev.documents.findIndex(
-        (doc: any) => doc.template_id === documentId
-      );
-      
-      if (existingIndex >= 0) {
-        // Remove if exists
-        return {
-          ...prev,
-          documents: prev.documents.filter(
-            (doc: any) => doc.template_id !== documentId
-          )
-        };
-      } else {
-        // Add if doesn't exist
-        return {
-          ...prev,
-          documents: [
-            ...prev.documents,
-            { template_id: documentId, is_required: true }
-          ]
-        };
-      }
-    });
-  };
-
-  const handleDocumentRequiredToggle = (documentId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: prev.documents.map((doc: any) =>
-        doc.template_id === documentId
-          ? { ...doc, is_required: !doc.is_required }
-          : doc
-      )
-    }));
-  };
 
   const validateForm = () => {
     if (!formData.code) {
@@ -380,8 +339,14 @@ export default function ActivityForm({
       toast.error('Nome da atividade é obrigatório');
       return false;
     }
-    if (formData.license_types.length === 0) {
-      toast.error('Selecione pelo menos um tipo de licença');
+    if (formData.license_type_blocks.length === 0) {
+      toast.error('Adicione pelo menos um tipo de licença');
+      return false;
+    }
+    // Validar que todos os blocos têm tipo de licença selecionado
+    const hasEmptyLicenseType = formData.license_type_blocks.some((block: LicenseTypeBlock) => !block.license_type_id);
+    if (hasEmptyLicenseType) {
+      toast.error('Selecione o tipo de licença em todos os blocos');
       return false;
     }
     if (!formData.pollution_potential_id) {
@@ -511,17 +476,23 @@ export default function ActivityForm({
         }
       }
 
-      // Update license types relationships
+      // Deletar relacionamentos antigos
       await supabase
         .from('activity_license_types')
         .delete()
         .eq('activity_id', activityId);
 
-      if (formData.license_types.length > 0) {
-        const licenseTypeRelations = formData.license_types.map((lt: any) => ({
+      await supabase
+        .from('activity_license_type_documents')
+        .delete()
+        .eq('activity_id', activityId);
+
+      // Inserir novos relacionamentos
+      if (formData.license_type_blocks.length > 0) {
+        // Inserir tipos de licença
+        const licenseTypeRelations = formData.license_type_blocks.map((block: LicenseTypeBlock) => ({
           activity_id: activityId,
-          license_type_id: lt.license_type_id,
-          is_required: lt.is_required
+          license_type_id: block.license_type_id
         }));
 
         const { error: licenseError } = await supabase
@@ -529,26 +500,32 @@ export default function ActivityForm({
           .insert(licenseTypeRelations);
 
         if (licenseError) throw licenseError;
-      }
 
-      // Update documents relationships
-      await supabase
-        .from('activity_documents')
-        .delete()
-        .eq('activity_id', activityId);
+        // Inserir documentos associados aos tipos de licença
+        const documentRelations: any[] = [];
+        formData.license_type_blocks.forEach((block: LicenseTypeBlock) => {
+          block.documents.forEach(doc => {
+            if (doc.template_id) {
+              documentRelations.push({
+                activity_id: activityId,
+                license_type_id: block.license_type_id,
+                template_id: doc.template_id,
+                is_required: doc.is_required
+              });
+            }
+          });
+        });
 
-      if (formData.documents.length > 0) {
-        const documentRelations = formData.documents.map((doc: any) => ({
-          activity_id: activityId,
-          template_id: doc.template_id,
-          is_required: doc.is_required
-        }));
+        if (documentRelations.length > 0) {
+          const { error: documentsError } = await supabase
+            .from('activity_license_type_documents')
+            .insert(documentRelations);
 
-        const { error: documentsError } = await supabase
-          .from('activity_documents')
-          .insert(documentRelations);
-
-        if (documentsError) throw documentsError;
+          if (documentsError) {
+            console.error('Erro ao salvar documentos:', documentsError);
+            toast.warning('Atividade salva, mas houve erro ao salvar os documentos. Verifique se a tabela activity_license_type_documents existe.');
+          }
+        }
       }
 
       onSave();
@@ -756,97 +733,13 @@ export default function ActivityForm({
             </button>
           </div>
 
-          {/* License Types */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Tipos de Licença Aplicáveis <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {licenseTypes.map(licenseType => {
-                const isSelected = formData.license_types.some(
-                  (lt: any) => lt.license_type_id === licenseType.id
-                );
-                return (
-                  <label
-                    key={licenseType.id}
-                    className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleLicenseTypeToggle(licenseType.id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="ml-3">
-                      <span className="text-sm font-medium text-gray-900">
-                        {licenseType.abbreviation}
-                      </span>
-                      <p className="text-xs text-gray-500">{licenseType.name}</p>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Documents */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Documentos Exigidos
-            </label>
-            <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3">
-              {documentTemplates.map(document => {
-                const selectedDoc = formData.documents.find(
-                  (doc: any) => doc.template_id === document.id
-                );
-                const isSelected = !!selectedDoc;
-                
-                return (
-                  <div
-                    key={document.id}
-                    className={`flex items-center justify-between p-3 border rounded-lg ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    <label className="flex items-center cursor-pointer flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleDocumentToggle(document.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="ml-3 flex-1">
-                        <span className="text-sm font-medium text-gray-900">
-                          {document.name}
-                        </span>
-                        <p className="text-xs text-gray-500">{document.description}</p>
-                      </div>
-                    </label>
-                    
-                    {isSelected && (
-                      <label className="flex items-center ml-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedDoc.is_required}
-                          onChange={() => handleDocumentRequiredToggle(document.id)}
-                          className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                        />
-                        <span className="ml-2 text-xs text-red-600 font-medium">
-                          Obrigatório
-                        </span>
-                      </label>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* License Types with Documents */}
+          <LicenseTypeDocumentsSection
+            licenseTypes={licenseTypes}
+            documentTemplates={documentTemplates}
+            value={formData.license_type_blocks}
+            onChange={(blocks) => handleInputChange('license_type_blocks', blocks)}
+          />
 
           {/* Warning */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
