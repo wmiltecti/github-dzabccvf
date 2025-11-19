@@ -352,7 +352,7 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
 
   const handleView = (item: any) => {
     // Show view component for license types, activities, process types, property types, enterprise sizes, pollution potentials, reference units, study types, and documentation
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units' || activeSection === 'study-types' || activeSection === 'documentation') {
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units' || activeSection === 'study-types' || activeSection === 'documentation-templates') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -548,7 +548,7 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
         return <ReferenceUnitView item={viewingItem} onBack={onBack} />;
       case 'study-types':
         return <StudyTypeView item={viewingItem} onBack={onBack} />;
-      case 'documentation':
+      case 'documentation-templates':
         return <DocumentationView item={viewingItem} onBack={onBack} />;
       default:
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
