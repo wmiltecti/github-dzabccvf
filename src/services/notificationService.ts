@@ -10,7 +10,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://fastapi-sandb
 
 // Helper to get auth token
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  // Tentar pegar token de múltiplas fontes
+  const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+  console.log('🔑 [NotificationService] Token encontrado:', token ? '✅ Sim' : '❌ Não');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -28,7 +30,7 @@ export const notificationService = {
     isRead?: boolean
   ): Promise<NotificationListResponse> {
     try {
-      const params: Record<string, string | number> = {
+      const params: Record<string, string | number | boolean> = {
         user_id: userId,
         skip,
         limit,
@@ -38,6 +40,8 @@ export const notificationService = {
         params.is_read = isRead;
       }
 
+      console.log('📡 [NotificationService] GET /notifications', { API_BASE_URL, params });
+
       const response = await axios.get<NotificationListResponse>(
         `${API_BASE_URL}/notifications`,
         {
@@ -46,9 +50,15 @@ export const notificationService = {
         }
       );
 
+      console.log('✅ [NotificationService] Notificações recebidas:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+    } catch (error: any) {
+      console.error('❌ [NotificationService] Erro ao buscar notificações:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
       throw new Error('Falha ao carregar notificações');
     }
   },

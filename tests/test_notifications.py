@@ -10,7 +10,7 @@ from datetime import datetime
 # Configuração
 API_BASE_URL = "https://fastapi-sandbox-ee3p.onrender.com/api/v1"
 # Substitua pelo ID do usuário que você está testando
-USER_ID = "seu-user-id-aqui"  # ⚠️ ALTERAR ESTE VALOR
+USER_ID = "264671"  # ✅ ID do usuário logado
 
 def create_test_notification(notification_type: str, title: str, message: str, severity: str, action_url: str = None):
     """Cria uma notificação de teste"""
