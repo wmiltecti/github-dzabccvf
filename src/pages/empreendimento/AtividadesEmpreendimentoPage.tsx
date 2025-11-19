@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle } from 'lucide-react';
+import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import { AdminService, Activity as ActivityType } from '../../services/adminService';
+import GeoUpload from '../../components/geo/GeoUpload';
 
 interface AtividadesEmpreendimentoPageProps {
   onNext: (data?: any) => void;
@@ -33,6 +34,8 @@ export default function AtividadesEmpreendimentoPage({
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
+  const [showGeoUpload, setShowGeoUpload] = useState(false);
+  const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
 
   useEffect(() => {
     loadActivities();
@@ -125,6 +128,17 @@ export default function AtividadesEmpreendimentoPage({
     const updated = [...selectedActivities];
     updated[index] = { ...updated[index], [field]: value };
     setSelectedActivities(updated);
+  };
+
+  const handleGeoUpload = (data: any[], fileName: string) => {
+    setUploadedGeoFiles(prev => [...prev, fileName]);
+    toast.success(`Arquivo ${fileName} carregado com sucesso! ${data.length} registros processados.`);
+    setShowGeoUpload(false);
+  };
+
+  const handleRemoveGeoFile = (fileName: string) => {
+    setUploadedGeoFiles(prev => prev.filter(f => f !== fileName));
+    toast.info(`Arquivo ${fileName} removido.`);
   };
 
   const handleNext = () => {
@@ -400,6 +414,57 @@ export default function AtividadesEmpreendimentoPage({
           </p>
         </div>
       )}
+
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Dados Georreferenciados</h3>
+          <button
+            onClick={() => setShowGeoUpload(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            Upload de Arquivos Geo
+          </button>
+        </div>
+
+        {uploadedGeoFiles.length > 0 ? (
+          <div className="space-y-2">
+            {uploadedGeoFiles.map((fileName, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700">{fileName}</span>
+                </div>
+                <button
+                  onClick={() => handleRemoveGeoFile(fileName)}
+                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                >
+                  Remover
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600 text-sm">
+              Nenhum arquivo georreferenciado carregado
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Clique no botão acima para fazer upload de arquivos CSV, JSON, GeoJSON ou KML
+            </p>
+          </div>
+        )}
+      </div>
+
+      <GeoUpload
+        isOpen={showGeoUpload}
+        onClose={() => setShowGeoUpload(false)}
+        onUpload={handleGeoUpload}
+      />
 
       <div className="flex justify-between pt-6 mt-6 border-t border-gray-200">
         <button
