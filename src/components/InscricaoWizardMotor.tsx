@@ -18,8 +18,9 @@ import ConfirmDialog from './ConfirmDialog';
 import ParticipantesWorkflowPageMotor from '../pages/inscricao/workflow/ParticipantesWorkflowPageMotor';
 import ImovelWorkflowPageMotor from '../pages/inscricao/workflow/ImovelWorkflowPageMotor';
 import EmpreendimentoWorkflowPageMotor from '../pages/inscricao/workflow/EmpreendimentoWorkflowPageMotor';
-// import DocumentacaoWorkflowPageMotor from '../pages/inscricao/workflow/DocumentacaoWorkflowPageMotor';
-// import RevisaoWorkflowPageMotor from '../pages/inscricao/workflow/RevisaoWorkflowPageMotor';
+import FormularioWorkflowPageMotor from '../pages/inscricao/workflow/FormularioWorkflowPageMotor';
+import DocumentacaoWorkflowPageMotor from '../pages/inscricao/workflow/DocumentacaoWorkflowPageMotor';
+import RevisaoWorkflowPageMotor from '../pages/inscricao/workflow/RevisaoWorkflowPageMotor';
 
 interface InscricaoWizardMotorProps {
   onClose?: () => void;
@@ -244,11 +245,14 @@ export default function InscricaoWizardMotor({ onClose, processoId, asModal = fa
           </EnterpriseProvider>
         );
 
-      // case 'documentacao':
-      //   return <DocumentacaoWorkflowPage />;
+      case 'formulario':
+        return <FormularioWorkflowPageMotor />;
 
-      // case 'revisao':
-      //   return <RevisaoWorkflowPage />;
+      case 'documentacao':
+        return <DocumentacaoWorkflowPageMotor />;
+
+      case 'revisao':
+        return <RevisaoWorkflowPageMotor />;
 
       default:
         return (
