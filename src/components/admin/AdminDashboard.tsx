@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AdminLayout from './AdminLayout';
 import GenericCRUD from './GenericCRUD';
@@ -307,6 +308,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ initialSection = 'property-types' }: AdminDashboardProps) {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState(initialSection);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -336,7 +338,13 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show item details in a formatted way
+    // Navigate to view page for license types
+    if (activeSection === 'license-types') {
+      navigate(`/admin/license-types/${item.id}`);
+      return;
+    }
+
+    // Show item details in a formatted way for other sections
     const formatValue = (key: string, value: any) => {
       if (key === 'default_deadline_days' && value) {
         return `${value} dias`;
