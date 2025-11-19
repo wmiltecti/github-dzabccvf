@@ -11,6 +11,7 @@ import LicenseTypeView from './LicenseTypeView';
 import ActivityView from './ActivityView';
 import ProcessTypeView from './ProcessTypeView';
 import PropertyTypeView from './PropertyTypeView';
+import EnterpriseSizeView from './EnterpriseSizeView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -346,8 +347,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types, activities, process types, and property types
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types') {
+    // Show view component for license types, activities, process types, property types, and enterprise sizes
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -535,6 +536,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
         return <PropertyTypeView item={viewingItem} onBack={onBack} />;
       case 'process-types':
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
+      case 'enterprise-sizes':
+        return <EnterpriseSizeView item={viewingItem} onBack={onBack} />;
       default:
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
     }
