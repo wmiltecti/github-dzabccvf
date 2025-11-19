@@ -14,6 +14,7 @@ import ImovelPage from './pages/inscricao/ImovelPage';
 import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
 import DocumentacaoPage from './pages/inscricao/DocumentacaoPage';
 import RevisaoPage from './pages/inscricao/RevisaoPage';
+import NotificationCenterPage from './pages/NotificationCenterPage';
 
 // Componente interno que usa o hook
 function AppRoutes() {
@@ -69,7 +70,17 @@ function AppRoutes() {
         <Route path="documentacao" element={<DocumentacaoPage />} />
         <Route path="revisao" element={<RevisaoPage />} />
       </Route>
-
+      
+      {/* Rota de Notificações */}
+      <Route
+        path="/notificacoes"
+        element={
+          <ProtectedRoute>
+            <NotificationCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
