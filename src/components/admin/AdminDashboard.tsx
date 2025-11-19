@@ -12,6 +12,7 @@ import ActivityView from './ActivityView';
 import ProcessTypeView from './ProcessTypeView';
 import PropertyTypeView from './PropertyTypeView';
 import EnterpriseSizeView from './EnterpriseSizeView';
+import PollutionPotentialView from './PollutionPotentialView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -347,8 +348,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types, activities, process types, property types, and enterprise sizes
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes') {
+    // Show view component for license types, activities, process types, property types, enterprise sizes, and pollution potentials
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -538,6 +539,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
       case 'enterprise-sizes':
         return <EnterpriseSizeView item={viewingItem} onBack={onBack} />;
+      case 'pollution-potentials':
+        return <PollutionPotentialView item={viewingItem} onBack={onBack} />;
       default:
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
     }
