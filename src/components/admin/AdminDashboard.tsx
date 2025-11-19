@@ -10,6 +10,7 @@ import SystemConfigSettings from './SystemConfigSettings';
 import LicenseTypeView from './LicenseTypeView';
 import ActivityView from './ActivityView';
 import ProcessTypeView from './ProcessTypeView';
+import PropertyTypeView from './PropertyTypeView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -345,8 +346,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types, activities, and process types
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types') {
+    // Show view component for license types, activities, process types, and property types
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -520,17 +521,30 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     );
   }
 
+  // Render appropriate view component based on section
+  const renderViewComponent = () => {
+    if (!showView || !viewingItem) return null;
+
+    const onBack = () => {
+      setShowView(false);
+      setViewingItem(null);
+    };
+
+    switch (activeSection) {
+      case 'property-types':
+        return <PropertyTypeView item={viewingItem} onBack={onBack} />;
+      case 'process-types':
+        return <ProcessTypeView item={viewingItem} onBack={onBack} />;
+      default:
+        return <ProcessTypeView item={viewingItem} onBack={onBack} />;
+    }
+  };
+
   return (
     <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
       <div className="p-6 h-full overflow-y-auto">
         {showView ? (
-          <ProcessTypeView
-            item={viewingItem}
-            onBack={() => {
-              setShowView(false);
-              setViewingItem(null);
-            }}
-          />
+          renderViewComponent()
         ) : !showForm ? (
           <GenericCRUD
             key={`${activeSection}-${refreshKey}`}
