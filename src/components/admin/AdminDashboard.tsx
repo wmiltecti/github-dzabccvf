@@ -7,6 +7,7 @@ import BillingConfigurationForm from './BillingConfigurationForm';
 import ActivityForm from './ActivityForm';
 import LicenseTypeForm from './LicenseTypeForm';
 import SystemConfigSettings from './SystemConfigSettings';
+import LicenseTypeView from './LicenseTypeView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -309,18 +310,24 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ initialSection = 'property-types' }: AdminDashboardProps) {
   const [activeSection, setActiveSection] = useState(initialSection);
   const [showForm, setShowForm] = useState(false);
+  const [showView, setShowView] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   React.useEffect(() => {
     setActiveSection(initialSection);
     setShowForm(false);
+    setShowView(false);
     setEditingItem(null);
+    setViewingItem(null);
   }, [initialSection]);
 
   React.useEffect(() => {
     setShowForm(false);
+    setShowView(false);
     setEditingItem(null);
+    setViewingItem(null);
   }, [activeSection]);
 
   const currentConfig = entityConfigs[activeSection as keyof typeof entityConfigs];
@@ -336,7 +343,14 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show item details in a formatted way
+    // Show view component for license types
+    if (activeSection === 'license-types') {
+      setViewingItem(item);
+      setShowView(true);
+      return;
+    }
+
+    // Show item details in a formatted way for other sections
     const formatValue = (key: string, value: any) => {
       if (key === 'default_deadline_days' && value) {
         return `${value} dias`;
@@ -452,7 +466,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          {!showForm ? (
+          {showView ? (
+            <LicenseTypeView
+              item={viewingItem}
+              onBack={() => {
+                setShowView(false);
+                setViewingItem(null);
+              }}
+            />
+          ) : !showForm ? (
             <GenericCRUD
               key={`${activeSection}-${refreshKey}`}
               title={currentConfig.title}
