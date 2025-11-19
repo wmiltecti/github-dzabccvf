@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AdminLayout from './AdminLayout';
 import GenericCRUD from './GenericCRUD';
@@ -8,6 +7,7 @@ import BillingConfigurationForm from './BillingConfigurationForm';
 import ActivityForm from './ActivityForm';
 import LicenseTypeForm from './LicenseTypeForm';
 import SystemConfigSettings from './SystemConfigSettings';
+import LicenseTypeView from './LicenseTypeView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -308,21 +308,26 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ initialSection = 'property-types' }: AdminDashboardProps) {
-  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState(initialSection);
   const [showForm, setShowForm] = useState(false);
+  const [showView, setShowView] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   React.useEffect(() => {
     setActiveSection(initialSection);
     setShowForm(false);
+    setShowView(false);
     setEditingItem(null);
+    setViewingItem(null);
   }, [initialSection]);
 
   React.useEffect(() => {
     setShowForm(false);
+    setShowView(false);
     setEditingItem(null);
+    setViewingItem(null);
   }, [activeSection]);
 
   const currentConfig = entityConfigs[activeSection as keyof typeof entityConfigs];
@@ -338,9 +343,10 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Navigate to view page for license types
+    // Show view component for license types
     if (activeSection === 'license-types') {
-      navigate(`/admin/license-types/${item.id}`);
+      setViewingItem(item);
+      setShowView(true);
       return;
     }
 
@@ -460,7 +466,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          {!showForm ? (
+          {showView ? (
+            <LicenseTypeView
+              item={viewingItem}
+              onBack={() => {
+                setShowView(false);
+                setViewingItem(null);
+              }}
+            />
+          ) : !showForm ? (
             <GenericCRUD
               key={`${activeSection}-${refreshKey}`}
               title={currentConfig.title}
