@@ -8,6 +8,15 @@ import ActivityForm from './ActivityForm';
 import LicenseTypeForm from './LicenseTypeForm';
 import SystemConfigSettings from './SystemConfigSettings';
 import LicenseTypeView from './LicenseTypeView';
+import ActivityView from './ActivityView';
+import ProcessTypeView from './ProcessTypeView';
+import PropertyTypeView from './PropertyTypeView';
+import EnterpriseSizeView from './EnterpriseSizeView';
+import PollutionPotentialView from './PollutionPotentialView';
+import ReferenceUnitView from './ReferenceUnitView';
+import StudyTypeView from './StudyTypeView';
+import DocumentationView from './DocumentationView';
+import BillingConfigurationView from './BillingConfigurationView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -30,9 +39,9 @@ const entityConfigs = {
       { key: 'name', label: 'Nome', type: 'text' as const },
       { key: 'abbreviation', label: 'Sigla', type: 'text' as const },
       { key: 'description', label: 'Descrição', type: 'text' as const },
-      { 
-        key: 'default_deadline_days', 
-        label: 'Prazo (dias)', 
+      {
+        key: 'default_deadline_days',
+        label: 'Prazo (dias)',
         type: 'number' as const,
         render: (value: number) => value ? `${value} dias` : '-'
       },
@@ -43,7 +52,49 @@ const entityConfigs = {
       { key: 'abbreviation', label: 'Sigla/Abreviação', type: 'text' as const, placeholder: 'Ex: LP, AA, RE' },
       { key: 'description', label: 'Descrição', type: 'textarea' as const, placeholder: 'Descrição detalhada do tipo de processo' },
       { key: 'default_deadline_days', label: 'Prazo Padrão (dias)', type: 'number' as const, placeholder: 'Ex: 180, 120, 90' },
-      { key: 'display_order', label: 'Ordem de Exibição', type: 'number' as const, placeholder: 'Ex: 1, 2, 3...' }
+      { key: 'display_order', label: 'Ordem de Exibição', type: 'number' as const, placeholder: 'Ex: 1, 2, 3...' },
+      {
+        key: 'fluxo',
+        label: 'Fluxo',
+        type: 'select' as const,
+        options: [
+          { value: 'simplificado', label: 'Simplificado' },
+          { value: 'regular', label: 'Regular' },
+          { value: 'complexo', label: 'Complexo' }
+        ],
+        placeholder: 'Selecione o fluxo do processo'
+      },
+      {
+        key: 'categoria_processo',
+        label: 'Categoria do Processo',
+        type: 'select' as const,
+        options: [
+          { value: 'licenciamento', label: 'Licenciamento' },
+          { value: 'autorizacao', label: 'Autorização' },
+          { value: 'regularizacao', label: 'Regularização' },
+          { value: 'renovacao', label: 'Renovação' },
+          { value: 'alteracao', label: 'Alteração' }
+        ],
+        placeholder: 'Selecione a categoria do processo'
+      },
+      {
+        key: 'prazo_cumprimento_oficio_dias',
+        label: 'Prazo para cumprimento do ofício de pendência (dias)',
+        type: 'number' as const,
+        placeholder: 'Ex: 30, 60, 90'
+      },
+      {
+        key: 'prazo_confirmacao_email_dias',
+        label: 'Prazo para confirmação de recebimento do e-mail (dias)',
+        type: 'number' as const,
+        placeholder: 'Ex: 5, 10, 15'
+      },
+      {
+        key: 'limite_oficios_pendencias',
+        label: 'Limite para criação de Ofícios de Pendências',
+        type: 'number' as const,
+        placeholder: 'Ex: 3, 5, 10'
+      }
     ]
   },
   'enterprise-sizes': {
@@ -343,8 +394,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types
-    if (activeSection === 'license-types') {
+    // Show view component for license types, activities, process types, property types, enterprise sizes, pollution potentials, reference units, study types, documentation, and billing configurations
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units' || activeSection === 'study-types' || activeSection === 'documentation-templates' || activeSection === 'billing-configurations') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -406,7 +457,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          {!showForm ? (
+          {showView ? (
+            <BillingConfigurationView
+              item={viewingItem}
+              onBack={() => {
+                setShowView(false);
+                setViewingItem(null);
+              }}
+            />
+          ) : !showForm ? (
             <GenericCRUD
               key={`${activeSection}-${refreshKey}`}
               title={currentConfig.title}
@@ -436,7 +495,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          {!showForm ? (
+          {showView ? (
+            <ActivityView
+              item={viewingItem}
+              onBack={() => {
+                setShowView(false);
+                setViewingItem(null);
+              }}
+            />
+          ) : !showForm ? (
             <GenericCRUD
               key={`${activeSection}-${refreshKey}`}
               title={currentConfig.title}
@@ -510,10 +577,43 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     );
   }
 
+  // Render appropriate view component based on section
+  const renderViewComponent = () => {
+    if (!showView || !viewingItem) return null;
+
+    const onBack = () => {
+      setShowView(false);
+      setViewingItem(null);
+    };
+
+    switch (activeSection) {
+      case 'property-types':
+        return <PropertyTypeView item={viewingItem} onBack={onBack} />;
+      case 'process-types':
+        return <ProcessTypeView item={viewingItem} onBack={onBack} />;
+      case 'enterprise-sizes':
+        return <EnterpriseSizeView item={viewingItem} onBack={onBack} />;
+      case 'pollution-potentials':
+        return <PollutionPotentialView item={viewingItem} onBack={onBack} />;
+      case 'reference-units':
+        return <ReferenceUnitView item={viewingItem} onBack={onBack} />;
+      case 'study-types':
+        return <StudyTypeView item={viewingItem} onBack={onBack} />;
+      case 'documentation-templates':
+        return <DocumentationView item={viewingItem} onBack={onBack} />;
+      case 'billing-configurations':
+        return <BillingConfigurationView item={viewingItem} onBack={onBack} />;
+      default:
+        return <ProcessTypeView item={viewingItem} onBack={onBack} />;
+    }
+  };
+
   return (
     <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
       <div className="p-6 h-full overflow-y-auto">
-        {!showForm ? (
+        {showView ? (
+          renderViewComponent()
+        ) : !showForm ? (
           <GenericCRUD
             key={`${activeSection}-${refreshKey}`}
             title={currentConfig.title}

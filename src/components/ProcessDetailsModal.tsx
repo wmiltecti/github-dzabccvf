@@ -6,7 +6,8 @@ import { CommentService } from '../services/commentService';
 import { CollaborationService } from '../services/collaborationService';
 import DocumentViewer from './DocumentViewer';
 import CollaborationPanel from './CollaborationPanel';
-import { X, FileText, Calendar, User, MapPin, Building2, Clock, CheckCircle, AlertTriangle, MessageSquare, Upload } from 'lucide-react';
+import BlockchainTab from './BlockchainTab';
+import { X, FileText, Calendar, User, MapPin, Building2, Clock, CheckCircle, AlertTriangle, MessageSquare, Upload, Link2 } from 'lucide-react';
 import ConfirmDialog from './ConfirmDialog';
 
 interface ProcessDetailsModalProps {
@@ -308,7 +309,8 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
     { id: 'timeline', name: 'Cronograma', icon: Clock },
     { id: 'documents', name: 'Documentos', icon: Upload },
     { id: 'comments', name: 'Comentários', icon: MessageSquare },
-    { id: 'collaboration', name: 'Colaboradores', icon: User }
+    { id: 'collaboration', name: 'Colaboradores', icon: User },
+    { id: 'blockchain', name: 'Blockchain', icon: Link2 }
   ];
 
   const renderDetails = () => (
@@ -780,10 +782,14 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
   );
 
   const renderCollaboration = () => (
-    <CollaborationPanel 
-      processId={process.id} 
+    <CollaborationPanel
+      processId={process.id}
       userPermission={userPermission}
     />
+  );
+
+  const renderBlockchain = () => (
+    <BlockchainTab process={process} />
   );
 
   return (
@@ -833,6 +839,7 @@ export default function ProcessDetailsModal({ isOpen, onClose, process, onUpdate
           {activeTab === 'documents' && renderDocuments()}
           {activeTab === 'comments' && renderComments()}
           {activeTab === 'collaboration' && renderCollaboration()}
+          {activeTab === 'blockchain' && renderBlockchain()}
         </div>
       </div>
 

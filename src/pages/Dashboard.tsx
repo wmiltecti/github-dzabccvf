@@ -1413,7 +1413,8 @@ export default function Dashboard() {
 
                 {adminExpanded && (
                   <div className="mt-1 space-y-1 pl-6 sm:pl-8">
-                    <div>
+                    {/* Menu "Geral" comentado - removido da interface */}
+                    {/* <div>
                       <button
                         onClick={() => setGeneralExpanded(!generalExpanded)}
                         className={`w-full flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
@@ -1459,7 +1460,7 @@ export default function Dashboard() {
                           ))}
                         </div>
                       )}
-                    </div>
+                    </div> */}
 
                     {adminDirectSections.map((subItem) => (
                       <button
