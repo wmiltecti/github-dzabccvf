@@ -38,15 +38,15 @@ export default function AtividadesEmpreendimentoPage({
   const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
 
   const [consultasData, setConsultasData] = useState({
-    unidades_conservacao_icmbio: [{ nome: '', grupo: '', area_sobreposicao: '' }],
-    unidades_conservacao_estaduais: [{ nome: '', grupo: '', area_sobreposicao: '' }],
-    zonas_amortecimento: [{ nome: '', area_sobreposicao: '' }],
-    unidades_conservacao_municipais: [{ nome: '', grupo: '', area_sobreposicao: '' }],
-    embargos_ibama: [{ descricao_infracao: '', area_sobreposicao: '', data_embargo: '' }],
-    embargos_icmbio: [{ descricao_infracao: '', area_sobreposicao: '', data_embargo: '' }],
-    embargos_estaduais: [{ area_sobreposicao: '', data_embargo: '' }],
-    terras_indigenas: [{ nome: '', area_sobreposicao: '' }],
-    desmatamento_prodes: [{ data_deteccao: '', area_sobreposicao: '' }]
+    unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
+    unidades_conservacao_estaduais: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
+    zonas_amortecimento: [] as Array<{ nome: string; area_sobreposicao: string }>,
+    unidades_conservacao_municipais: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
+    embargos_ibama: [] as Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>,
+    embargos_icmbio: [] as Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>,
+    embargos_estaduais: [] as Array<{ area_sobreposicao: string; data_embargo: string }>,
+    terras_indigenas: [] as Array<{ nome: string; area_sobreposicao: string }>,
+    desmatamento_prodes: [] as Array<{ data_deteccao: string; area_sobreposicao: string }>
   });
 
   useEffect(() => {
@@ -153,40 +153,6 @@ export default function AtividadesEmpreendimentoPage({
     toast.info(`Arquivo ${fileName} removido.`);
   };
 
-  const addConsultaRow = (tipo: keyof typeof consultasData) => {
-    setConsultasData(prev => {
-      const newRow = tipo === 'unidades_conservacao_icmbio' || tipo === 'unidades_conservacao_estaduais' || tipo === 'unidades_conservacao_municipais'
-        ? { nome: '', grupo: '', area_sobreposicao: '' }
-        : tipo === 'zonas_amortecimento' || tipo === 'terras_indigenas'
-        ? { nome: '', area_sobreposicao: '' }
-        : tipo === 'embargos_ibama' || tipo === 'embargos_icmbio'
-        ? { descricao_infracao: '', area_sobreposicao: '', data_embargo: '' }
-        : tipo === 'embargos_estaduais'
-        ? { area_sobreposicao: '', data_embargo: '' }
-        : { data_deteccao: '', area_sobreposicao: '' };
-
-      return {
-        ...prev,
-        [tipo]: [...prev[tipo], newRow]
-      };
-    });
-  };
-
-  const removeConsultaRow = (tipo: keyof typeof consultasData, index: number) => {
-    setConsultasData(prev => ({
-      ...prev,
-      [tipo]: prev[tipo].filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateConsultaField = (tipo: keyof typeof consultasData, index: number, field: string, value: string) => {
-    setConsultasData(prev => ({
-      ...prev,
-      [tipo]: prev[tipo].map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
-    }));
-  };
 
   const handleNext = () => {
     if (selectedActivities.length === 0) {
@@ -465,573 +431,290 @@ export default function AtividadesEmpreendimentoPage({
       <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Consultas</h3>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Unidades de Conservação ICMBio */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação ICMBio</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.unidades_conservacao_icmbio.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.nome}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_icmbio', idx, 'nome', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.grupo}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_icmbio', idx, 'grupo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_icmbio', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.unidades_conservacao_icmbio.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('unidades_conservacao_icmbio', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.unidades_conservacao_icmbio.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.unidades_conservacao_icmbio.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('unidades_conservacao_icmbio')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Unidades de Conservação Estaduais */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Estaduais</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.unidades_conservacao_estaduais.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.nome}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_estaduais', idx, 'nome', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.grupo}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_estaduais', idx, 'grupo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_estaduais', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.unidades_conservacao_estaduais.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('unidades_conservacao_estaduais', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.unidades_conservacao_estaduais.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.unidades_conservacao_estaduais.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('unidades_conservacao_estaduais')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Zonas de Amortecimento */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Zonas de Amortecimento de Unidades de Conservação Estaduais</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.zonas_amortecimento.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.nome}
-                        onChange={(e) => updateConsultaField('zonas_amortecimento', idx, 'nome', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('zonas_amortecimento', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.zonas_amortecimento.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('zonas_amortecimento', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.zonas_amortecimento.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.zonas_amortecimento.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('zonas_amortecimento')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Unidades de Conservação Municipais */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Municipais</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.unidades_conservacao_municipais.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.nome}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_municipais', idx, 'nome', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.grupo}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_municipais', idx, 'grupo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('unidades_conservacao_municipais', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.unidades_conservacao_municipais.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('unidades_conservacao_municipais', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.unidades_conservacao_municipais.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.unidades_conservacao_municipais.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('unidades_conservacao_municipais')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Embargos IBAMA */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos IBAMA</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.embargos_ibama.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.descricao_infracao}
-                        onChange={(e) => updateConsultaField('embargos_ibama', idx, 'descricao_infracao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('embargos_ibama', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="date"
-                        value={row.data_embargo}
-                        onChange={(e) => updateConsultaField('embargos_ibama', idx, 'data_embargo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.embargos_ibama.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('embargos_ibama', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.embargos_ibama.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.embargos_ibama.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.descricao_infracao}</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('embargos_ibama')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Embargos ICMBio */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos ICMBio</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.embargos_icmbio.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.descricao_infracao}
-                        onChange={(e) => updateConsultaField('embargos_icmbio', idx, 'descricao_infracao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('embargos_icmbio', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="date"
-                        value={row.data_embargo}
-                        onChange={(e) => updateConsultaField('embargos_icmbio', idx, 'data_embargo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.embargos_icmbio.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('embargos_icmbio', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.embargos_icmbio.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.embargos_icmbio.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.descricao_infracao}</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('embargos_icmbio')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Embargos Estaduais */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos Estaduais</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.embargos_estaduais.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('embargos_estaduais', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="date"
-                        value={row.data_embargo}
-                        onChange={(e) => updateConsultaField('embargos_estaduais', idx, 'data_embargo', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.embargos_estaduais.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('embargos_estaduais', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.embargos_estaduais.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.embargos_estaduais.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('embargos_estaduais')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Terras Indígenas */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Terras Indígenas</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.terras_indigenas.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.nome}
-                        onChange={(e) => updateConsultaField('terras_indigenas', idx, 'nome', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('terras_indigenas', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.terras_indigenas.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('terras_indigenas', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.terras_indigenas.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.terras_indigenas.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('terras_indigenas')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
 
           {/* Desmatamento PRODES */}
           <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300 mb-2">
+            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
               <h4 className="text-sm font-semibold text-gray-900 text-center">Desmatamento PRODES</h4>
             </div>
-            <table className="w-full border-collapse border border-gray-300 mb-2">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
-                <tr className="bg-white">
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data da Detecção</th>
-                  <th className="border border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="border border-gray-300 px-3 py-2 w-20"></th>
+                <tr className="bg-white border-b border-gray-300">
+                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data da Detecção</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
                 </tr>
               </thead>
               <tbody>
-                {consultasData.desmatamento_prodes.map((row, idx) => (
-                  <tr key={idx} className="bg-gray-50">
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="date"
-                        value={row.data_deteccao}
-                        onChange={(e) => updateConsultaField('desmatamento_prodes', idx, 'data_deteccao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.area_sobreposicao}
-                        onChange={(e) => updateConsultaField('desmatamento_prodes', idx, 'area_sobreposicao', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="---"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-2 py-2 text-center">
-                      {consultasData.desmatamento_prodes.length > 1 && (
-                        <button
-                          onClick={() => removeConsultaRow('desmatamento_prodes', idx)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </td>
+                {consultasData.desmatamento_prodes.length === 0 ? (
+                  <tr className="bg-gray-50">
+                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
                   </tr>
-                ))}
+                ) : (
+                  consultasData.desmatamento_prodes.map((row, idx) => (
+                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.data_deteccao}</td>
+                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-            <button
-              onClick={() => addConsultaRow('desmatamento_prodes')}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Adicionar linha
-            </button>
           </div>
         </div>
       </div>
