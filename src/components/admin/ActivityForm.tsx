@@ -164,15 +164,25 @@ export default function ActivityForm({
       setDocumentTemplates(documentsData || []);
       setStudyTypes(studyTypesData || []);
 
-      // Load pollution potentials (manter Supabase por enquanto)
-      const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
-        .from('pollution_potentials')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
+      // Load pollution potentials via API REST
+      const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      const pollutionResponse = await fetch(`${apiUrl}/referencias/pollution-potentials`);
+      if (pollutionResponse.ok) {
+        const pollutionPotentialsData = await pollutionResponse.json();
+        setPollutionPotentials(pollutionPotentialsData || []);
+        console.log('✅ Potenciais poluidores carregados da API:', pollutionPotentialsData);
+      } else {
+        console.warn('⚠️ Erro ao carregar potenciais poluidores da API:', pollutionResponse.status);
+        // Fallback para Supabase
+        const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
+          .from('pollution_potentials')
+          .select('id, name')
+          .eq('is_active', true)
+          .order('name');
 
-      if (pollutionPotentialsError) throw pollutionPotentialsError;
-      setPollutionPotentials(pollutionPotentialsData || []);
+        if (pollutionPotentialsError) throw pollutionPotentialsError;
+        setPollutionPotentials(pollutionPotentialsData || []);
+      }
 
     } catch (error) {
       console.error('Error loading dropdown data:', error);
