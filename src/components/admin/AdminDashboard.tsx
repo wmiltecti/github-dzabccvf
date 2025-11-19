@@ -13,6 +13,7 @@ import ProcessTypeView from './ProcessTypeView';
 import PropertyTypeView from './PropertyTypeView';
 import EnterpriseSizeView from './EnterpriseSizeView';
 import PollutionPotentialView from './PollutionPotentialView';
+import ReferenceUnitView from './ReferenceUnitView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -348,8 +349,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types, activities, process types, property types, enterprise sizes, and pollution potentials
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials') {
+    // Show view component for license types, activities, process types, property types, enterprise sizes, pollution potentials, and reference units
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -541,6 +542,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
         return <EnterpriseSizeView item={viewingItem} onBack={onBack} />;
       case 'pollution-potentials':
         return <PollutionPotentialView item={viewingItem} onBack={onBack} />;
+      case 'reference-units':
+        return <ReferenceUnitView item={viewingItem} onBack={onBack} />;
       default:
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
     }
