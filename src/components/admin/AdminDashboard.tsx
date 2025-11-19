@@ -9,6 +9,7 @@ import LicenseTypeForm from './LicenseTypeForm';
 import SystemConfigSettings from './SystemConfigSettings';
 import LicenseTypeView from './LicenseTypeView';
 import ActivityView from './ActivityView';
+import ProcessTypeView from './ProcessTypeView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -344,8 +345,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types and activities
-    if (activeSection === 'license-types' || activeSection === 'activities') {
+    // Show view component for license types, activities, and process types
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -522,7 +523,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   return (
     <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
       <div className="p-6 h-full overflow-y-auto">
-        {!showForm ? (
+        {showView ? (
+          <ProcessTypeView
+            item={viewingItem}
+            onBack={() => {
+              setShowView(false);
+              setViewingItem(null);
+            }}
+          />
+        ) : !showForm ? (
           <GenericCRUD
             key={`${activeSection}-${refreshKey}`}
             title={currentConfig.title}
