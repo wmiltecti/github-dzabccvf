@@ -20,6 +20,18 @@ interface SelectedActivity {
   quantidade?: string;
   unidade?: string;
   area_ocupada?: string;
+  geoFiles?: string[];
+  consultasData?: {
+    unidades_conservacao_icmbio: Array<{ nome: string; grupo: string; area_sobreposicao: string }>;
+    unidades_conservacao_estaduais: Array<{ nome: string; grupo: string; area_sobreposicao: string }>;
+    zonas_amortecimento: Array<{ nome: string; area_sobreposicao: string }>;
+    unidades_conservacao_municipais: Array<{ nome: string; grupo: string; area_sobreposicao: string }>;
+    embargos_ibama: Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>;
+    embargos_icmbio: Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>;
+    embargos_estaduais: Array<{ area_sobreposicao: string; data_embargo: string }>;
+    terras_indigenas: Array<{ nome: string; area_sobreposicao: string }>;
+    desmatamento_prodes: Array<{ data_deteccao: string; area_sobreposicao: string }>;
+  };
 }
 
 export default function AtividadesEmpreendimentoPage({
@@ -34,20 +46,7 @@ export default function AtividadesEmpreendimentoPage({
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
-  const [showGeoUpload, setShowGeoUpload] = useState(false);
-  const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
-
-  const [consultasData, setConsultasData] = useState({
-    unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
-    unidades_conservacao_estaduais: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
-    zonas_amortecimento: [] as Array<{ nome: string; area_sobreposicao: string }>,
-    unidades_conservacao_municipais: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
-    embargos_ibama: [] as Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>,
-    embargos_icmbio: [] as Array<{ descricao_infracao: string; area_sobreposicao: string; data_embargo: string }>,
-    embargos_estaduais: [] as Array<{ area_sobreposicao: string; data_embargo: string }>,
-    terras_indigenas: [] as Array<{ nome: string; area_sobreposicao: string }>,
-    desmatamento_prodes: [] as Array<{ data_deteccao: string; area_sobreposicao: string }>
-  });
+  const [expandedActivityIndex, setExpandedActivityIndex] = useState<number | null>(null);
 
   useEffect(() => {
     loadActivities();
@@ -142,15 +141,23 @@ export default function AtividadesEmpreendimentoPage({
     setSelectedActivities(updated);
   };
 
-  const handleGeoUpload = (data: any[], fileName: string) => {
-    setUploadedGeoFiles(prev => [...prev, fileName]);
+  const handleGeoUpload = (activityIndex: number, data: any[], fileName: string) => {
+    const updated = [...selectedActivities];
+    const currentFiles = updated[activityIndex].geoFiles || [];
+    updated[activityIndex].geoFiles = [...currentFiles, fileName];
+    setSelectedActivities(updated);
     toast.success(`Arquivo ${fileName} carregado com sucesso! ${data.length} registros processados.`);
-    setShowGeoUpload(false);
   };
 
-  const handleRemoveGeoFile = (fileName: string) => {
-    setUploadedGeoFiles(prev => prev.filter(f => f !== fileName));
+  const handleRemoveGeoFile = (activityIndex: number, fileName: string) => {
+    const updated = [...selectedActivities];
+    updated[activityIndex].geoFiles = (updated[activityIndex].geoFiles || []).filter(f => f !== fileName);
+    setSelectedActivities(updated);
     toast.info(`Arquivo ${fileName} removido.`);
+  };
+
+  const toggleActivityExpansion = (index: number) => {
+    setExpandedActivityIndex(expandedActivityIndex === index ? null : index);
   };
 
 
@@ -413,6 +420,100 @@ export default function AtividadesEmpreendimentoPage({
                   />
                 </div>
               </div>
+
+              {/* Seção de Dados Georreferenciados */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => toggleActivityExpansion(index)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <h4 className="text-sm font-semibold text-gray-900">Dados Georreferenciados e Consultas</h4>
+                  <span className="text-gray-500">
+                    {expandedActivityIndex === index ? '▼' : '▶'}
+                  </span>
+                </button>
+
+                {expandedActivityIndex === index && (
+                  <div className="mt-4 space-y-4">
+                    {/* Upload de Arquivos Geo */}
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-medium text-gray-900">Arquivos Georreferenciados</h5>
+                      </div>
+
+                      <GeoUpload
+                        onDataLoad={(data, fileName) => handleGeoUpload(index, data, fileName)}
+                      />
+
+                      {activity.geoFiles && activity.geoFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-xs font-medium text-gray-700">Arquivos carregados:</p>
+                          {activity.geoFiles.map((file, fileIdx) => (
+                            <div
+                              key={fileIdx}
+                              className="flex items-center justify-between bg-white p-2 rounded border border-gray-200"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-green-600" />
+                                <span className="text-sm text-gray-700">{file}</span>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveGeoFile(index, file)}
+                                className="text-red-600 hover:text-red-800"
+                                title="Remover arquivo"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tabelas de Consultas */}
+                    {activity.consultasData && (
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <h5 className="text-sm font-semibold text-gray-900 mb-4">Resultados das Consultas</h5>
+
+                        <div className="space-y-4">
+                          {/* Unidades de Conservação ICMBio */}
+                          <div>
+                            <div className="bg-gray-100 px-3 py-2 border border-gray-300 rounded-t">
+                              <h6 className="text-xs font-semibold text-gray-900 text-center">Unidades de Conservação ICMBio</h6>
+                            </div>
+                            <table className="w-full text-xs border-collapse border border-gray-300">
+                              <thead>
+                                <tr className="bg-white">
+                                  <th className="border border-gray-300 px-2 py-1 text-left">Nome</th>
+                                  <th className="border border-gray-300 px-2 py-1 text-left">Grupo</th>
+                                  <th className="border border-gray-300 px-2 py-1 text-left">Área Sobreposição</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {activity.consultasData.unidades_conservacao_icmbio.length === 0 ? (
+                                  <tr className="bg-gray-50">
+                                    <td className="border border-gray-300 px-2 py-2 text-gray-600">Nada Encontrado</td>
+                                    <td className="border border-gray-300 px-2 py-2 text-center text-gray-600">---</td>
+                                    <td className="border border-gray-300 px-2 py-2 text-center text-gray-600">---</td>
+                                  </tr>
+                                ) : (
+                                  activity.consultasData.unidades_conservacao_icmbio.map((row, idx) => (
+                                    <tr key={idx} className="bg-gray-50">
+                                      <td className="border border-gray-300 px-2 py-2">{row.nome}</td>
+                                      <td className="border border-gray-300 px-2 py-2">{row.grupo}</td>
+                                      <td className="border border-gray-300 px-2 py-2">{row.area_sobreposicao}</td>
+                                    </tr>
+                                  ))
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           );})}
         </div>
@@ -427,348 +528,6 @@ export default function AtividadesEmpreendimentoPage({
           </p>
         </div>
       )}
-
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Consultas</h3>
-
-        <div className="space-y-6">
-          {/* Unidades de Conservação ICMBio */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação ICMBio</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.unidades_conservacao_icmbio.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.unidades_conservacao_icmbio.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Unidades de Conservação Estaduais */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Estaduais</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.unidades_conservacao_estaduais.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.unidades_conservacao_estaduais.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Zonas de Amortecimento */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Zonas de Amortecimento de Unidades de Conservação Estaduais</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.zonas_amortecimento.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.zonas_amortecimento.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Unidades de Conservação Municipais */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Municipais</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.unidades_conservacao_municipais.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.unidades_conservacao_municipais.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.grupo}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Embargos IBAMA */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos IBAMA</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.embargos_ibama.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.embargos_ibama.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.descricao_infracao}</td>
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Embargos ICMBio */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos ICMBio</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.embargos_icmbio.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.embargos_icmbio.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.descricao_infracao}</td>
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Embargos Estaduais */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos Estaduais</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.embargos_estaduais.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.embargos_estaduais.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.data_embargo}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Terras Indígenas */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Terras Indígenas</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.terras_indigenas.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.terras_indigenas.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.nome}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Desmatamento PRODES */}
-          <div>
-            <div className="bg-gray-50 px-4 py-2 border border-gray-300">
-              <h4 className="text-sm font-semibold text-gray-900 text-center">Desmatamento PRODES</h4>
-            </div>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-white border-b border-gray-300">
-                  <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data da Detecção</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
-                </tr>
-              </thead>
-              <tbody>
-                {consultasData.desmatamento_prodes.length === 0 ? (
-                  <tr className="bg-gray-50">
-                    <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
-                    <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
-                  </tr>
-                ) : (
-                  consultasData.desmatamento_prodes.map((row, idx) => (
-                    <tr key={idx} className="bg-gray-50 border-t border-gray-300">
-                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-900">{row.data_deteccao}</td>
-                      <td className="px-3 py-3 text-sm text-gray-900">{row.area_sobreposicao}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Dados Georreferenciados</h3>
-          <button
-            onClick={() => setShowGeoUpload(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            Upload de Arquivos Geo
-          </button>
-        </div>
-
-        {uploadedGeoFiles.length > 0 ? (
-          <div className="space-y-2">
-            {uploadedGeoFiles.map((fileName, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-gray-700">{fileName}</span>
-                </div>
-                <button
-                  onClick={() => handleRemoveGeoFile(fileName)}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 text-sm">
-              Nenhum arquivo georreferenciado carregado
-            </p>
-            <p className="text-gray-500 text-xs mt-1">
-              Clique no botão acima para fazer upload de arquivos CSV, JSON, GeoJSON ou KML
-            </p>
-          </div>
-        )}
-      </div>
-
-      <GeoUpload
-        isOpen={showGeoUpload}
-        onClose={() => setShowGeoUpload(false)}
-        onUpload={handleGeoUpload}
-      />
 
       <div className="flex justify-between pt-6 mt-6 border-t border-gray-200">
         <button
