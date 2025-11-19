@@ -16,6 +16,7 @@ import PollutionPotentialView from './PollutionPotentialView';
 import ReferenceUnitView from './ReferenceUnitView';
 import StudyTypeView from './StudyTypeView';
 import DocumentationView from './DocumentationView';
+import BillingConfigurationView from './BillingConfigurationView';
 
 // Form field configurations for each entity
 const entityConfigs = {
@@ -351,8 +352,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
   };
 
   const handleView = (item: any) => {
-    // Show view component for license types, activities, process types, property types, enterprise sizes, pollution potentials, reference units, study types, and documentation
-    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units' || activeSection === 'study-types' || activeSection === 'documentation-templates') {
+    // Show view component for license types, activities, process types, property types, enterprise sizes, pollution potentials, reference units, study types, documentation, and billing configurations
+    if (activeSection === 'license-types' || activeSection === 'activities' || activeSection === 'process-types' || activeSection === 'property-types' || activeSection === 'enterprise-sizes' || activeSection === 'pollution-potentials' || activeSection === 'reference-units' || activeSection === 'study-types' || activeSection === 'documentation-templates' || activeSection === 'billing-configurations') {
       setViewingItem(item);
       setShowView(true);
       return;
@@ -550,6 +551,8 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
         return <StudyTypeView item={viewingItem} onBack={onBack} />;
       case 'documentation-templates':
         return <DocumentationView item={viewingItem} onBack={onBack} />;
+      case 'billing-configurations':
+        return <BillingConfigurationView item={viewingItem} onBack={onBack} />;
       default:
         return <ProcessTypeView item={viewingItem} onBack={onBack} />;
     }
