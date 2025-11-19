@@ -39,9 +39,9 @@ const entityConfigs = {
       { key: 'name', label: 'Nome', type: 'text' as const },
       { key: 'abbreviation', label: 'Sigla', type: 'text' as const },
       { key: 'description', label: 'Descrição', type: 'text' as const },
-      { 
-        key: 'default_deadline_days', 
-        label: 'Prazo (dias)', 
+      {
+        key: 'default_deadline_days',
+        label: 'Prazo (dias)',
         type: 'number' as const,
         render: (value: number) => value ? `${value} dias` : '-'
       },
@@ -52,7 +52,49 @@ const entityConfigs = {
       { key: 'abbreviation', label: 'Sigla/Abreviação', type: 'text' as const, placeholder: 'Ex: LP, AA, RE' },
       { key: 'description', label: 'Descrição', type: 'textarea' as const, placeholder: 'Descrição detalhada do tipo de processo' },
       { key: 'default_deadline_days', label: 'Prazo Padrão (dias)', type: 'number' as const, placeholder: 'Ex: 180, 120, 90' },
-      { key: 'display_order', label: 'Ordem de Exibição', type: 'number' as const, placeholder: 'Ex: 1, 2, 3...' }
+      { key: 'display_order', label: 'Ordem de Exibição', type: 'number' as const, placeholder: 'Ex: 1, 2, 3...' },
+      {
+        key: 'fluxo',
+        label: 'Fluxo',
+        type: 'select' as const,
+        options: [
+          { value: 'simplificado', label: 'Simplificado' },
+          { value: 'regular', label: 'Regular' },
+          { value: 'complexo', label: 'Complexo' }
+        ],
+        placeholder: 'Selecione o fluxo do processo'
+      },
+      {
+        key: 'categoria_processo',
+        label: 'Categoria do Processo',
+        type: 'select' as const,
+        options: [
+          { value: 'licenciamento', label: 'Licenciamento' },
+          { value: 'autorizacao', label: 'Autorização' },
+          { value: 'regularizacao', label: 'Regularização' },
+          { value: 'renovacao', label: 'Renovação' },
+          { value: 'alteracao', label: 'Alteração' }
+        ],
+        placeholder: 'Selecione a categoria do processo'
+      },
+      {
+        key: 'prazo_cumprimento_oficio_dias',
+        label: 'Prazo para cumprimento do ofício de pendência (dias)',
+        type: 'number' as const,
+        placeholder: 'Ex: 30, 60, 90'
+      },
+      {
+        key: 'prazo_confirmacao_email_dias',
+        label: 'Prazo para confirmação de recebimento do e-mail (dias)',
+        type: 'number' as const,
+        placeholder: 'Ex: 5, 10, 15'
+      },
+      {
+        key: 'limite_oficios_pendencias',
+        label: 'Limite para criação de Ofícios de Pendências',
+        type: 'number' as const,
+        placeholder: 'Ex: 3, 5, 10'
+      }
     ]
   },
   'enterprise-sizes': {

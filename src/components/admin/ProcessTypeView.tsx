@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, FileText, Calendar, Hash, SortAsc, Info } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Hash, SortAsc, Info, Workflow, Tag, Mail, AlertCircle } from 'lucide-react';
 
 interface ProcessTypeViewProps {
   item: any;
@@ -37,6 +37,43 @@ export default function ProcessTypeView({ item, onBack }: ProcessTypeViewProps) 
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Fluxo e Categoria */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Fluxo */}
+            {item.fluxo && (
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Workflow className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-purple-900">Fluxo</label>
+                    <p className="text-lg font-semibold text-purple-700 capitalize">
+                      {item.fluxo}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Categoria do Processo */}
+            {item.categoria_processo && (
+              <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <Tag className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-indigo-900">Categoria do Processo</label>
+                    <p className="text-lg font-semibold text-indigo-700 capitalize">
+                      {item.categoria_processo}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Basic Information Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Default Deadline */}
@@ -72,6 +109,57 @@ export default function ProcessTypeView({ item, onBack }: ProcessTypeViewProps) 
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Prazos Adicionais */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-gray-600" />
+              Prazos e Limites
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Prazo Cumprimento Ofício */}
+              {item.prazo_cumprimento_oficio_dias && (
+                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-5 h-5 text-orange-600" />
+                    <label className="text-xs font-medium text-orange-900">Prazo Cumprimento Ofício</label>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {item.prazo_cumprimento_oficio_dias}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">dias</p>
+                </div>
+              )}
+
+              {/* Prazo Confirmação E-mail */}
+              {item.prazo_confirmacao_email_dias && (
+                <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mail className="w-5 h-5 text-cyan-600" />
+                    <label className="text-xs font-medium text-cyan-900">Prazo Confirmação E-mail</label>
+                  </div>
+                  <p className="text-2xl font-bold text-cyan-700">
+                    {item.prazo_confirmacao_email_dias}
+                  </p>
+                  <p className="text-xs text-cyan-600 mt-1">dias</p>
+                </div>
+              )}
+
+              {/* Limite Ofícios Pendências */}
+              {item.limite_oficios_pendencias && (
+                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Hash className="w-5 h-5 text-red-600" />
+                    <label className="text-xs font-medium text-red-900">Limite Ofícios Pendências</label>
+                  </div>
+                  <p className="text-2xl font-bold text-red-700">
+                    {item.limite_oficios_pendencias}
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">ofícios</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Description */}
