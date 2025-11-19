@@ -415,7 +415,15 @@ export default function AdminDashboard({ initialSection = 'property-types' }: Ad
     return (
       <AdminLayout activeSection={activeSection} onSectionChange={setActiveSection}>
         <div className="p-6 h-full overflow-y-auto">
-          {!showForm ? (
+          {showView ? (
+            <BillingConfigurationView
+              item={viewingItem}
+              onBack={() => {
+                setShowView(false);
+                setViewingItem(null);
+              }}
+            />
+          ) : !showForm ? (
             <GenericCRUD
               key={`${activeSection}-${refreshKey}`}
               title={currentConfig.title}
