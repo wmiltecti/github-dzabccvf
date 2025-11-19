@@ -22,7 +22,7 @@ export default function ProcessTypeView({ item, onBack }: ProcessTypeViewProps) 
 
       {/* Process Type Info Card */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
@@ -30,7 +30,7 @@ export default function ProcessTypeView({ item, onBack }: ProcessTypeViewProps) 
             <div>
               <h2 className="text-2xl font-bold text-white">{item.name}</h2>
               {item.abbreviation && (
-                <p className="text-purple-100">Sigla: {item.abbreviation}</p>
+                <p className="text-blue-100">Sigla: {item.abbreviation}</p>
               )}
             </div>
           </div>
