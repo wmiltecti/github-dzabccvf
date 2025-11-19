@@ -199,38 +199,43 @@ try:
     except Exception as e:
         print(f"  ⚠️ Campo Descrição não preenchido: {e}")
     
-    # Preencher campos select (Unidade, Potencial)
+    # Preencher Unidade de Medida (select)
     try:
-        # Esperar um pouco para garantir que o formulário carregou completamente
         time.sleep(1)
+        unit_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Unidade de Medida')]")
+        unit_select = unit_label.find_element(By.XPATH, "./following-sibling::select")
+        select_unit = Select(unit_select)
         
-        selects = modal_element.find_elements(By.CSS_SELECTOR, 'select')
-        print(f"  ℹ️ Encontrados {len(selects)} campos select")
-        
-        selects_preenchidos = 0
-        for i, select_elem in enumerate(selects):
-            try:
-                # Scroll para o select
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", select_elem)
-                time.sleep(0.3)
-                
-                if select_elem.is_displayed() and select_elem.is_enabled():
-                    select = Select(select_elem)
-                    options = select.options
-                    if len(options) > 1:  # Pular placeholder
-                        select.select_by_index(1)  # Selecionar primeira opção real
-                        selected_text = select.first_selected_option.text
-                        print(f"  ✓ Select {i+1}: {selected_text}")
-                        selects_preenchidos += 1
-                        time.sleep(0.3)
-                else:
-                    print(f"  ⚠️ Select {i+1} não está visível ou habilitado")
-            except Exception as e:
-                print(f"  ⚠️ Erro ao preencher select {i+1}: {e}")
-        
-        print(f"  ℹ️ Total de selects preenchidos: {selects_preenchidos}")
+        if len(select_unit.options) > 1:
+            select_unit.select_by_index(1)
+            selected_unit = select_unit.first_selected_option.text
+            print(f"  ✓ Unidade de Medida: {selected_unit}")
+            time.sleep(0.3)
     except Exception as e:
-        print(f"  ℹ️ Campos select não preenchidos: {e}")
+        print(f"  ⚠️ Erro ao preencher Unidade de Medida: {e}")
+    
+    # Preencher Potencial Poluidor (select - OBRIGATÓRIO)
+    try:
+        potential_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Potencial Poluidor')]")
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", potential_label)
+        time.sleep(0.5)
+        
+        potential_select = potential_label.find_element(By.XPATH, "./following-sibling::select")
+        select_potential = Select(potential_select)
+        
+        print(f"  ℹ️ Opções de Potencial Poluidor: {len(select_potential.options)}")
+        
+        if len(select_potential.options) > 1:
+            select_potential.select_by_index(1)  # Selecionar primeiro potencial disponível
+            selected_potential = select_potential.first_selected_option.text
+            print(f"  ✓ Potencial Poluidor: {selected_potential}")
+            time.sleep(0.3)
+        else:
+            print(f"  ⚠️ Nenhum potencial poluidor disponível (banco pode estar vazio ou API offline)")
+            print(f"  ⚠️ O teste não será salvo com sucesso, mas continuará para debug")
+    except Exception as e:
+        print(f"  ❌ Erro ao preencher Potencial Poluidor (OBRIGATÓRIO): {e}")
+        print(f"  ⚠️ Continuando teste mesmo com erro...")
     
     # Preencher Porte do Empreendimento (seção de faixas)
     try:
@@ -309,50 +314,53 @@ try:
     except Exception as e:
         print(f"  ❌ Erro ao preencher Porte/Faixas: {e}")
     
-    # Marcar pelo menos 1 tipo de licença (OBRIGATÓRIO)
+    # Adicionar pelo menos 1 tipo de licença (OBRIGATÓRIO - NOVA INTERFACE)
     try:
         # Procurar pela seção de "Tipos de Licença Aplicáveis"
         license_heading = driver.find_element(By.XPATH, "//label[contains(text(), 'Tipos de Licença Aplicáveis')]")
         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", license_heading)
+        time.sleep(1)
+        
+        # Clicar no botão "+ Adicionar Tipo de Licença"
+        add_license_button = modal_element.find_element(By.XPATH, "//button[contains(., 'Adicionar Tipo de Licença')]")
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_license_button)
+        time.sleep(0.5)
+        driver.execute_script("arguments[0].click();", add_license_button)
+        time.sleep(0.5)
+        print(f"  ✓ Botão 'Adicionar Tipo de Licença' clicado")
+        
+        # Aguardar o bloco de tipo de licença aparecer
         time.sleep(0.5)
         
-        # Encontrar o container dos checkboxes (div com grid)
-        license_container = license_heading.find_element(By.XPATH, "./following-sibling::div")
+        # Aguardar um pouco mais para a API carregar os tipos
+        time.sleep(2)
         
-        # Encontrar todos os labels clicáveis (que contêm o checkbox)
-        license_labels = license_container.find_elements(By.TAG_NAME, 'label')
-        print(f"  ℹ️ Encontrados {len(license_labels)} tipos de licença")
+        # Encontrar o select de tipo de licença (dropdown)
+        license_selects = modal_element.find_elements(By.XPATH, "//label[contains(text(), 'Tipo de Licença')]/following-sibling::select")
         
-        if license_labels:
-            # Clicar no primeiro label (isso aciona o handleLicenseTypeToggle)
-            first_label = license_labels[0]
+        print(f"  ℹ️ Dropdowns de tipo de licença encontrados: {len(license_selects)}")
+        
+        if license_selects:
+            select_license = Select(license_selects[0])
+            options = select_license.options
             
-            # Pegar o texto antes de clicar
-            label_text = first_label.text.strip().split('\n')[0]  # Primeira linha = sigla
+            print(f"  ℹ️ Opções no dropdown: {len(options)}")
+            for idx, opt in enumerate(options[:5]):  # Mostrar primeiras 5 opções
+                print(f"      [{idx}] {opt.text}")
             
-            # Clicar no label usando JavaScript (mais confiável que click())
-            driver.execute_script("arguments[0].click();", first_label)
-            time.sleep(0.5)
-            
-            # Verificar se o checkbox dentro foi marcado
-            checkbox = first_label.find_element(By.CSS_SELECTOR, 'input[type="checkbox"]')
-            is_checked = checkbox.is_selected()
-            
-            if is_checked:
-                print(f"  ✓ Tipo de Licença marcado: {label_text}")
+            # Pegar opções disponíveis (pular a primeira que é placeholder)
+            if len(options) > 1:
+                select_license.select_by_index(1)  # Selecionar primeira licença disponível
+                selected_license = select_license.first_selected_option.text
+                print(f"  ✓ Tipo de Licença selecionado: {selected_license}")
+                time.sleep(0.5)
             else:
-                print(f"  ⚠️ Label clicado mas checkbox não marcou: {label_text}")
-                # Tentar clicar de novo
-                driver.execute_script("arguments[0].click();", first_label)
-                time.sleep(0.3)
-                driver.execute_script("arguments[0].click();", first_label)
-                time.sleep(0.3)
-                is_checked_retry = checkbox.is_selected()
-                print(f"  ℹ️ Segunda tentativa: {is_checked_retry}")
+                print(f"  ⚠️ Nenhum tipo de licença disponível no dropdown (API não retornou dados?)")
+                print(f"  ⚠️ Continuando sem tipo de licença (teste vai falhar na validação)")
         else:
-            print("  ⚠️ Nenhum label de licença encontrado")
+            print(f"  ⚠️ Dropdown de tipo de licença não encontrado na página")
     except Exception as e:
-        print(f"  ⚠️ Erro ao marcar tipos de licença: {e}")
+        print(f"  ⚠️ Erro ao adicionar tipo de licença: {e}")
     
     driver.save_screenshot('tests/screenshots/activities_form_filled.png')
     print("  📸 Screenshot: activities_form_filled.png")
