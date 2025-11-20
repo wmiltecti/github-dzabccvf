@@ -4,7 +4,7 @@ import { useInscricaoStore } from '../lib/store/inscricao';
 import { criarProcesso } from '../services/processosService';
 import { getUserId } from '../utils/authToken';
 import { InscricaoProvider } from '../contexts/InscricaoContext';
-import InscricaoStepper from './InscricaoStepper';
+import InscricaoStepperSimple from './InscricaoStepperSimple';
 import { FileText, ArrowLeft, Save, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import http from '../lib/api/http';
@@ -12,10 +12,25 @@ import ConfirmDialog from './ConfirmDialog';
 import NotificationBell from './notifications/NotificationBell';
 import { useAuth } from '../contexts/AuthContext';
 
+// Mapeamento de rotas para steps (FONTE ÚNICA DE VERDADE)
+const ROUTE_TO_STEP: Record<string, number> = {
+  '/inscricao/empreendimento': 1,
+  '/inscricao/participantes': 2,
+  '/inscricao/licenca': 3,
+  '/inscricao/revisao': 4
+};
+
+const STEP_TO_ROUTE: Record<number, string> = {
+  1: '/inscricao/empreendimento',
+  2: '/inscricao/participantes',
+  3: '/inscricao/licenca',
+  4: '/inscricao/revisao'
+};
+
 export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentStep, reset, startNewInscricao } = useInscricaoStore();
+  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
 
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
@@ -26,13 +41,14 @@ export default function InscricaoLayout() {
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
 
-  // Mapeamento de step para rota (apenas para navegação)
-  const stepToRoute = {
-    1: '/inscricao/empreendimento',
-    2: '/inscricao/participantes',
-    3: '/inscricao/licenca',
-    4: '/inscricao/revisao'
-  };
+  // 🔥 CRITICAL: Sincroniza currentStep com a rota atual
+  useEffect(() => {
+    const stepNumber = ROUTE_TO_STEP[location.pathname];
+    if (stepNumber && stepNumber !== currentStep) {
+      console.log('🎯 [InscricaoLayout] Sincronizando step com rota:', location.pathname, '→', stepNumber);
+      setCurrentStep(stepNumber);
+    }
+  }, [location.pathname, currentStep, setCurrentStep]);
 
   // Criar processo ao montar o componente - EXATAMENTE IGUAL AO FORMWIZARD
   useEffect(() => {
@@ -85,8 +101,9 @@ export default function InscricaoLayout() {
   }, [location.pathname, navigate]);
 
   const handleStepClick = (step: number) => {
-    const route = stepToRoute[step as keyof typeof stepToRoute];
+    const route = STEP_TO_ROUTE[step];
     if (route) {
+      console.log('🖱️ [InscricaoLayout] Click no step:', step, '→', route);
       navigate(route);
     }
   };
@@ -196,14 +213,14 @@ export default function InscricaoLayout() {
         </div>
       </header>
 
-      {/* Provider envolve TUDO que usa contexto (Stepper + Pages) */}
-      <InscricaoProvider processoId={processoId}>
-        {/* Stepper */}
-        <InscricaoStepper 
-          currentStep={currentStep} 
-          onStepClick={handleStepClick}
-        />
+      {/* Stepper Simples */}
+      <InscricaoStepperSimple
+        currentStep={currentStep}
+        onStepClick={handleStepClick}
+      />
 
+      {/* Provider envolve TUDO que usa contexto (apenas Pages) */}
+      <InscricaoProvider processoId={processoId}>
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
