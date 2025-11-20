@@ -135,15 +135,22 @@ async function handleApiError(response: Response): Promise<never> {
   
   try {
     const errorData = await response.json();
+    console.error('📛 Erro detalhado da API:', errorData);
+    
     if (errorData.detail) {
-      errorMessage = errorData.detail;
+      if (typeof errorData.detail === 'string') {
+        errorMessage = errorData.detail;
+      } else {
+        errorMessage = JSON.stringify(errorData.detail);
+      }
     } else if (errorData.message) {
       errorMessage = errorData.message;
     }
-  } catch {
-    // Ignora erro ao parsear JSON
+  } catch (e) {
+    console.error('⚠️ Erro ao parsear resposta de erro:', e);
   }
 
+  console.error('💥 Erro final:', errorMessage);
   throw new Error(errorMessage);
 }
 
