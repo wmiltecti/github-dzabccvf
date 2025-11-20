@@ -54,6 +54,7 @@ export default function GenericCRUD({
   };
 
   const loadItems = async () => {
+    console.log('🔄 GenericCRUD.loadItems() - Iniciando...', { tableName, showInactive });
     setLoading(true);
     try {
       let query;
@@ -71,15 +72,19 @@ export default function GenericCRUD({
       }
       
       if (!showInactive) {
+        console.log('  📌 Filtrando apenas ativos (is_active = true)');
         query = query.eq('is_active', true);
       }
       
+      console.log('  🔍 Executando query no Supabase...');
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) {
+        console.error('  ❌ Erro na query:', error);
         throw error;
       }
       
+      console.log('  ✅ Query bem-sucedida:', { count: data?.length, data });
       setItems(data);
     } catch (error) {
       console.error('Error loading items:', error);

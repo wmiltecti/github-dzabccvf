@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import * as activityLicenseService from '../../services/activityLicenseService';
+import type { LicenseType, DocumentTemplate, StudyType, PollutionPotential } from '../../services/activityLicenseService';
 import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
 
 interface ActivityFormProps {
@@ -12,45 +14,9 @@ interface ActivityFormProps {
   onSave: () => void;
 }
 
-interface LicenseType {
-  id: string;
-  abbreviation: string;
-  name: string;
-}
-
-interface DocumentTemplate {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface LicenseTypeBlock {
-  license_type_id: string;
-  documents: {
-    template_id: string;
-    is_required: boolean;
-  }[];
-  studies: {
-    study_type_id: string;
-    is_required: boolean;
-  }[];
-}
-
 interface EnterpriseSize {
   id: string;
   name: string;
-}
-
-interface PollutionPotential {
-  id: string;
-  name: string;
-}
-
-interface StudyType {
-  id: string;
-  abbreviation: string;
-  name: string;
-  description?: string;
 }
 
 export default function ActivityForm({
@@ -66,7 +32,7 @@ export default function ActivityForm({
     description: '',
     pollution_potential_id: '',
     measurement_unit: '',
-    license_type_blocks: [],
+    license_types: [], // Array de blocos: { license_type_id, documents[], studies[] }
     ranges: [{
       enterprise_size_id: '',
       range_name: 'Porte 1',
@@ -114,7 +80,7 @@ export default function ActivityForm({
         description: item.description || '',
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
-        license_type_blocks: [],
+        license_types: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -133,7 +99,7 @@ export default function ActivityForm({
         description: '',
         pollution_potential_id: '',
         measurement_unit: '',
-        license_type_blocks: [],
+        license_types: [],
         ranges: [{
           enterprise_size_id: '',
           range_name: 'Porte 1',
@@ -182,81 +148,51 @@ export default function ActivityForm({
 
   const loadDropdownData = async () => {
     try {
-      // Load license types
-      const { data: licenseTypesData, error: licenseTypesError } = await supabase
-        .from('license_types')
-        .select('id, abbreviation, name')
-        .eq('is_active', true)
-        .order('abbreviation');
+      console.log('🔍 Carregando dados dos dropdowns da API...');
+      
+      // Carregar todos os dados em paralelo da API REST
+      const [licenseTypesData, pollutionPotentialsData, documentsData] = await Promise.all([
+        activityLicenseService.getLicenseTypes(),
+        activityLicenseService.getPollutionPotentials(),
+        activityLicenseService.getDocumentTemplates(),
+      ]);
 
-      if (licenseTypesError) throw licenseTypesError;
+      console.log('✅ Tipos de licença carregados:', licenseTypesData.length, 'itens');
+      console.log('✅ Potenciais poluidores carregados:', pollutionPotentialsData.length, 'itens');
+      console.log('✅ Templates de documentos carregados:', documentsData.length, 'itens');
+      
       setLicenseTypes(licenseTypesData || []);
-
-      // Load document templates
-      const { data: documentsData, error: documentsError } = await supabase
-        .from('documentation_templates')
-        .select('id, name, description')
-        .eq('is_active', true)
-        .order('name');
-
-      if (documentsError) throw documentsError;
-      setDocumentTemplates(documentsData || []);
-
-      // Load pollution potentials
-      const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
-        .from('pollution_potentials')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-
-      if (pollutionPotentialsError) throw pollutionPotentialsError;
       setPollutionPotentials(pollutionPotentialsData || []);
-
-      // Load study types
-      const { data: studyTypesData, error: studyTypesError } = await supabase
-        .from('study_types')
-        .select('id, abbreviation, name, description')
-        .eq('is_active', true)
-        .order('abbreviation');
-
-      if (studyTypesError) throw studyTypesError;
-      setStudyTypes(studyTypesData || []);
+      setDocumentTemplates(documentsData || []);
+      setStudyTypes([]); // Backend não tem endpoint de study-types ainda
 
     } catch (error) {
-      console.error('Error loading dropdown data:', error);
-      toast.error('Erro ao carregar dados: ' + (error as Error).message);
+      console.error('❌ Erro ao carregar dados da API:', error);
+      toast.error('Erro ao carregar dados da API: ' + (error as Error).message);
     }
   };
 
   const loadActivityRelationships = async (activityId: string) => {
     try {
-      // Load license types for this activity
-      const { data: activityLicenseTypes, error: licenseError } = await supabase
-        .from('activity_license_types')
-        .select('license_type_id')
-        .eq('activity_id', activityId);
+      // Usar endpoint combinado da API REST para carregar tudo de uma vez
+      const config = await activityLicenseService.getActivityLicenseConfig(activityId);
 
-      if (licenseError) throw licenseError;
+      // Transformar dados da API para o formato esperado pelo LicenseTypeDocumentsSection
+      // Agrupar documentos por tipo de licença
+      const licenseTypeBlocks = config.license_types.map(lt => {
+        // Filtrar documentos deste tipo de licença (se houver associação)
+        // Por enquanto, todos os documentos vão para todos os tipos
+        const documents = config.documents.map(doc => ({
+          template_id: doc.template_id,
+          is_required: doc.is_required
+        }));
 
-      // Load documents for this activity with license type association
-      const { data: activityDocuments, error: documentsError } = await supabase
-        .from('activity_license_type_documents')
-        .select('license_type_id, template_id, is_required')
-        .eq('activity_id', activityId);
-
-      if (documentsError) {
-        console.warn('Erro ao carregar documentos (pode não existir a tabela ainda):', documentsError);
-      }
-
-      // Load studies for this activity with license type association
-      const { data: activityStudies, error: studiesError } = await supabase
-        .from('activity_license_type_studies')
-        .select('license_type_id, study_type_id, is_required')
-        .eq('activity_id', activityId);
-
-      if (studiesError) {
-        console.warn('Erro ao carregar estudos (pode não existir a tabela ainda):', studiesError);
-      }
+        return {
+          license_type_id: lt.license_type_id,
+          documents: documents,
+          studies: [] // Estudos serão carregados se houver suporte no backend
+        };
+      });
 
       // Load ranges from API
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -277,30 +213,9 @@ export default function ActivityForm({
         }];
       }
 
-      // Agrupar documentos e estudos por tipo de licença
-      const licenseTypeBlocks: LicenseTypeBlock[] = [];
-
-      if (activityLicenseTypes) {
-        for (const lt of activityLicenseTypes) {
-          const docs = activityDocuments?.filter(d => d.license_type_id === lt.license_type_id) || [];
-          const studies = activityStudies?.filter(s => s.license_type_id === lt.license_type_id) || [];
-          licenseTypeBlocks.push({
-            license_type_id: lt.license_type_id,
-            documents: docs.map(d => ({
-              template_id: d.template_id,
-              is_required: d.is_required
-            })),
-            studies: studies.map(s => ({
-              study_type_id: s.study_type_id,
-              is_required: s.is_required
-            }))
-          });
-        }
-      }
-
       setFormData(prev => ({
         ...prev,
-        license_type_blocks: licenseTypeBlocks,
+        license_types: licenseTypeBlocks,
         ranges: ranges
       }));
 
@@ -309,6 +224,7 @@ export default function ActivityForm({
 
     } catch (error) {
       console.error('Error loading activity relationships:', error);
+      toast.error('Erro ao carregar dados da atividade');
     }
   };
 
@@ -367,6 +283,7 @@ export default function ActivityForm({
   };
 
 
+
   const validateForm = () => {
     if (!formData.code) {
       toast.error('Código da atividade é obrigatório');
@@ -376,14 +293,8 @@ export default function ActivityForm({
       toast.error('Nome da atividade é obrigatório');
       return false;
     }
-    if (formData.license_type_blocks.length === 0) {
-      toast.error('Adicione pelo menos um tipo de licença');
-      return false;
-    }
-    // Validar que todos os blocos têm tipo de licença selecionado
-    const hasEmptyLicenseType = formData.license_type_blocks.some((block: LicenseTypeBlock) => !block.license_type_id);
-    if (hasEmptyLicenseType) {
-      toast.error('Selecione o tipo de licença em todos os blocos');
+    if (formData.license_types.length === 0) {
+      toast.error('Selecione pelo menos um tipo de licença');
       return false;
     }
     if (!formData.pollution_potential_id) {
@@ -513,87 +424,57 @@ export default function ActivityForm({
         }
       }
 
-      // Deletar relacionamentos antigos
-      await supabase
-        .from('activity_license_types')
-        .delete()
-        .eq('activity_id', activityId);
+      // Salvar tipos de licença e documentos usando API REST
+      try {
+        // Limpar relacionamentos existentes
+        await Promise.all([
+          supabase.from('activity_license_types').delete().eq('activity_id', activityId),
+          supabase.from('activity_documents').delete().eq('activity_id', activityId),
+        ]);
 
-      await supabase
-        .from('activity_license_type_documents')
-        .delete()
-        .eq('activity_id', activityId);
+        // Processar cada bloco de tipo de licença
+        if (formData.license_types.length > 0) {
+          // Extrair tipos de licença únicos
+          const licenseTypesToAdd = formData.license_types
+            .filter((block: any) => block.license_type_id)
+            .map((block: any) => ({
+              license_type_id: block.license_type_id,
+              is_required: true // Pode ser ajustado depois
+            }));
 
-      await supabase
-        .from('activity_license_type_studies')
-        .delete()
-        .eq('activity_id', activityId);
+          if (licenseTypesToAdd.length > 0) {
+            await activityLicenseService.addLicenseTypesBulk(activityId, licenseTypesToAdd);
+            console.log('✅ Tipos de licença salvos via API REST');
+          }
 
-      // Inserir novos relacionamentos
-      if (formData.license_type_blocks.length > 0) {
-        // Inserir tipos de licença
-        const licenseTypeRelations = formData.license_type_blocks.map((block: LicenseTypeBlock) => ({
-          activity_id: activityId,
-          license_type_id: block.license_type_id
-        }));
-
-        const { error: licenseError } = await supabase
-          .from('activity_license_types')
-          .insert(licenseTypeRelations);
-
-        if (licenseError) throw licenseError;
-
-        // Inserir documentos associados aos tipos de licença
-        const documentRelations: any[] = [];
-        formData.license_type_blocks.forEach((block: LicenseTypeBlock) => {
-          block.documents.forEach(doc => {
-            if (doc.template_id) {
-              documentRelations.push({
-                activity_id: activityId,
-                license_type_id: block.license_type_id,
-                template_id: doc.template_id,
-                is_required: doc.is_required
+          // Coletar todos os documentos de todos os blocos
+          const allDocuments: any[] = [];
+          formData.license_types.forEach((block: any) => {
+            if (block.documents && block.documents.length > 0) {
+              block.documents.forEach((doc: any) => {
+                if (doc.template_id) {
+                  allDocuments.push({
+                    template_id: doc.template_id,
+                    is_required: doc.is_required || false
+                  });
+                }
               });
             }
           });
-        });
 
-        if (documentRelations.length > 0) {
-          const { error: documentsError } = await supabase
-            .from('activity_license_type_documents')
-            .insert(documentRelations);
+          // Remover duplicados (se um documento aparece em múltiplos tipos)
+          const uniqueDocuments = allDocuments.filter((doc, index, self) =>
+            index === self.findIndex((d) => d.template_id === doc.template_id)
+          );
 
-          if (documentsError) {
-            console.error('Erro ao salvar documentos:', documentsError);
-            toast.warning('Atividade salva, mas houve erro ao salvar os documentos. Verifique se a tabela activity_license_type_documents existe.');
+          if (uniqueDocuments.length > 0) {
+            await activityLicenseService.addDocumentsBulk(activityId, uniqueDocuments);
+            console.log('✅ Documentos salvos via API REST');
           }
         }
-
-        // Inserir estudos associados aos tipos de licença
-        const studyRelations: any[] = [];
-        formData.license_type_blocks.forEach((block: LicenseTypeBlock) => {
-          block.studies?.forEach(study => {
-            if (study.study_type_id) {
-              studyRelations.push({
-                activity_id: activityId,
-                license_type_id: block.license_type_id,
-                study_type_id: study.study_type_id,
-                is_required: study.is_required
-              });
-            }
-          });
-        });
-
-        if (studyRelations.length > 0) {
-          const { error: studiesError } = await supabase
-            .from('activity_license_type_studies')
-            .insert(studyRelations);
-
-          if (studiesError) {
-            console.error('Erro ao salvar estudos:', studiesError);
-            toast.warning('Atividade salva, mas houve erro ao salvar os estudos. Verifique se a tabela activity_license_type_studies existe.');
-          }
-        }
+      } catch (apiError) {
+        console.error('❌ Erro ao salvar tipos de licença e documentos via API:', apiError);
+        throw apiError;
       }
 
       onSave();
@@ -801,13 +682,18 @@ export default function ActivityForm({
             </button>
           </div>
 
-          {/* License Types with Documents and Studies */}
+          {/* Tipos de Licença Aplicáveis com Documentos e Estudos */}
           <LicenseTypeDocumentsSection
             licenseTypes={licenseTypes}
             documentTemplates={documentTemplates}
             studyTypes={studyTypes}
-            value={formData.license_type_blocks}
-            onChange={(blocks) => handleInputChange('license_type_blocks', blocks)}
+            value={formData.license_types}
+            onChange={(licenseTypeBlocks) => {
+              setFormData(prev => ({
+                ...prev,
+                license_types: licenseTypeBlocks
+              }));
+            }}
           />
 
           {/* Warning */}
