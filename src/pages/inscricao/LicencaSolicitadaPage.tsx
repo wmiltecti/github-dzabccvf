@@ -304,6 +304,82 @@ export default function LicencaSolicitadaPage() {
       </div>
 
       <div className="space-y-6">
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Licença Anterior</h3>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Possui licença anterior para esta atividade?
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="possui_licenca_anterior"
+                  value="sim"
+                  checked={previousLicense.possui_licenca_anterior === 'sim'}
+                  onChange={(e) => handlePreviousLicenseChange('possui_licenca_anterior', e.target.value as 'sim' | 'nao')}
+                  className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Sim</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="possui_licenca_anterior"
+                  value="nao"
+                  checked={previousLicense.possui_licenca_anterior === 'nao'}
+                  onChange={(e) => handlePreviousLicenseChange('possui_licenca_anterior', e.target.value as 'sim' | 'nao')}
+                  className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Não</span>
+              </label>
+            </div>
+          </div>
+
+          {previousLicense.possui_licenca_anterior === 'sim' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Número da Licença <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={previousLicense.numero_licenca_anterior}
+                  onChange={(e) => handlePreviousLicenseChange('numero_licenca_anterior', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: 12345/2023"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Validade
+                </label>
+                <input
+                  type="date"
+                  value={previousLicense.validade_licenca_anterior}
+                  onChange={(e) => handlePreviousLicenseChange('validade_licenca_anterior', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Órgão Emissor
+                </label>
+                <input
+                  type="text"
+                  value={previousLicense.orgao_emissor}
+                  onChange={(e) => handlePreviousLicenseChange('orgao_emissor', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: IBAMA, CETESB"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Tipo de Licença <span className="text-red-500">*</span>
@@ -355,84 +431,6 @@ export default function LicencaSolicitadaPage() {
               </div>
             )}
           </>
-        )}
-
-        {selectedLicenseTypeId && (
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Licença Anterior</h3>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Possui licença anterior para esta atividade?
-              </label>
-              <div className="flex gap-4">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="possui_licenca_anterior"
-                    value="sim"
-                    checked={previousLicense.possui_licenca_anterior === 'sim'}
-                    onChange={(e) => handlePreviousLicenseChange('possui_licenca_anterior', e.target.value as 'sim' | 'nao')}
-                    className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Sim</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="possui_licenca_anterior"
-                    value="nao"
-                    checked={previousLicense.possui_licenca_anterior === 'nao'}
-                    onChange={(e) => handlePreviousLicenseChange('possui_licenca_anterior', e.target.value as 'sim' | 'nao')}
-                    className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Não</span>
-                </label>
-              </div>
-            </div>
-
-            {previousLicense.possui_licenca_anterior === 'sim' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Número da Licença <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={previousLicense.numero_licenca_anterior}
-                    onChange={(e) => handlePreviousLicenseChange('numero_licenca_anterior', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ex: 12345/2023"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Validade
-                  </label>
-                  <input
-                    type="date"
-                    value={previousLicense.validade_licenca_anterior}
-                    onChange={(e) => handlePreviousLicenseChange('validade_licenca_anterior', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Órgão Emissor
-                  </label>
-                  <input
-                    type="text"
-                    value={previousLicense.orgao_emissor}
-                    onChange={(e) => handlePreviousLicenseChange('orgao_emissor', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Ex: IBAMA, CETESB"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </div>
 
