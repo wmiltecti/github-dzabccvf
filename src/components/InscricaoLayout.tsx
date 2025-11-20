@@ -15,34 +15,8 @@ import { useAuth } from '../contexts/AuthContext';
 export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentStep, setCurrentStep, reset, startNewInscricao, setCurrentStepFromEngine } = useInscricaoStore();
+  const { currentStep, reset, startNewInscricao } = useInscricaoStore();
 
-  // Map routes to steps and keys
-  const routeToStep = {
-    '/inscricao/empreendimento': { step: 1, key: 'EMPREENDIMENTO' },
-    '/inscricao/participantes': { step: 2, key: 'PARTICIPANTES' },
-    '/inscricao/licenca': { step: 3, key: 'LICENCA' },
-    '/inscricao/revisao': { step: 4, key: 'REVISAO' }
-  };
-
-  const stepToRoute = {
-    1: '/inscricao/empreendimento',
-    2: '/inscricao/participantes',
-    3: '/inscricao/licenca',
-    4: '/inscricao/revisao'
-  };
-
-  // CRITICAL: Atualiza o currentStepKey IMEDIATAMENTE ao montar o componente
-  // Isso sobrescreve qualquer valor antigo do localStorage
-  React.useEffect(() => {
-    const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
-    if (stepData) {
-      console.log('🚀 [InscricaoLayout] MONTAGEM INICIAL - Sincronizando com rota:', location.pathname, stepData);
-      setCurrentStep(stepData.step);
-      setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
-    }
-  }, []); // Executa apenas uma vez na montagem
-  
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -52,22 +26,13 @@ export default function InscricaoLayout() {
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
 
-  // Update current step and key based on route (quando navegar)
-  useEffect(() => {
-    console.log('🌍 [InscricaoLayout] Route changed:', location.pathname);
-    const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
-    console.log('📍 [InscricaoLayout] stepData encontrado:', stepData);
-    if (stepData) {
-      console.log('🔄 [InscricaoLayout] Chamando setCurrentStep com:', stepData.step);
-      setCurrentStep(stepData.step);
-      console.log('🔄 [InscricaoLayout] Chamando setCurrentStepFromEngine com:', stepData.key);
-      // Atualiza o currentStepKey no store para o stepper funcionar corretamente
-      setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
-      console.log('✅ [InscricaoLayout] Step atualizado para:', stepData);
-    } else {
-      console.warn('⚠️ [InscricaoLayout] Rota não mapeada:', location.pathname);
-    }
-  }, [location.pathname, setCurrentStep, setCurrentStepFromEngine]);
+  // Mapeamento de step para rota (apenas para navegação)
+  const stepToRoute = {
+    1: '/inscricao/empreendimento',
+    2: '/inscricao/participantes',
+    3: '/inscricao/licenca',
+    4: '/inscricao/revisao'
+  };
 
   // Criar processo ao montar o componente - EXATAMENTE IGUAL AO FORMWIZARD
   useEffect(() => {
