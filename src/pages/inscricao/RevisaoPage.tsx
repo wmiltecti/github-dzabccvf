@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
 import { useInscricaoStore } from '../../lib/store/inscricao';
-import { FileCheck, ArrowLeft, Send, Users, Home, Building, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
+import { FileCheck, ArrowLeft, Send, Users, Home, Building, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 // use o mesmo client do restante do app
@@ -16,7 +17,7 @@ import { sendToBlockchain } from '../../lib/utils/BlockchainUtils';
 
 export default function RevisaoPage() {
   const navigate = useNavigate();
-  const { processoId } = useInscricaoContext(); // ✅ Usa Context
+  const { processoId } = useInscricaoContext();
   const {
     propertyId,
     participants,
@@ -27,7 +28,11 @@ export default function RevisaoPage() {
     setCurrentStep,
   } = useInscricaoStore();
 
+  const empreendimentoStore = useEmpreendimentoStore();
+
   const [submitting, setSubmitting] = useState(false);
+  const [selectedLicenseType, setSelectedLicenseType] = useState<any>(null);
+  const [licenseTypes, setLicenseTypes] = useState<any[]>([]);
 
   const handleSubmit = async () => {
     if (!processoId) {
@@ -143,22 +148,65 @@ export default function RevisaoPage() {
     }
   };
 
-  const handleBack = () => {
-    if (window.location.pathname.includes('/inscricao/')) {
-      navigate('/inscricao/documentacao');
-    } else {
-      setCurrentStep(5);
+  useEffect(() => {
+    loadLicenseTypes();
+    loadSelectedLicenseType();
+  }, []);
+
+  const loadLicenseTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('license_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setLicenseTypes(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar tipos de licença:', error);
     }
   };
 
-  const mockActivity = atividadeId
-    ? {
-        id: atividadeId,
-        code: '1.1',
-        name: 'Extração de areia',
-        description: 'Extração de areia em leito de rio',
+  const loadSelectedLicenseType = async () => {
+    if (!processoId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('license_processes')
+        .select('license_type_id')
+        .eq('id', processoId)
+        .single();
+
+      if (error) throw error;
+
+      if (data?.license_type_id) {
+        const { data: licenseType, error: licenseError } = await supabase
+          .from('license_types')
+          .select('*')
+          .eq('id', data.license_type_id)
+          .single();
+
+        if (!licenseError && licenseType) {
+          setSelectedLicenseType(licenseType);
+        }
       }
-    : null;
+    } catch (error) {
+      console.error('Erro ao carregar tipo de licença selecionado:', error);
+    }
+  };
+
+  const handleBack = () => {
+    if (window.location.pathname.includes('/inscricao/')) {
+      navigate('/inscricao/licenca');
+    } else {
+      setCurrentStep(3);
+    }
+  };
+
+  const empreendimentoProperty = empreendimentoStore.property;
+  const empreendimentoAtividades = empreendimentoStore.atividades || [];
+  const empreendimentoDadosGerais = empreendimentoStore.dadosGerais;
 
   const getRoleText = (role: string) => {
     switch (role) {
@@ -176,8 +224,8 @@ export default function RevisaoPage() {
   const allStepsComplete =
     participants.length > 0 &&
     participants.some((p) => p.role === 'REQUERENTE') &&
-    !!propertyId &&
-    !!atividadeId;
+    (!!propertyId || !!empreendimentoProperty) &&
+    (!!atividadeId || empreendimentoAtividades.length > 0);
 
   return (
     <div className="p-6">
@@ -247,6 +295,38 @@ export default function RevisaoPage() {
           )}
         </div>
 
+        {/* Tipo de Licenciamento */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Tipo de Licenciamento
+          </h3>
+
+          {selectedLicenseType ? (
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-medium text-gray-900">{selectedLicenseType.name}</span>
+                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      {selectedLicenseType.abbreviation}
+                    </span>
+                  </div>
+                  {selectedLicenseType.description && (
+                    <p className="text-sm text-gray-600">{selectedLicenseType.description}</p>
+                  )}
+                </div>
+                <CheckCircle className="w-5 h-5 text-green-500" />
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 border border-gray-200 rounded-lg">
+              <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+              <p className="text-red-600">Tipo de licenciamento não selecionado</p>
+            </div>
+          )}
+        </div>
+
         {/* Imóvel */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
@@ -254,38 +334,83 @@ export default function RevisaoPage() {
             Imóvel
           </h3>
 
-          {property && propertyId ? (
+          {empreendimentoProperty || (property && propertyId) ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <span className="font-medium text-gray-900">Tipo: {property.kind}</span>
-                  <p className="text-sm text-gray-600">
-                    {property.address?.municipio}/{property.address?.uf}
-                  </p>
+                  {empreendimentoProperty ? (
+                    <>
+                      <span className="font-medium text-gray-900">{empreendimentoProperty.nome || 'Imóvel'}</span>
+                      <p className="text-sm text-gray-600">
+                        {empreendimentoProperty.municipio}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium text-gray-900">Tipo: {property?.kind}</span>
+                      <p className="text-sm text-gray-600">
+                        {property?.address?.municipio}/{property?.address?.uf}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-500" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Endereço:</span>
-                  <p className="text-gray-600">
-                    {property.address?.logradouro}, {property.address?.numero}
-                    <br />
-                    {property.address?.municipio}/{property.address?.uf}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Coordenadas:</span>
-                  <p className="text-gray-600">
-                    {property.utm_lat && property.utm_long ? (
-                      <>UTM: {property.utm_lat}, {property.utm_long}</>
-                    ) : property.dms_lat && property.dms_long ? (
-                      <>DMS: {property.dms_lat}, {property.dms_long}</>
-                    ) : (
-                      'Não informadas'
+                {empreendimentoProperty ? (
+                  <>
+                    <div>
+                      <span className="font-medium text-gray-700">Endereço:</span>
+                      <p className="text-gray-600">
+                        {empreendimentoProperty.endereco}
+                        <br />
+                        {empreendimentoProperty.bairro && `${empreendimentoProperty.bairro}, `}
+                        {empreendimentoProperty.municipio}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Área:</span>
+                      <p className="text-gray-600">
+                        {empreendimentoProperty.area ? `${empreendimentoProperty.area} m²` : 'Não informada'}
+                      </p>
+                    </div>
+                    {empreendimentoProperty.matricula && (
+                      <div>
+                        <span className="font-medium text-gray-700">Matrícula:</span>
+                        <p className="text-gray-600">{empreendimentoProperty.matricula}</p>
+                      </div>
                     )}
-                  </p>
-                </div>
+                    {empreendimentoProperty.car_codigo && (
+                      <div>
+                        <span className="font-medium text-gray-700">CAR:</span>
+                        <p className="text-gray-600">{empreendimentoProperty.car_codigo}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="font-medium text-gray-700">Endereço:</span>
+                      <p className="text-gray-600">
+                        {property?.address?.logradouro}, {property?.address?.numero}
+                        <br />
+                        {property?.address?.municipio}/{property?.address?.uf}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Coordenadas:</span>
+                      <p className="text-gray-600">
+                        {property?.utm_lat && property?.utm_long ? (
+                          <>UTM: {property.utm_lat}, {property.utm_long}</>
+                        ) : property?.dms_lat && property?.dms_long ? (
+                          <>DMS: {property.dms_lat}, {property.dms_long}</>
+                        ) : (
+                          'Não informadas'
+                        )}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {titles.length > 0 && (
@@ -309,24 +434,41 @@ export default function RevisaoPage() {
           )}
         </div>
 
-        {/* Atividade */}
+        {/* Atividades */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Building className="w-5 h-5" />
-            Atividade
+            Atividades ({empreendimentoAtividades.length})
           </h3>
 
-          {mockActivity ? (
+          {empreendimentoAtividades.length > 0 ? (
+            <div className="space-y-3">
+              {empreendimentoAtividades.map((atividade, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900">{atividade.nome}</span>
+                        {atividade.tipo && (
+                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                            {atividade.tipo}
+                          </span>
+                        )}
+                      </div>
+                      {atividade.descricao && (
+                        <p className="text-sm text-gray-600">{atividade.descricao}</p>
+                      )}
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : atividadeId ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-gray-900">{mockActivity.name}</span>
-                    <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {mockActivity.code}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{mockActivity.description}</p>
+                  <span className="font-medium text-gray-900">Atividade ID: {atividadeId}</span>
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-500" />
               </div>
@@ -334,7 +476,7 @@ export default function RevisaoPage() {
           ) : (
             <div className="text-center py-6 border border-gray-200 rounded-lg">
               <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-              <p className="text-red-600">Atividade não selecionada</p>
+              <p className="text-red-600">Nenhuma atividade cadastrada</p>
             </div>
           )}
         </div>
@@ -377,7 +519,7 @@ export default function RevisaoPage() {
           className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar: Documentação
+          Voltar
         </button>
 
         <button
