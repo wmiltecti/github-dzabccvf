@@ -99,5 +99,6 @@ export interface InscricaoState {
   property: Property | null;
   titles: PropertyTitle[];
   atividadeId: number | null;
+  selectedLicenseTypeId: string | null;
   currentStep: number;
 }

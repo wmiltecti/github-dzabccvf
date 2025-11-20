@@ -29,10 +29,10 @@ export default function RevisaoPage() {
   } = useInscricaoStore();
 
   const empreendimentoStore = useEmpreendimentoStore();
+  const inscricaoStore = useInscricaoStore();
 
   const [submitting, setSubmitting] = useState(false);
   const [selectedLicenseType, setSelectedLicenseType] = useState<any>(null);
-  const [licenseTypes, setLicenseTypes] = useState<any[]>([]);
 
   const handleSubmit = async () => {
     if (!processoId) {
@@ -149,50 +149,32 @@ export default function RevisaoPage() {
   };
 
   useEffect(() => {
-    loadLicenseTypes();
     loadSelectedLicenseType();
-  }, []);
-
-  const loadLicenseTypes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('license_types')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-      setLicenseTypes(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar tipos de licença:', error);
-    }
-  };
+  }, [inscricaoStore.selectedLicenseTypeId]);
 
   const loadSelectedLicenseType = async () => {
-    if (!processoId) return;
+    const licenseTypeId = inscricaoStore.selectedLicenseTypeId;
+
+    if (!licenseTypeId) {
+      console.log('Nenhum tipo de licença selecionado');
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
-        .from('license_processes')
-        .select('license_type_id')
-        .eq('id', processoId)
+      const { data: licenseType, error } = await supabase
+        .from('license_types')
+        .select('*')
+        .eq('id', licenseTypeId)
         .single();
 
       if (error) throw error;
 
-      if (data?.license_type_id) {
-        const { data: licenseType, error: licenseError } = await supabase
-          .from('license_types')
-          .select('*')
-          .eq('id', data.license_type_id)
-          .single();
-
-        if (!licenseError && licenseType) {
-          setSelectedLicenseType(licenseType);
-        }
+      if (licenseType) {
+        setSelectedLicenseType(licenseType);
+        console.log('Tipo de licença carregado:', licenseType);
       }
     } catch (error) {
-      console.error('Erro ao carregar tipo de licença selecionado:', error);
+      console.error('Erro ao carregar tipo de licença:', error);
     }
   };
 

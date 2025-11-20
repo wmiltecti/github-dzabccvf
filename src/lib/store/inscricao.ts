@@ -29,6 +29,7 @@ interface InscricaoStore extends InscricaoState {
   addTitle: (title: PropertyTitle) => void;
   removeTitle: (index: number) => void;
   setAtividadeId: (id: number) => void;
+  setSelectedLicenseTypeId: (id: string | null) => void;
   setCurrentStep: (step: number) => void;
   setProcessInitializing: (initializing: boolean) => void;
   reset: () => void;
@@ -56,6 +57,7 @@ const initialState: InscricaoState = {
   property: null,
   titles: [],
   atividadeId: null,
+  selectedLicenseTypeId: null,
   currentStep: 1
 };
 
@@ -119,6 +121,8 @@ export const useInscricaoStore = create<InscricaoStore>()(
         })),
 
       setAtividadeId: (id: number) => set({ atividadeId: id }),
+
+      setSelectedLicenseTypeId: (id: string | null) => set({ selectedLicenseTypeId: id }),
 
       setCurrentStep: (step: number) => set({ currentStep: step }),
 
@@ -242,6 +246,7 @@ export const useInscricaoStore = create<InscricaoStore>()(
         property: state.property,
         titles: state.titles,
         atividadeId: state.atividadeId,
+        selectedLicenseTypeId: state.selectedLicenseTypeId,
         currentStep: state.currentStep,
         // Workflow Engine
         workflowInstanceId: state.workflowInstanceId,
