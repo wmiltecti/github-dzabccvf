@@ -45,13 +45,12 @@ export default function InscricaoLayout() {
   useEffect(() => {
     const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
     if (stepData) {
-      if (stepData.step !== currentStep) {
-        setCurrentStep(stepData.step);
-      }
+      setCurrentStep(stepData.step);
       // Atualiza o currentStepKey no store para o stepper funcionar corretamente
       setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
+      console.log('🔄 Atualizando step para rota:', location.pathname, '→', stepData);
     }
-  }, [location.pathname, currentStep, setCurrentStep, setCurrentStepFromEngine]);
+  }, [location.pathname]);
 
   // Criar processo ao montar o componente - EXATAMENTE IGUAL AO FORMWIZARD
   useEffect(() => {
