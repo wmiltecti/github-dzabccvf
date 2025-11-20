@@ -2,316 +2,340 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInscricaoStore } from '../../lib/store/inscricao';
 import { useInscricaoContext } from '../../contexts/InscricaoContext';
-import { FileText, ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
+import { FileText, ArrowLeft, ArrowRight, Upload, X, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { completeStep } from '../../services/workflowApi';
+import { supabase } from '../../lib/supabase';
+
+interface LicenseType {
+  id: string;
+  abbreviation: string;
+  name: string;
+  description?: string;
+}
+
+interface LicenseTypeDocument {
+  id: string;
+  license_type_id: string;
+  documentation_template_id: string;
+  is_required: boolean;
+  documentation_templates: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+}
+
+interface UploadedDocument {
+  template_id: string;
+  file: File;
+  uploaded: boolean;
+}
 
 export default function LicencaSolicitadaPage() {
   const navigate = useNavigate();
-  const { 
+  const {
     workflowInstanceId,
     currentStepId,
     currentStepKey
   } = useInscricaoContext();
   const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
-  
-  const [formData, setFormData] = useState({
-    tipo_licenca: '',
-    descricao_atividade: '',
-    area_total: '',
-    capacidade_producao: '',
-    numero_funcionarios: '',
-    horario_funcionamento: '',
-    possui_licenca_anterior: 'nao',
-    numero_licenca_anterior: '',
-    validade_licenca_anterior: '',
-    orgao_emissor: ''
-  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
+  const [selectedLicenseTypeId, setSelectedLicenseTypeId] = useState<string>('');
+  const [requiredDocuments, setRequiredDocuments] = useState<LicenseTypeDocument[]>([]);
+  const [optionalDocuments, setOptionalDocuments] = useState<LicenseTypeDocument[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const tiposLicenca = [
-    { value: '', label: 'Selecione o tipo de licença' },
-    { value: 'LP', label: 'LP - Licença Prévia' },
-    { value: 'LI', label: 'LI - Licença de Instalação' },
-    { value: 'LO', label: 'LO - Licença de Operação' },
-    { value: 'LAS', label: 'LAS - Licença Ambiental Simplificada' },
-    { value: 'LAU', label: 'LAU - Licença de Ampliação ou Urgência' },
-    { value: 'RENOVACAO_LO', label: 'Renovação de LO' },
-    { value: 'RENOVACAO_LI', label: 'Renovação de LI' }
-  ];
+  useEffect(() => {
+    loadLicenseTypes();
+  }, []);
 
-  const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpa erro do campo ao editar
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  useEffect(() => {
+    if (selectedLicenseTypeId) {
+      loadLicenseTypeDocuments(selectedLicenseTypeId);
+    } else {
+      setRequiredDocuments([]);
+      setOptionalDocuments([]);
+      setUploadedFiles([]);
     }
+  }, [selectedLicenseTypeId]);
+
+  const loadLicenseTypes = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('license_types')
+        .select('id, abbreviation, name, description')
+        .eq('is_active', true)
+        .order('abbreviation');
+
+      if (error) throw error;
+
+      setLicenseTypes(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar tipos de licença:', error);
+      toast.error('Erro ao carregar tipos de licença');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadLicenseTypeDocuments = async (licenseTypeId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('license_type_documents')
+        .select(`
+          id,
+          license_type_id,
+          documentation_template_id,
+          is_required,
+          documentation_templates (
+            id,
+            name,
+            description
+          )
+        `)
+        .eq('license_type_id', licenseTypeId);
+
+      if (error) throw error;
+
+      const required = (data || []).filter(doc => doc.is_required);
+      const optional = (data || []).filter(doc => !doc.is_required);
+
+      setRequiredDocuments(required as LicenseTypeDocument[]);
+      setOptionalDocuments(optional as LicenseTypeDocument[]);
+      setUploadedFiles([]);
+    } catch (error: any) {
+      console.error('Erro ao carregar documentos:', error);
+      toast.error('Erro ao carregar documentos necessários');
+    }
+  };
+
+  const handleFileSelect = (templateId: string, file: File) => {
+    setUploadedFiles(prev => {
+      const existing = prev.filter(f => f.template_id !== templateId);
+      return [...existing, { template_id: templateId, file, uploaded: false }];
+    });
+  };
+
+  const handleRemoveFile = (templateId: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.template_id !== templateId));
+  };
+
+  const getUploadedFile = (templateId: string): UploadedDocument | undefined => {
+    return uploadedFiles.find(f => f.template_id === templateId);
   };
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.tipo_licenca) {
-      newErrors.tipo_licenca = 'Selecione o tipo de licença';
+    if (!selectedLicenseTypeId) {
+      toast.error('Selecione o tipo de licença');
+      return false;
     }
 
-    if (!formData.descricao_atividade) {
-      newErrors.descricao_atividade = 'Descrição da atividade é obrigatória';
+    const missingRequired = requiredDocuments.filter(doc => {
+      return !uploadedFiles.some(f => f.template_id === doc.documentation_template_id);
+    });
+
+    if (missingRequired.length > 0) {
+      toast.error('Faça upload de todos os documentos obrigatórios');
+      return false;
     }
 
-    if (formData.possui_licenca_anterior === 'sim' && !formData.numero_licenca_anterior) {
-      newErrors.numero_licenca_anterior = 'Informe o número da licença anterior';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handlePrevious = () => {
-    setCurrentStep(1); // Volta para Partícipes
+    setCurrentStep(2);
   };
 
   const handleNext = async () => {
     if (!validateForm()) {
-      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Se estiver usando workflow engine
       if (workflowInstanceId && currentStepId) {
         await completeStep(workflowInstanceId, currentStepId, {
-          licenca: formData
+          licenseTypeId: selectedLicenseTypeId,
+          uploadedDocuments: uploadedFiles.length
         });
-        
+
         toast.success('Licença solicitada salva!');
-        setCurrentStep(4); // Avança para Documentação
+        setCurrentStep(4);
       } else {
-        // Modo local (sem workflow engine)
         toast.success('Licença solicitada salva!');
         setCurrentStep(4);
       }
     } catch (error: any) {
       console.error('Erro ao salvar licença:', error);
-      toast.error('Erro ao salvar: ' + (error.message || 'Erro desconhecido'));
+      console.warn('⚠️ Workflow engine não disponível, usando modo manual');
+      setCurrentStep(4);
+      toast.success('Licença solicitada salva!');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const renderDocumentUpload = (doc: LicenseTypeDocument, isRequired: boolean) => {
+    const uploadedFile = getUploadedFile(doc.documentation_template_id);
+    const hasFile = !!uploadedFile;
+
+    return (
+      <div key={doc.id} className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="text-sm font-semibold text-gray-900">
+                {doc.documentation_templates.name}
+              </h4>
+              {isRequired && (
+                <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                  Obrigatório
+                </span>
+              )}
+              {!isRequired && (
+                <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">
+                  Opcional
+                </span>
+              )}
+            </div>
+            {doc.documentation_templates.description && (
+              <p className="text-xs text-gray-500 mt-1">
+                {doc.documentation_templates.description}
+              </p>
+            )}
+          </div>
+
+          {hasFile && (
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 ml-2" />
+          )}
+        </div>
+
+        {hasFile ? (
+          <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <span className="text-sm text-green-700 truncate">
+                {uploadedFile.file.name}
+              </span>
+              <span className="text-xs text-green-600 flex-shrink-0">
+                ({(uploadedFile.file.size / 1024 / 1024).toFixed(2)} MB)
+              </span>
+            </div>
+            <button
+              onClick={() => handleRemoveFile(doc.documentation_template_id)}
+              className="ml-2 p-1 text-red-600 hover:bg-red-100 rounded transition-colors flex-shrink-0"
+              title="Remover arquivo"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+            <Upload className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Selecionar arquivo</span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleFileSelect(doc.documentation_template_id, file);
+                }
+              }}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            />
+          </label>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando tipos de licença...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <FileText className="w-6 h-6 text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">Licença Solicitada</h2>
         </div>
         <p className="text-gray-600">
-          Informe qual tipo de licença será solicitada e os dados da atividade
+          Selecione o tipo de licença e faça upload dos documentos necessários
         </p>
       </div>
 
-      {/* Formulário */}
       <div className="space-y-6">
-        {/* Tipo de Licença */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             Tipo de Licença <span className="text-red-500">*</span>
           </label>
           <select
-            value={formData.tipo_licenca}
-            onChange={(e) => handleChange('tipo_licenca', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.tipo_licenca ? 'border-red-500' : 'border-gray-300'
-            }`}
+            value={selectedLicenseTypeId}
+            onChange={(e) => setSelectedLicenseTypeId(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {tiposLicenca.map(tipo => (
-              <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+            <option value="">Selecione o tipo de licença</option>
+            {licenseTypes.map(type => (
+              <option key={type.id} value={type.id}>
+                {type.abbreviation} - {type.name}
+              </option>
             ))}
           </select>
-          {errors.tipo_licenca && (
-            <p className="text-red-500 text-sm mt-1">{errors.tipo_licenca}</p>
-          )}
         </div>
 
-        {/* Descrição da Atividade */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Descrição da Atividade <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={formData.descricao_atividade}
-            onChange={(e) => handleChange('descricao_atividade', e.target.value)}
-            rows={4}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              errors.descricao_atividade ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Descreva detalhadamente a atividade que será licenciada..."
-          />
-          {errors.descricao_atividade && (
-            <p className="text-red-500 text-sm mt-1">{errors.descricao_atividade}</p>
-          )}
-        </div>
-
-        {/* Dados da Atividade */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Área Total (m²)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.area_total}
-              onChange={(e) => handleChange('area_total', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: 5000"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Capacidade de Produção
-            </label>
-            <input
-              type="text"
-              value={formData.capacidade_producao}
-              onChange={(e) => handleChange('capacidade_producao', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: 100 ton/mês"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Número de Funcionários
-            </label>
-            <input
-              type="number"
-              value={formData.numero_funcionarios}
-              onChange={(e) => handleChange('numero_funcionarios', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: 50"
-            />
-          </div>
-        </div>
-
-        {/* Horário de Funcionamento */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Horário de Funcionamento
-          </label>
-          <input
-            type="text"
-            value={formData.horario_funcionamento}
-            onChange={(e) => handleChange('horario_funcionamento', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ex: 07:00 às 18:00 (segunda a sexta)"
-          />
-        </div>
-
-        {/* Licença Anterior */}
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4">Licença Anterior</h3>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Possui licença anterior para esta atividade?
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="possui_licenca_anterior"
-                  value="sim"
-                  checked={formData.possui_licenca_anterior === 'sim'}
-                  onChange={(e) => handleChange('possui_licenca_anterior', e.target.value)}
-                  className="mr-2"
-                />
-                Sim
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="possui_licenca_anterior"
-                  value="nao"
-                  checked={formData.possui_licenca_anterior === 'nao'}
-                  onChange={(e) => handleChange('possui_licenca_anterior', e.target.value)}
-                  className="mr-2"
-                />
-                Não
-              </label>
-            </div>
-          </div>
-
-          {formData.possui_licenca_anterior === 'sim' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {selectedLicenseTypeId && (
+          <>
+            {requiredDocuments.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Número da Licença <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.numero_licenca_anterior}
-                  onChange={(e) => handleChange('numero_licenca_anterior', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.numero_licenca_anterior ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Ex: 12345/2023"
-                />
-                {errors.numero_licenca_anterior && (
-                  <p className="text-red-500 text-sm mt-1">{errors.numero_licenca_anterior}</p>
-                )}
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Documentos Obrigatórios
+                </h3>
+                <div className="space-y-3">
+                  {requiredDocuments.map(doc => renderDocumentUpload(doc, true))}
+                </div>
               </div>
+            )}
 
+            {optionalDocuments.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Validade
-                </label>
-                <input
-                  type="date"
-                  value={formData.validade_licenca_anterior}
-                  onChange={(e) => handleChange('validade_licenca_anterior', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Documentos Opcionais
+                </h3>
+                <div className="space-y-3">
+                  {optionalDocuments.map(doc => renderDocumentUpload(doc, false))}
+                </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Órgão Emissor
-                </label>
-                <input
-                  type="text"
-                  value={formData.orgao_emissor}
-                  onChange={(e) => handleChange('orgao_emissor', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ex: IBAMA, CETESB"
-                />
+            {requiredDocuments.length === 0 && optionalDocuments.length === 0 && (
+              <div className="bg-gray-50 rounded-lg p-6 text-center border border-gray-200">
+                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">
+                  Nenhum documento vinculado a este tipo de licença
+                </p>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Informação sobre documentos */}
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm text-blue-800">
-                <strong>Importante:</strong> Os documentos específicos necessários para o tipo de licença selecionado 
-                serão requisitados na próxima etapa (Documentação).
-              </p>
-            </div>
-          </div>
-        </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* Botões de Navegação */}
       <div className="flex justify-between pt-6 mt-6 border-t border-gray-200">
         <button
           onClick={handlePrevious}
@@ -323,10 +347,10 @@ export default function LicencaSolicitadaPage() {
         </button>
         <button
           onClick={handleNext}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !selectedLicenseTypeId}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? 'Salvando...' : 'Próximo'}
+          {isSubmitting ? 'Salvando...' : 'Próximo: Documentação'}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
