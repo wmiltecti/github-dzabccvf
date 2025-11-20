@@ -23,6 +23,13 @@ interface SelectedActivity {
   geoFiles?: string[];
 }
 
+interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  uploadDate: Date;
+}
+
 export default function AtividadesEmpreendimentoPage({
   onNext,
   onPrevious
@@ -36,6 +43,7 @@ export default function AtividadesEmpreendimentoPage({
   const [loading, setLoading] = useState(true);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [expandedActivityIndex, setExpandedActivityIndex] = useState<number | null>(null);
+  const [uploadedAcoesFiles, setUploadedAcoesFiles] = useState<UploadedFile[]>([]);
 
   const [consultasData, setConsultasData] = useState({
     unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
@@ -159,6 +167,37 @@ export default function AtividadesEmpreendimentoPage({
 
   const toggleActivityExpansion = (index: number) => {
     setExpandedActivityIndex(expandedActivityIndex === index ? null : index);
+  };
+
+  const handleAcoesFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: UploadedFile[] = Array.from(files).map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      uploadDate: new Date()
+    }));
+
+    setUploadedAcoesFiles([...uploadedAcoesFiles, ...newFiles]);
+    toast.success(`${newFiles.length} arquivo(s) adicionado(s) em Ações`);
+
+    event.target.value = '';
+  };
+
+  const handleRemoveAcoesFile = (index: number) => {
+    const file = uploadedAcoesFiles[index];
+    setUploadedAcoesFiles(uploadedAcoesFiles.filter((_, i) => i !== index));
+    toast.info(`Arquivo "${file.name}" removido`);
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
 
@@ -778,6 +817,81 @@ export default function AtividadesEmpreendimentoPage({
             </table>
           </div>
         </div>
+      </div>
+
+      {/* Seção de Upload - Ações */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Upload className="w-5 h-5 text-green-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Ações</h3>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 mb-3">
+            Faça upload de documentos relacionados às ações do empreendimento.
+          </p>
+
+          <label
+            htmlFor="acoes-file-upload"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors"
+          >
+            <Upload className="w-4 h-4" />
+            Selecionar Arquivos
+          </label>
+          <input
+            id="acoes-file-upload"
+            type="file"
+            multiple
+            onChange={handleAcoesFileUpload}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip"
+          />
+        </div>
+
+        {uploadedAcoesFiles.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Arquivos Carregados ({uploadedAcoesFiles.length})
+            </h4>
+            <div className="space-y-2">
+              {uploadedAcoesFiles.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(file.size)} • {new Date(file.uploadDate).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveAcoesFile(index)}
+                    className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                    title="Remover arquivo"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {uploadedAcoesFiles.length === 0 && (
+          <div className="mt-4 bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+            <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Nenhum arquivo carregado</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Clique em "Selecionar Arquivos" para fazer upload
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between pt-6 mt-6 border-t border-gray-200">
