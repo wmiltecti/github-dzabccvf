@@ -4,7 +4,11 @@
  * Utiliza a API REST do backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+// Log para debug
+console.log('🌐 activityLicenseService - VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('🌐 activityLicenseService - API_BASE_URL (com fallback):', API_BASE_URL);
 
 // ============================================================================
 // TYPES
