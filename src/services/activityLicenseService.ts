@@ -42,6 +42,15 @@ export interface StudyType {
   updated_at: string;
 }
 
+export interface PollutionPotential {
+  id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ActivityLicenseType {
   id: string;
   activity_id: string;
@@ -178,6 +187,23 @@ export async function getDocumentTemplates(): Promise<DocumentTemplate[]> {
  */
 export async function getStudyTypes(): Promise<StudyType[]> {
   const response = await fetch(`${API_BASE_URL}/study-types`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+}
+
+/**
+ * Carrega todos os potenciais poluidores disponíveis (para dropdown)
+ * GET /api/v1/referencias/pollution-potentials
+ */
+export async function getPollutionPotentials(): Promise<PollutionPotential[]> {
+  const response = await fetch(`${API_BASE_URL}/referencias/pollution-potentials`, {
     method: 'GET',
     headers: getHeaders(),
   });

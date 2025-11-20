@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import * as activityLicenseService from '../../services/activityLicenseService';
-import type { LicenseType, DocumentTemplate, StudyType } from '../../services/activityLicenseService';
+import type { LicenseType, DocumentTemplate, StudyType, PollutionPotential } from '../../services/activityLicenseService';
 import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
 
 interface ActivityFormProps {
@@ -15,11 +15,6 @@ interface ActivityFormProps {
 }
 
 interface EnterpriseSize {
-  id: string;
-  name: string;
-}
-
-interface PollutionPotential {
   id: string;
   name: string;
 }
@@ -155,50 +150,26 @@ export default function ActivityForm({
     try {
       console.log('🔍 Carregando dados dos dropdowns da API...');
       
-      const apiUrl = import.meta.env.VITE_API_BASE_URL;
-      console.log('📍 API Base URL:', apiUrl);
-      
       // Carregar todos os dados em paralelo da API REST
-      const [licenseTypesRes, pollutionPotentialsRes, documentsData, studyTypesData] = await Promise.all([
-        fetch(`${apiUrl}/license-types`).then(res => {
-          console.log('📡 Response /license-types:', res.status, res.statusText);
-          return res;
-        }),
-        fetch(`${apiUrl}/referencias/pollution-potentials`).then(res => {
-          console.log('📡 Response /referencias/pollution-potentials:', res.status, res.statusText);
-          return res;
-        }),
+      const [licenseTypesData, pollutionPotentialsData, documentsData, studyTypesData] = await Promise.all([
+        activityLicenseService.getLicenseTypes(),
+        activityLicenseService.getPollutionPotentials(),
         activityLicenseService.getDocumentTemplates(),
         activityLicenseService.getStudyTypes(),
       ]);
 
-      // Parse dos tipos de licença
-      if (licenseTypesRes.ok) {
-        const licenseTypesData = await licenseTypesRes.json();
-        console.log('✅ Tipos de licença carregados da API:', licenseTypesData.length, 'itens');
-        setLicenseTypes(licenseTypesData || []);
-      } else {
-        const errorText = await licenseTypesRes.text();
-        console.error('❌ Erro ao carregar tipos de licença:', licenseTypesRes.status, errorText);
-        toast.error(`Erro ao carregar tipos de licença: ${licenseTypesRes.status}`);
-      }
-
-      // Parse dos potenciais poluidores
-      if (pollutionPotentialsRes.ok) {
-        const pollutionPotentialsData = await pollutionPotentialsRes.json();
-        console.log('✅ Potenciais poluidores carregados da API:', pollutionPotentialsData.length, 'itens');
-        setPollutionPotentials(pollutionPotentialsData || []);
-      } else {
-        const errorText = await pollutionPotentialsRes.text();
-        console.error('❌ Erro ao carregar potenciais poluidores:', pollutionPotentialsRes.status, errorText);
-        toast.error(`Erro ao carregar potenciais poluidores: ${pollutionPotentialsRes.status}`);
-      }
-
+      console.log('✅ Tipos de licença carregados:', licenseTypesData.length, 'itens');
+      console.log('✅ Potenciais poluidores carregados:', pollutionPotentialsData.length, 'itens');
+      console.log('✅ Templates de documentos carregados:', documentsData.length, 'itens');
+      console.log('✅ Tipos de estudo carregados:', studyTypesData.length, 'itens');
+      
+      setLicenseTypes(licenseTypesData || []);
+      setPollutionPotentials(pollutionPotentialsData || []);
       setDocumentTemplates(documentsData || []);
       setStudyTypes(studyTypesData || []);
 
     } catch (error) {
-      console.error('❌ Error loading dropdown data:', error);
+      console.error('❌ Erro ao carregar dados da API:', error);
       toast.error('Erro ao carregar dados da API: ' + (error as Error).message);
     }
   };
