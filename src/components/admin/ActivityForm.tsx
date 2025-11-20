@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { AdminService } from '../../services/adminService';
 import * as activityLicenseService from '../../services/activityLicenseService';
 import type { LicenseType, DocumentTemplate, StudyType } from '../../services/activityLicenseService';
 import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
@@ -153,36 +154,32 @@ export default function ActivityForm({
 
   const loadDropdownData = async () => {
     try {
-      // Carregar dados em paralelo usando API REST
-      const [licenseTypesData, documentsData, studyTypesData] = await Promise.all([
-        activityLicenseService.getLicenseTypes(),
+      console.log('🔍 Carregando dados dos dropdowns...');
+      
+      // Carregar tipos de licença do cadastro principal (Supabase)
+      const licenseTypesData = await AdminService.getAll<LicenseType>('license_types', false);
+      console.log('✅ Tipos de licença carregados do cadastro:', licenseTypesData);
+      setLicenseTypes(licenseTypesData || []);
+
+      // Carregar templates de documentos e tipos de estudo da API REST
+      const [documentsData, studyTypesData] = await Promise.all([
         activityLicenseService.getDocumentTemplates(),
         activityLicenseService.getStudyTypes(),
       ]);
 
-      setLicenseTypes(licenseTypesData || []);
       setDocumentTemplates(documentsData || []);
       setStudyTypes(studyTypesData || []);
 
-      // Load pollution potentials via API REST
-      const apiUrl = import.meta.env.VITE_API_BASE_URL;
-      const pollutionResponse = await fetch(`${apiUrl}/referencias/pollution-potentials`);
-      if (pollutionResponse.ok) {
-        const pollutionPotentialsData = await pollutionResponse.json();
-        setPollutionPotentials(pollutionPotentialsData || []);
-        console.log('✅ Potenciais poluidores carregados da API:', pollutionPotentialsData);
-      } else {
-        console.warn('⚠️ Erro ao carregar potenciais poluidores da API:', pollutionResponse.status);
-        // Fallback para Supabase
-        const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
-          .from('pollution_potentials')
-          .select('id, name')
-          .eq('is_active', true)
-          .order('name');
+      // Load pollution potentials do Supabase
+      const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
+        .from('pollution_potentials')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
 
-        if (pollutionPotentialsError) throw pollutionPotentialsError;
-        setPollutionPotentials(pollutionPotentialsData || []);
-      }
+      if (pollutionPotentialsError) throw pollutionPotentialsError;
+      setPollutionPotentials(pollutionPotentialsData || []);
+      console.log('✅ Potenciais poluidores carregados:', pollutionPotentialsData);
 
     } catch (error) {
       console.error('Error loading dropdown data:', error);
