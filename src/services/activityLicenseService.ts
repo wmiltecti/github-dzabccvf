@@ -152,16 +152,23 @@ async function handleApiError(response: Response): Promise<never> {
  * GET /api/v1/license-types
  */
 export async function getLicenseTypes(): Promise<LicenseType[]> {
+  console.log('🔧 getLicenseTypes - API_BASE_URL:', API_BASE_URL);
+  console.log('🔧 getLicenseTypes - URL completa:', `${API_BASE_URL}/license-types`);
+  
   const response = await fetch(`${API_BASE_URL}/license-types`, {
     method: 'GET',
     headers: getHeaders(),
   });
 
+  console.log('🔧 getLicenseTypes - Response status:', response.status);
+
   if (!response.ok) {
     await handleApiError(response);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('🔧 getLicenseTypes - Data length:', data.length);
+  return data;
 }
 
 /**
@@ -203,16 +210,23 @@ export async function getStudyTypes(): Promise<StudyType[]> {
  * GET /api/v1/referencias/pollution-potentials
  */
 export async function getPollutionPotentials(): Promise<PollutionPotential[]> {
+  console.log('🔧 getPollutionPotentials - API_BASE_URL:', API_BASE_URL);
+  console.log('🔧 getPollutionPotentials - URL completa:', `${API_BASE_URL}/referencias/pollution-potentials`);
+  
   const response = await fetch(`${API_BASE_URL}/referencias/pollution-potentials`, {
     method: 'GET',
     headers: getHeaders(),
   });
 
+  console.log('🔧 getPollutionPotentials - Response status:', response.status);
+
   if (!response.ok) {
     await handleApiError(response);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('🔧 getPollutionPotentials - Data length:', data.length);
+  return data;
 }
 
 // ============================================================================
