@@ -16,15 +16,6 @@ export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentStep, setCurrentStep, reset, startNewInscricao, setCurrentStepFromEngine } = useInscricaoStore();
-  
-  // State LOCAL (como no FormWizard) - não usa Zustand para processoId
-  const [processoId, setProcessoId] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
-
-  // Flag para evitar criação duplicada de processo no StrictMode
-  const isCreatingProcesso = useRef(false);
 
   // Map routes to steps and keys
   const routeToStep = {
@@ -41,7 +32,27 @@ export default function InscricaoLayout() {
     4: '/inscricao/revisao'
   };
 
-  // Update current step and key based on route
+  // CRITICAL: Atualiza o currentStepKey IMEDIATAMENTE ao montar o componente
+  // Isso sobrescreve qualquer valor antigo do localStorage
+  React.useEffect(() => {
+    const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
+    if (stepData) {
+      console.log('🚀 [InscricaoLayout] MONTAGEM INICIAL - Sincronizando com rota:', location.pathname, stepData);
+      setCurrentStep(stepData.step);
+      setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
+    }
+  }, []); // Executa apenas uma vez na montagem
+  
+  // State LOCAL (como no FormWizard) - não usa Zustand para processoId
+  const [processoId, setProcessoId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const [confirmNewOpen, setConfirmNewOpen] = useState(false);
+
+  // Flag para evitar criação duplicada de processo no StrictMode
+  const isCreatingProcesso = useRef(false);
+
+  // Update current step and key based on route (quando navegar)
   useEffect(() => {
     console.log('🌍 [InscricaoLayout] Route changed:', location.pathname);
     const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
