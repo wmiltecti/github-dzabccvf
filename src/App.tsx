@@ -12,7 +12,7 @@ import InscricaoLayout from './components/InscricaoLayout';
 import ParticipantesPage from './pages/inscricao/ParticipantesPage';
 import ImovelPage from './pages/inscricao/ImovelPage';
 import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
-import DocumentacaoPage from './pages/inscricao/DocumentacaoPage';
+import LicencaSolicitadaPage from './pages/inscricao/LicencaSolicitadaPage';
 import RevisaoPage from './pages/inscricao/RevisaoPage';
 import NotificationCenterPage from './pages/NotificationCenterPage';
 
@@ -67,7 +67,7 @@ function AppRoutes() {
         <Route path="participantes" element={<ParticipantesPage />} />
         <Route path="imovel" element={<ImovelPage />} />
         <Route path="empreendimento" element={<EmpreendimentoPage />} />
-        <Route path="documentacao" element={<DocumentacaoPage />} />
+        <Route path="licenca" element={<LicencaSolicitadaPage />} />
         <Route path="revisao" element={<RevisaoPage />} />
       </Route>
       

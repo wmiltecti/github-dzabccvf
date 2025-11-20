@@ -12,7 +12,6 @@ import http from '../lib/api/http';
 import EmpreendimentoPageNew from '../pages/inscricao/EmpreendimentoPageNew';
 import ParticipantesPage from '../pages/inscricao/ParticipantesPage';
 import LicencaSolicitadaPage from '../pages/inscricao/LicencaSolicitadaPage';
-import DocumentacaoPage from '../pages/inscricao/DocumentacaoPage';
 import RevisaoPage from '../pages/inscricao/RevisaoPage';
 import ConfirmDialog from './ConfirmDialog';
 import { startWorkflowForLicense } from '../services/workflowApi';
@@ -147,7 +146,7 @@ export default function InscricaoWizard() {
   };
 
   const renderCurrentStep = () => {
-    // Nova ordem: Empreendimento → Partícipes → Licença solicitada → Documentação → Revisão
+    // Nova ordem: Empreendimento → Partícipes → Licença solicitada → Revisão
     switch (currentStep) {
       case 1:
         return <EmpreendimentoPageNew />;
@@ -156,8 +155,6 @@ export default function InscricaoWizard() {
       case 3:
         return <LicencaSolicitadaPage />;
       case 4:
-        return <DocumentacaoPage />;
-      case 5:
         return <RevisaoPage />;
       default:
         return <EmpreendimentoPageNew />;

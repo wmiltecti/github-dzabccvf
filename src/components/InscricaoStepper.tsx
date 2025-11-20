@@ -9,8 +9,7 @@ const FALLBACK_STEPS = [
   { id: '1', key: 'EMPREENDIMENTO', label: 'Empreendimento', path: '/inscricao/empreendimento' },
   { id: '2', key: 'PARTICIPANTES', label: 'Partícipes', path: '/inscricao/participantes' },
   { id: '3', key: 'LICENCA', label: 'Licença solicitada', path: '/inscricao/licenca' },
-  { id: '4', key: 'DOCUMENTACAO', label: 'Documentação', path: '/inscricao/documentacao' },
-  { id: '5', key: 'REVISAO', label: 'Revisão', path: '/inscricao/revisao' }
+  { id: '4', key: 'REVISAO', label: 'Revisão', path: '/inscricao/revisao' }
 ];
 
 // Mapeamento de keys para ícones
