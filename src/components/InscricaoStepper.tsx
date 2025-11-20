@@ -29,14 +29,23 @@ interface InscricaoStepperProps {
 export default function InscricaoStepper({ currentStep, onStepClick }: InscricaoStepperProps) {
   const { isStepComplete, canProceedToStep } = useInscricaoStore();
   const { workflowInstanceId, currentStepKey } = useInscricaoContext();
-  
+
   const [steps, setSteps] = useState<WorkflowStep[]>(FALLBACK_STEPS);
   const [completedStepIds, setCompletedStepIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Inicia false para usar FALLBACK_STEPS imediatamente
 
   // Carregar steps do template e histórico
   useEffect(() => {
     const loadSteps = async () => {
+      // Se não tiver workflowInstanceId, usa FALLBACK imediatamente
+      if (!workflowInstanceId) {
+        console.log('📋 Usando FALLBACK_STEPS (sem workflow engine)');
+        setSteps(FALLBACK_STEPS);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
         // 1. Tentar buscar steps do template (opcional)
         const templateSteps = await getTemplateSteps('LICENCIAMENTO_AMBIENTAL_COMPLETO');
@@ -44,11 +53,9 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
         console.log('✅ Steps carregados do backend:', templateSteps);
 
         // 2. Se tiver instância ativa, buscar histórico
-        if (workflowInstanceId) {
-          const history = await getInstanceStepHistory(workflowInstanceId);
-          setCompletedStepIds(history.completedSteps);
-          console.log('✅ Histórico de steps:', history);
-        }
+        const history = await getInstanceStepHistory(workflowInstanceId);
+        setCompletedStepIds(history.completedSteps);
+        console.log('✅ Histórico de steps:', history);
       } catch (error) {
         console.warn('⚠️ Workflow engine não disponível, usando modo manual:', error);
         setSteps(FALLBACK_STEPS);
@@ -61,28 +68,37 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
   }, [workflowInstanceId]);
 
   const getStepStatus = (step: WorkflowStep, stepIndex: number) => {
-    // 1. Se step foi completado (está no histórico)
+    // 1. Encontra o índice do step atual
+    const currentIndex = steps.findIndex(s => s.key === currentStepKey);
+
+    // Debug: mostra qual step está sendo verificado
+    if (stepIndex === 0) {
+      console.log('🔍 [Stepper] currentStepKey:', currentStepKey, 'steps:', steps.map(s => s.key));
+      console.log('🔍 [Stepper] currentIndex:', currentIndex);
+    }
+
+    // 2. Se é o step atual (baseado na key do contexto)
+    if (step.key === currentStepKey) {
+      console.log('✅ [Stepper] Step CURRENT:', step.key);
+      return 'current';
+    }
+
+    // 3. Se está antes do step atual (pela ordem no array) - já foi completado
+    if (currentIndex !== -1 && stepIndex < currentIndex) {
+      return 'completed';
+    }
+
+    // 4. Se step foi explicitamente completado (está no histórico do workflow engine)
     if (completedStepIds.includes(step.id)) {
       return 'completed';
     }
-    
-    // 2. Se é o step atual (baseado na key do contexto)
-    if (step.key === currentStepKey) {
-      return 'current';
-    }
-    
-    // 3. Se está antes do step atual (pela ordem no array)
-    const currentIndex = steps.findIndex(s => s.key === currentStepKey);
-    if (currentIndex !== -1 && stepIndex < currentIndex) {
-      return 'completed';  // Steps anteriores ao atual são considerados completos
-    }
-    
-    // 4. Se está depois do step atual
+
+    // 5. Se está depois do step atual - ainda não acessível
     if (currentIndex !== -1 && stepIndex > currentIndex) {
-      return 'disabled';  // Steps futuros são desabilitados
+      return 'upcoming';
     }
-    
-    // 5. Fallback: upcoming
+
+    // 6. Fallback: upcoming
     return 'upcoming';
   };
 

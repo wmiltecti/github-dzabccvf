@@ -1,4 +1,5 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useInscricaoStore } from '../lib/store/inscricao';
 
 interface InscricaoContextType {
@@ -15,22 +16,49 @@ interface InscricaoContextType {
 
 const InscricaoContext = createContext<InscricaoContextType | undefined>(undefined);
 
-export function InscricaoProvider({ 
-  children, 
-  processoId 
-}: { 
-  children: React.ReactNode; 
+// Mapeamento de rotas para steps (FONTE ÚNICA DE VERDADE)
+const ROUTE_TO_STEP_MAP = {
+  '/inscricao/empreendimento': { step: 1, key: 'EMPREENDIMENTO' },
+  '/inscricao/participantes': { step: 2, key: 'PARTICIPANTES' },
+  '/inscricao/licenca': { step: 3, key: 'LICENCA' },
+  '/inscricao/revisao': { step: 4, key: 'REVISAO' }
+} as const;
+
+export function InscricaoProvider({
+  children,
+  processoId
+}: {
+  children: React.ReactNode;
   processoId: string | null;
 }) {
+  const location = useLocation();
+  const setCurrentStepFromEngine = useInscricaoStore(state => state.setCurrentStepFromEngine);
+  const setCurrentStep = useInscricaoStore(state => state.setCurrentStep);
+
+  // 🔥 CRITICAL: Sincroniza o store com a rota IMEDIATAMENTE
+  useEffect(() => {
+    const stepData = ROUTE_TO_STEP_MAP[location.pathname as keyof typeof ROUTE_TO_STEP_MAP];
+    if (stepData) {
+      console.log('🎯 [InscricaoContext] Sincronizando step com rota:', location.pathname, '→', stepData.key);
+      setCurrentStep(stepData.step);
+      setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
+    }
+  }, [location.pathname, setCurrentStep, setCurrentStepFromEngine]);
+
   // Busca os dados do workflow do Zustand store
   const workflowInstanceId = useInscricaoStore(state => state.workflowInstanceId);
   const currentStepId = useInscricaoStore(state => state.currentStepId);
   const currentStepKey = useInscricaoStore(state => state.currentStepKey);
-  
+
   // Busca os dados do subprocess do Zustand store
   const subprocessInstanceId = useInscricaoStore(state => state.subprocessInstanceId);
   const subprocessCurrentStepId = useInscricaoStore(state => state.subprocessCurrentStepId);
   const subprocessCurrentStepKey = useInscricaoStore(state => state.subprocessCurrentStepKey);
+
+  // Debug: mostra o valor atual do currentStepKey
+  useEffect(() => {
+    console.log('📦 [InscricaoContext] currentStepKey atualizado para:', currentStepKey);
+  }, [currentStepKey]);
 
   return (
     <InscricaoContext.Provider 

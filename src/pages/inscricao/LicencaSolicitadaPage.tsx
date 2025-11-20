@@ -46,7 +46,7 @@ export default function LicencaSolicitadaPage() {
     currentStepId,
     currentStepKey
   } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
+  const { setCurrentStep, setCurrentStepFromEngine, setSelectedLicenseTypeId: setStoreSelectedLicenseTypeId } = useInscricaoStore();
 
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
   const [selectedLicenseTypeId, setSelectedLicenseTypeId] = useState<string>('');
@@ -181,6 +181,9 @@ export default function LicencaSolicitadaPage() {
     setIsSubmitting(true);
 
     try {
+      // Salva o tipo de licença selecionado no store
+      setStoreSelectedLicenseTypeId(selectedLicenseTypeId);
+
       if (workflowInstanceId && currentStepId) {
         await completeStep(workflowInstanceId, currentStepId, {
           licenseTypeId: selectedLicenseTypeId,
