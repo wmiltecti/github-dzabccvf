@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
+  const { currentStep, setCurrentStep, reset, startNewInscricao, setCurrentStepFromEngine } = useInscricaoStore();
   
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
@@ -26,32 +26,32 @@ export default function InscricaoLayout() {
   // Flag para evitar criação duplicada de processo no StrictMode
   const isCreatingProcesso = useRef(false);
 
-  // Map routes to steps
+  // Map routes to steps and keys
   const routeToStep = {
-    '/inscricao/participantes': 1,
-    '/inscricao/imovel': 2,
-    '/inscricao/empreendimento': 3,
-    '/inscricao/formulario': 4,
-    '/inscricao/documentacao': 5,
-    '/inscricao/revisao': 6
+    '/inscricao/empreendimento': { step: 1, key: 'EMPREENDIMENTO' },
+    '/inscricao/participantes': { step: 2, key: 'PARTICIPANTES' },
+    '/inscricao/licenca': { step: 3, key: 'LICENCA' },
+    '/inscricao/revisao': { step: 4, key: 'REVISAO' }
   };
 
   const stepToRoute = {
-    1: '/inscricao/participantes',
-    2: '/inscricao/imovel',
-    3: '/inscricao/empreendimento',
-    4: '/inscricao/formulario',
-    5: '/inscricao/documentacao',
-    6: '/inscricao/revisao'
+    1: '/inscricao/empreendimento',
+    2: '/inscricao/participantes',
+    3: '/inscricao/licenca',
+    4: '/inscricao/revisao'
   };
 
-  // Update current step based on route
+  // Update current step and key based on route
   useEffect(() => {
-    const step = routeToStep[location.pathname as keyof typeof routeToStep];
-    if (step && step !== currentStep) {
-      setCurrentStep(step);
+    const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
+    if (stepData) {
+      if (stepData.step !== currentStep) {
+        setCurrentStep(stepData.step);
+      }
+      // Atualiza o currentStepKey no store para o stepper funcionar corretamente
+      setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
     }
-  }, [location.pathname, currentStep, setCurrentStep]);
+  }, [location.pathname, currentStep, setCurrentStep, setCurrentStepFromEngine]);
 
   // Criar processo ao montar o componente - EXATAMENTE IGUAL AO FORMWIZARD
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function InscricaoLayout() {
   // Redirect to first step if on base route
   useEffect(() => {
     if (location.pathname === '/inscricao' || location.pathname === '/inscricao/') {
-      navigate('/inscricao/participantes', { replace: true });
+      navigate('/inscricao/empreendimento', { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -126,7 +126,7 @@ export default function InscricaoLayout() {
   const confirmReset = () => {
     reset();
     setProcessoId(null);
-    navigate('/inscricao/participantes');
+    navigate('/inscricao/empreendimento');
     toast.info('Processo reiniciado');
     window.location.reload();
   };
@@ -138,7 +138,7 @@ export default function InscricaoLayout() {
   const confirmNewInscricao = () => {
     startNewInscricao();
     setProcessoId(null);
-    navigate('/inscricao/participantes');
+    navigate('/inscricao/empreendimento');
     toast.info('Nova inscrição iniciada');
     window.location.reload();
   };

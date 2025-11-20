@@ -61,28 +61,30 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
   }, [workflowInstanceId]);
 
   const getStepStatus = (step: WorkflowStep, stepIndex: number) => {
-    // 1. Se step foi completado (está no histórico)
-    if (completedStepIds.includes(step.id)) {
-      return 'completed';
-    }
-    
+    // 1. Encontra o índice do step atual
+    const currentIndex = steps.findIndex(s => s.key === currentStepKey);
+
     // 2. Se é o step atual (baseado na key do contexto)
     if (step.key === currentStepKey) {
       return 'current';
     }
-    
-    // 3. Se está antes do step atual (pela ordem no array)
-    const currentIndex = steps.findIndex(s => s.key === currentStepKey);
+
+    // 3. Se está antes do step atual (pela ordem no array) - já foi completado
     if (currentIndex !== -1 && stepIndex < currentIndex) {
-      return 'completed';  // Steps anteriores ao atual são considerados completos
+      return 'completed';
     }
-    
-    // 4. Se está depois do step atual
+
+    // 4. Se step foi explicitamente completado (está no histórico do workflow engine)
+    if (completedStepIds.includes(step.id)) {
+      return 'completed';
+    }
+
+    // 5. Se está depois do step atual - ainda não acessível
     if (currentIndex !== -1 && stepIndex > currentIndex) {
-      return 'disabled';  // Steps futuros são desabilitados
+      return 'upcoming';
     }
-    
-    // 5. Fallback: upcoming
+
+    // 6. Fallback: upcoming
     return 'upcoming';
   };
 
