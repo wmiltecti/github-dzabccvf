@@ -74,10 +74,12 @@ export default function InscricaoStepper({ currentStep, onStepClick }: Inscricao
     // Debug: mostra qual step está sendo verificado
     if (stepIndex === 0) {
       console.log('🔍 [Stepper] currentStepKey:', currentStepKey, 'steps:', steps.map(s => s.key));
+      console.log('🔍 [Stepper] currentIndex:', currentIndex);
     }
 
     // 2. Se é o step atual (baseado na key do contexto)
     if (step.key === currentStepKey) {
+      console.log('✅ [Stepper] Step CURRENT:', step.key);
       return 'current';
     }
 

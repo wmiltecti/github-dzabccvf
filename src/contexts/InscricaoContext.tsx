@@ -55,6 +55,11 @@ export function InscricaoProvider({
   const subprocessCurrentStepId = useInscricaoStore(state => state.subprocessCurrentStepId);
   const subprocessCurrentStepKey = useInscricaoStore(state => state.subprocessCurrentStepKey);
 
+  // Debug: mostra o valor atual do currentStepKey
+  useEffect(() => {
+    console.log('📦 [InscricaoContext] currentStepKey atualizado para:', currentStepKey);
+  }, [currentStepKey]);
+
   return (
     <InscricaoContext.Provider 
       value={{ 
