@@ -85,10 +85,17 @@ try:
     # 2. NAVEGAR PARA ADMINISTRAÇÃO
     print("\n📂 [2/7] Navegando para Administração...")
     # Aguardar o dashboard carregar (verificando elemento ao invés de URL)
-    WebDriverWait(driver, 15).until(
+    print("  ⏳ Aguardando botão Administração aparecer...")
+    time.sleep(2)  # Aguardar renderização inicial
+    
+    # Capturar screenshot para debug
+    driver.save_screenshot('debug_before_admin.png')
+    print("  📸 Screenshot: debug_before_admin.png")
+    
+    WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.XPATH, "//button[contains(., 'Administração')]"))
     )
-    time.sleep(3)  # Aguardar renderização completa
+    time.sleep(2)  # Aguardar renderização completa
     
     # Aumentar timeout para encontrar botão Administração
     admin_wait = WebDriverWait(driver, 20)
@@ -408,9 +415,23 @@ try:
     
     # 7. VERIFICAR NA LISTA
     print("\n🔍 [7/7] Verificando atividade na lista...")
-    time.sleep(2)
     
     try:
+        # Aguardar a tabela carregar (até 10 segundos)
+        print("  ⏳ Aguardando tabela carregar...")
+        time.sleep(3)  # Aumentar de 2 para 3 segundos
+        
+        # Capturar logs do console
+        logs = driver.get_log('browser')
+        print(f"\n📋 Últimos logs do console ({len(logs)} mensagens):")
+        for log in logs[-10:]:  # Mostrar últimas 10 mensagens
+            level = log['level']
+            message = log['message']
+            print(f"  [{level}] {message}")
+        
+        # Aguardar até que haja pelo menos uma linha na tabela
+        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, 'tbody tr')) > 0)
+        
         # Recarregar a tabela
         rows_after = driver.find_elements(By.CSS_SELECTOR, 'tbody tr')
         count_after = len(rows_after)

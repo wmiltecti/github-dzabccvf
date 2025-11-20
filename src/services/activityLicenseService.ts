@@ -108,23 +108,23 @@ export interface UpdateRequiredRequest {
  * Busca token de autenticação do localStorage
  */
 function getAuthToken(): string | null {
-  // Tentar várias possíveis chaves de token
+  // PRIORIDADE 1: Token do Supabase (JWT válido)
+  try {
+    const supabaseAuth = localStorage.getItem('sb-jnhvlqytvssrbwjpolyq-auth-token');
+    if (supabaseAuth) {
+      const authData = JSON.parse(supabaseAuth);
+      if (authData?.access_token) {
+        return authData.access_token;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Erro ao parsear token do Supabase:', e);
+  }
+  
+  // PRIORIDADE 2: Tentar outras chaves (fallback)
   const token = localStorage.getItem('auth_token') 
     || localStorage.getItem('token')
     || localStorage.getItem('supabase.auth.token');
-  
-  // Tentar também pegar do objeto de sessão do Supabase
-  if (!token) {
-    try {
-      const supabaseAuth = localStorage.getItem('sb-jnhvlqytvssrbwjpolyq-auth-token');
-      if (supabaseAuth) {
-        const authData = JSON.parse(supabaseAuth);
-        return authData?.access_token || null;
-      }
-    } catch (e) {
-      console.warn('⚠️ Erro ao parsear token do Supabase:', e);
-    }
-  }
   
   return token;
 }
@@ -138,10 +138,18 @@ function getHeaders(): HeadersInit {
   };
 
   const token = getAuthToken();
-  console.log('🔑 Token encontrado:', token ? `${token.substring(0, 20)}...` : 'null');
-  
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    // Validar se é JWT (3 partes separadas por ".")
+    const parts = token.split('.');
+    console.log('🔑 Token encontrado:', token.substring(0, 30) + '...', `(${parts.length} partes)`);
+    
+    if (parts.length === 3) {
+      headers['Authorization'] = `Bearer ${token}`;
+      console.log('✅ Token JWT válido');
+    } else {
+      console.error('❌ Token inválido! JWT deve ter 3 partes, mas tem:', parts.length);
+      console.error('   Token completo:', token);
+    }
   } else {
     console.warn('⚠️ Nenhum token de autenticação encontrado!');
   }
@@ -364,7 +372,7 @@ export async function addLicenseTypesBulk(
     {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify({ license_types: licenseTypes }),
+      body: JSON.stringify(licenseTypes), // API espera a lista diretamente, não um objeto com propriedade
     }
   );
 
