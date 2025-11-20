@@ -161,7 +161,9 @@ export async function getLicenseTypes(): Promise<LicenseType[]> {
   
   const response = await fetch(`${API_BASE_URL}/license-types`, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   console.log('🔧 getLicenseTypes - Response status:', response.status);
@@ -182,7 +184,9 @@ export async function getLicenseTypes(): Promise<LicenseType[]> {
 export async function getDocumentTemplates(): Promise<DocumentTemplate[]> {
   const response = await fetch(`${API_BASE_URL}/document-templates`, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!response.ok) {
@@ -219,7 +223,9 @@ export async function getPollutionPotentials(): Promise<PollutionPotential[]> {
   
   const response = await fetch(`${API_BASE_URL}/referencias/pollution-potentials`, {
     method: 'GET',
-    headers: getHeaders(),
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   console.log('🔧 getPollutionPotentials - Response status:', response.status);
