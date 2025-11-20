@@ -108,7 +108,25 @@ export interface UpdateRequiredRequest {
  * Busca token de autenticação do localStorage
  */
 function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token') || localStorage.getItem('token');
+  // Tentar várias possíveis chaves de token
+  const token = localStorage.getItem('auth_token') 
+    || localStorage.getItem('token')
+    || localStorage.getItem('supabase.auth.token');
+  
+  // Tentar também pegar do objeto de sessão do Supabase
+  if (!token) {
+    try {
+      const supabaseAuth = localStorage.getItem('sb-jnhvlqytvssrbwjpolyq-auth-token');
+      if (supabaseAuth) {
+        const authData = JSON.parse(supabaseAuth);
+        return authData?.access_token || null;
+      }
+    } catch (e) {
+      console.warn('⚠️ Erro ao parsear token do Supabase:', e);
+    }
+  }
+  
+  return token;
 }
 
 /**
@@ -120,8 +138,12 @@ function getHeaders(): HeadersInit {
   };
 
   const token = getAuthToken();
+  console.log('🔑 Token encontrado:', token ? `${token.substring(0, 20)}...` : 'null');
+  
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    console.warn('⚠️ Nenhum token de autenticação encontrado!');
   }
 
   return headers;
