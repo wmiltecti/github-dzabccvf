@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { X, Save, Activity, AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { AdminService } from '../../services/adminService';
 import * as activityLicenseService from '../../services/activityLicenseService';
 import type { LicenseType, DocumentTemplate, StudyType } from '../../services/activityLicenseService';
 import LicenseTypeDocumentsSection from './LicenseTypeDocumentsSection';
@@ -154,36 +153,53 @@ export default function ActivityForm({
 
   const loadDropdownData = async () => {
     try {
-      console.log('🔍 Carregando dados dos dropdowns...');
+      console.log('🔍 Carregando dados dos dropdowns da API...');
       
-      // Carregar tipos de licença do cadastro principal (Supabase)
-      const licenseTypesData = await AdminService.getAll<LicenseType>('license_types', false);
-      console.log('✅ Tipos de licença carregados do cadastro:', licenseTypesData);
-      setLicenseTypes(licenseTypesData || []);
-
-      // Carregar templates de documentos e tipos de estudo da API REST
-      const [documentsData, studyTypesData] = await Promise.all([
+      const apiUrl = import.meta.env.VITE_API_BASE_URL;
+      console.log('📍 API Base URL:', apiUrl);
+      
+      // Carregar todos os dados em paralelo da API REST
+      const [licenseTypesRes, pollutionPotentialsRes, documentsData, studyTypesData] = await Promise.all([
+        fetch(`${apiUrl}/license-types`).then(res => {
+          console.log('📡 Response /license-types:', res.status, res.statusText);
+          return res;
+        }),
+        fetch(`${apiUrl}/referencias/pollution-potentials`).then(res => {
+          console.log('📡 Response /referencias/pollution-potentials:', res.status, res.statusText);
+          return res;
+        }),
         activityLicenseService.getDocumentTemplates(),
         activityLicenseService.getStudyTypes(),
       ]);
 
+      // Parse dos tipos de licença
+      if (licenseTypesRes.ok) {
+        const licenseTypesData = await licenseTypesRes.json();
+        console.log('✅ Tipos de licença carregados da API:', licenseTypesData.length, 'itens');
+        setLicenseTypes(licenseTypesData || []);
+      } else {
+        const errorText = await licenseTypesRes.text();
+        console.error('❌ Erro ao carregar tipos de licença:', licenseTypesRes.status, errorText);
+        toast.error(`Erro ao carregar tipos de licença: ${licenseTypesRes.status}`);
+      }
+
+      // Parse dos potenciais poluidores
+      if (pollutionPotentialsRes.ok) {
+        const pollutionPotentialsData = await pollutionPotentialsRes.json();
+        console.log('✅ Potenciais poluidores carregados da API:', pollutionPotentialsData.length, 'itens');
+        setPollutionPotentials(pollutionPotentialsData || []);
+      } else {
+        const errorText = await pollutionPotentialsRes.text();
+        console.error('❌ Erro ao carregar potenciais poluidores:', pollutionPotentialsRes.status, errorText);
+        toast.error(`Erro ao carregar potenciais poluidores: ${pollutionPotentialsRes.status}`);
+      }
+
       setDocumentTemplates(documentsData || []);
       setStudyTypes(studyTypesData || []);
 
-      // Load pollution potentials do Supabase
-      const { data: pollutionPotentialsData, error: pollutionPotentialsError } = await supabase
-        .from('pollution_potentials')
-        .select('id, name')
-        .eq('is_active', true)
-        .order('name');
-
-      if (pollutionPotentialsError) throw pollutionPotentialsError;
-      setPollutionPotentials(pollutionPotentialsData || []);
-      console.log('✅ Potenciais poluidores carregados:', pollutionPotentialsData);
-
     } catch (error) {
-      console.error('Error loading dropdown data:', error);
-      toast.error('Erro ao carregar dados: ' + (error as Error).message);
+      console.error('❌ Error loading dropdown data:', error);
+      toast.error('Erro ao carregar dados da API: ' + (error as Error).message);
     }
   };
 
