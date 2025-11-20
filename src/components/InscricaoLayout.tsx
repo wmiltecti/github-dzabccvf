@@ -43,14 +43,20 @@ export default function InscricaoLayout() {
 
   // Update current step and key based on route
   useEffect(() => {
+    console.log('🌍 [InscricaoLayout] Route changed:', location.pathname);
     const stepData = routeToStep[location.pathname as keyof typeof routeToStep];
+    console.log('📍 [InscricaoLayout] stepData encontrado:', stepData);
     if (stepData) {
+      console.log('🔄 [InscricaoLayout] Chamando setCurrentStep com:', stepData.step);
       setCurrentStep(stepData.step);
+      console.log('🔄 [InscricaoLayout] Chamando setCurrentStepFromEngine com:', stepData.key);
       // Atualiza o currentStepKey no store para o stepper funcionar corretamente
       setCurrentStepFromEngine('step-' + stepData.step, stepData.key);
-      console.log('🔄 Atualizando step para rota:', location.pathname, '→', stepData);
+      console.log('✅ [InscricaoLayout] Step atualizado para:', stepData);
+    } else {
+      console.warn('⚠️ [InscricaoLayout] Rota não mapeada:', location.pathname);
     }
-  }, [location.pathname]);
+  }, [location.pathname, setCurrentStep, setCurrentStepFromEngine]);
 
   // Criar processo ao montar o componente - EXATAMENTE IGUAL AO FORMWIZARD
   useEffect(() => {
