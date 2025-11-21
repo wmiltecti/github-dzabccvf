@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ClipboardList, Search, Filter, Eye, UserCheck, X, Building2 } from 'lucide-react';
+import { ClipboardList, Search, Filter, Eye, UserCheck, X, Building2, ArrowLeft, Calendar, User, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface ProcessoPauta {
@@ -86,6 +86,7 @@ export default function PautaGeral() {
   const [processos, setProcessos] = useState<ProcessoPauta[]>(mockProcessosPauta);
   const [processoSelecionado, setProcessoSelecionado] = useState<ProcessoPauta | null>(null);
   const [showAssumirModal, setShowAssumirModal] = useState(false);
+  const [mostrandoDetalhes, setMostrandoDetalhes] = useState(false);
 
   const handleAssumir = (processo: ProcessoPauta) => {
     setProcessoSelecionado(processo);
@@ -102,7 +103,8 @@ export default function PautaGeral() {
   };
 
   const handleDetalhes = (processo: ProcessoPauta) => {
-    toast.info(`Visualizando detalhes do processo ${processo.numero}`);
+    setProcessoSelecionado(processo);
+    setMostrandoDetalhes(true);
   };
 
   const filteredProcessos = processos.filter(p =>
@@ -111,6 +113,17 @@ export default function PautaGeral() {
     p.atividade.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (mostrandoDetalhes && processoSelecionado) {
+    return (
+      <ProcessoPautaDetalhes
+        processo={processoSelecionado}
+        onVoltar={() => {
+          setMostrandoDetalhes(false);
+          setProcessoSelecionado(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -350,6 +363,116 @@ function AssumirProcessoModal({ processo, onConfirmar, onCancelar }: AssumirProc
             <UserCheck className="w-4 h-4" />
             Confirmar e Assumir
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ProcessoPautaDetalhesProps {
+  processo: ProcessoPauta;
+  onVoltar: () => void;
+}
+
+function ProcessoPautaDetalhes({ processo, onVoltar }: ProcessoPautaDetalhesProps) {
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <button
+            onClick={onVoltar}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para pauta geral
+          </button>
+          <div className="flex items-center gap-3 mb-2">
+            <ClipboardList className="w-8 h-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Detalhes do Processo</h1>
+          </div>
+          <p className="text-gray-600">{processo.numero}</p>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+              Informações Gerais
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm text-gray-500">Número do Processo</label>
+                <p className="text-base font-medium text-gray-900">{processo.numero}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Requerente</label>
+                <p className="text-base font-medium text-gray-900">{processo.requerente}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Atividade Principal</label>
+                <p className="text-base font-medium text-gray-900">{processo.atividade}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Situação</label>
+                <span className="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
+                  {processo.situacao}
+                </span>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Etapa</label>
+                <p className="text-base font-medium text-gray-900">{processo.etapa}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Data de Solicitação
+                </label>
+                <p className="text-base font-medium text-gray-900">
+                  {new Date(processo.dataSolicitacao).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              {processo.responsavelTecnico && (
+                <div>
+                  <label className="text-sm text-gray-500 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Responsável Técnico
+                  </label>
+                  <p className="text-base font-medium text-gray-900">{processo.responsavelTecnico}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {processo.empreendimento && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Empreendimento
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-gray-500">Número do Empreendimento</label>
+                  <p className="text-base font-medium text-gray-900">{processo.empreendimento.numero}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500">Nome</label>
+                  <p className="text-base font-medium text-gray-900">{processo.empreendimento.nome}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-500 mb-2 block">Atividades</label>
+                  <div className="flex flex-wrap gap-2">
+                    {processo.empreendimento.atividades.map((atividade, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-300"
+                      >
+                        {atividade}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
