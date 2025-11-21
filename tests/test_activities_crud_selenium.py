@@ -206,20 +206,33 @@ try:
     except Exception as e:
         print(f"  ⚠️ Campo Descrição não preenchido: {e}")
     
-    # Preencher Unidade de Medida (select)
+    # Preencher Unidade de Medida (select - OBRIGATÓRIO)
     try:
-        time.sleep(1)
+        time.sleep(1.5)  # Aguardar API carregar
         unit_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Unidade de Medida')]")
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", unit_label)
+        time.sleep(0.5)
+        
         unit_select = unit_label.find_element(By.XPATH, "./following-sibling::select")
         select_unit = Select(unit_select)
         
+        print(f"  ℹ️ Opções de Unidade de Medida: {len(select_unit.options)}")
+        
         if len(select_unit.options) > 1:
-            select_unit.select_by_index(1)
+            # Listar primeiras opções disponíveis
+            for i, option in enumerate(select_unit.options[:5]):
+                print(f"      [{i}] {option.text}")
+            
+            select_unit.select_by_index(1)  # Selecionar primeira unidade disponível
             selected_unit = select_unit.first_selected_option.text
             print(f"  ✓ Unidade de Medida: {selected_unit}")
             time.sleep(0.3)
+        else:
+            print(f"  ⚠️ Nenhuma unidade de medida disponível (API pode estar offline)")
+            print(f"  ⚠️ O teste não será salvo com sucesso, mas continuará para debug")
     except Exception as e:
-        print(f"  ⚠️ Erro ao preencher Unidade de Medida: {e}")
+        print(f"  ❌ Erro ao preencher Unidade de Medida (OBRIGATÓRIO): {e}")
+        print(f"  ⚠️ Continuando teste mesmo com erro...")
     
     # Preencher Potencial Poluidor (select - OBRIGATÓRIO)
     try:

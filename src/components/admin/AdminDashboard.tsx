@@ -132,7 +132,7 @@ const entityConfigs = {
     formFields: [
       { key: 'code', label: 'Código', type: 'text' as const, required: true, placeholder: 'Ex: UPF, UFIR, SM' },
       { key: 'name', label: 'Nome', type: 'text' as const, required: true, placeholder: 'Ex: Unidade Padrão Fiscal' },
-      { key: 'description', label: 'Descrição', type: 'textarea' as const, placeholder: 'Descrição da unidade de referência' }
+      { key: 'description', label: 'Descrição', type: 'textarea' as const, placeholder: 'Descrição da unidade de medida' }
     ]
   },
   'license-types': {
@@ -241,7 +241,7 @@ const entityConfigs = {
       },
       { 
         key: 'reference_unit_id', 
-        label: 'Unidade de Referência', 
+        label: 'Unidade de Medida', 
         type: 'select' as const, 
         required: true,
         options: [] // Will be populated dynamically
