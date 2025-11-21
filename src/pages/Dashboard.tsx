@@ -40,6 +40,9 @@ import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import Notificacoes from './Notificacoes';
+import PreProcessos from './analise/PreProcessos';
+import PautaGeral from './analise/PautaGeral';
+import MeuProcesso from './analise/MeuProcesso';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -84,6 +87,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('notificacoes');
   const [adminExpanded, setAdminExpanded] = useState(false);
   const [generalExpanded, setGeneralExpanded] = useState(false);
+  const [analiseExpanded, setAnaliseExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [loadingProcesses, setLoadingProcesses] = useState(true);
@@ -340,7 +344,8 @@ export default function Dashboard() {
     // { id: 'dashboard', name: 'Dashboard', icon: Home },
     { id: 'inscricoes', name: 'Solicitação de Processo', icon: FileCheck },
     // { id: 'processesmotor', name: 'Processos', icon: FileText },
-    { id: 'empreendimento', name: 'Empreendimento', icon: Building2 }
+    { id: 'empreendimento', name: 'Empreendimento', icon: Building2 },
+    { id: 'analise', name: 'Análise de Processos', icon: FileCheck, hasSubmenu: true }
   ];
 
   const otherNavigation = [
@@ -1203,6 +1208,9 @@ export default function Dashboard() {
       case 'processesmotor': return renderProcessesMotor();
       case 'empreendimento': return renderEmpreendimento();
       case 'inscricoes': return renderInscricoes();
+      case 'analise-pre-processos': return <PreProcessos />;
+      case 'analise-pauta-geral': return <PautaGeral />;
+      case 'analise-meu-processo': return <MeuProcesso />;
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (
       //   <div className="text-center py-8 sm:py-12 px-4">
@@ -1327,6 +1335,93 @@ export default function Dashboard() {
 
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
               {navigation.map((item) => {
+                if (item.hasSubmenu && item.id === 'analise') {
+                  return (
+                    <div key={item.id}>
+                      <button
+                        onClick={() => setAnaliseExpanded(!analiseExpanded)}
+                        className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium nav-item ${
+                          activeTab.startsWith('analise')
+                            ? 'active text-green-700'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={arrowIcon}
+                            alt={item.name}
+                            className={`w-5 h-5 flex-shrink-0 mr-3 transition-transform duration-200 ${
+                              analiseExpanded ? 'rotate-90' : ''
+                            }`}
+                          />
+                          {item.name}
+                        </div>
+                      </button>
+
+                      {analiseExpanded && (
+                        <div className="mt-1 space-y-1 pl-6 sm:pl-8">
+                          <button
+                            onClick={() => {
+                              setActiveTab('analise-pre-processos');
+                              setSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-pre-processos'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            <img
+                              src={submenuIcon}
+                              alt="Pré-processos"
+                              className="w-4 h-4 flex-shrink-0 mr-2"
+                            />
+                            Pré-processos
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('analise-pauta-geral');
+                              setSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-pauta-geral'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            <img
+                              src={submenuIcon}
+                              alt="Pauta Geral"
+                              className="w-4 h-4 flex-shrink-0 mr-2"
+                            />
+                            Pauta Geral
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('analise-meu-processo');
+                              setSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-meu-processo'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            <img
+                              src={submenuIcon}
+                              alt="Meu Processo"
+                              className="w-4 h-4 flex-shrink-0 mr-2"
+                            />
+                            Meu Processo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={item.id}
