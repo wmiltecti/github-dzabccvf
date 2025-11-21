@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ClipboardList, Search, Filter, Eye, UserCheck } from 'lucide-react';
+import { ClipboardList, Search, Filter, Eye, UserCheck, X, Building2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface ProcessoPauta {
@@ -7,9 +7,15 @@ interface ProcessoPauta {
   numero: string;
   requerente: string;
   atividade: string;
-  tipoLicenca: string;
-  dataFormacao: string;
-  prioridade: 'Alta' | 'Média' | 'Baixa';
+  situacao: string;
+  etapa: string;
+  dataSolicitacao: string;
+  responsavelTecnico?: string;
+  empreendimento?: {
+    numero: string;
+    nome: string;
+    atividades: string[];
+  };
 }
 
 const mockProcessosPauta: ProcessoPauta[] = [
@@ -18,45 +24,81 @@ const mockProcessosPauta: ProcessoPauta[] = [
     numero: 'PROC-2025-045',
     requerente: 'Indústria Metalúrgica Beta',
     atividade: 'Fabricação de Peças Metálicas',
-    tipoLicenca: 'LO - Licença de Operação',
-    dataFormacao: '2025-11-10',
-    prioridade: 'Alta'
+    situacao: 'Aguardando Distribuição',
+    etapa: 'Análise Técnica',
+    dataSolicitacao: '2025-11-10',
+    responsavelTecnico: 'João Silva - CREA 12345',
+    empreendimento: {
+      numero: 'EMP-2025-010',
+      nome: 'Indústria Metalúrgica Beta',
+      atividades: ['Fabricação de Peças Metálicas', 'Fundição', 'Usinagem']
+    }
   },
   {
     id: '2',
     numero: 'PROC-2025-046',
     requerente: 'Mineradora Gamma Ltda',
     atividade: 'Extração de Minérios',
-    tipoLicenca: 'LP - Licença Prévia',
-    dataFormacao: '2025-11-12',
-    prioridade: 'Média'
+    situacao: 'Aguardando Distribuição',
+    etapa: 'Análise Técnica',
+    dataSolicitacao: '2025-11-12',
+    responsavelTecnico: 'Maria Santos - CREA 67890',
+    empreendimento: {
+      numero: 'EMP-2025-011',
+      nome: 'Mineradora Gamma',
+      atividades: ['Extração de Minérios', 'Beneficiamento']
+    }
   },
   {
     id: '3',
     numero: 'PROC-2025-047',
     requerente: 'Frigorífico Omega',
     atividade: 'Abate de Bovinos',
-    tipoLicenca: 'LI - Licença de Instalação',
-    dataFormacao: '2025-11-14',
-    prioridade: 'Alta'
+    situacao: 'Aguardando Distribuição',
+    etapa: 'Análise Técnica',
+    dataSolicitacao: '2025-11-14',
+    responsavelTecnico: 'Carlos Oliveira - CRMV 11223',
+    empreendimento: {
+      numero: 'EMP-2025-012',
+      nome: 'Frigorífico Omega',
+      atividades: ['Abate de Bovinos', 'Processamento de Carnes']
+    }
   },
   {
     id: '4',
     numero: 'PROC-2025-048',
     requerente: 'Posto Combustível Sigma',
     atividade: 'Comércio de Combustíveis',
-    tipoLicenca: 'LAU - Licença Ambiental Única',
-    dataFormacao: '2025-11-16',
-    prioridade: 'Baixa'
+    situacao: 'Aguardando Distribuição',
+    etapa: 'Análise Técnica',
+    dataSolicitacao: '2025-11-16',
+    responsavelTecnico: 'Ana Costa - CREA 33445',
+    empreendimento: {
+      numero: 'EMP-2025-013',
+      nome: 'Posto Combustível Sigma',
+      atividades: ['Comércio de Combustíveis', 'Lavagem de Veículos']
+    }
   }
 ];
 
 export default function PautaGeral() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [processos] = useState<ProcessoPauta[]>(mockProcessosPauta);
+  const [processos, setProcessos] = useState<ProcessoPauta[]>(mockProcessosPauta);
+  const [processoSelecionado, setProcessoSelecionado] = useState<ProcessoPauta | null>(null);
+  const [showAssumirModal, setShowAssumirModal] = useState(false);
 
   const handleAssumir = (processo: ProcessoPauta) => {
-    toast.success(`Assumindo análise do processo ${processo.numero}`);
+    setProcessoSelecionado(processo);
+    setShowAssumirModal(true);
+  };
+
+  const handleConfirmarAssumir = () => {
+    if (processoSelecionado) {
+      setProcessos(prev => prev.filter(p => p.id !== processoSelecionado.id));
+      toast.success(`Processo ${processoSelecionado.numero} assumido com sucesso!`);
+      setShowAssumirModal(false);
+      setProcessoSelecionado(null);
+    }
   };
 
   const handleDetalhes = (processo: ProcessoPauta) => {
@@ -69,18 +111,6 @@ export default function PautaGeral() {
     p.atividade.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPrioridadeColor = (prioridade: string) => {
-    switch (prioridade) {
-      case 'Alta':
-        return 'bg-red-100 text-red-800';
-      case 'Média':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Baixa':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -132,13 +162,10 @@ export default function PautaGeral() {
                     Atividade
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo de Licença
+                    Situação
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data Formação
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prioridade
+                    Etapa
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -148,7 +175,7 @@ export default function PautaGeral() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProcessos.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       Nenhum processo encontrado na pauta
                     </td>
                   </tr>
@@ -167,23 +194,18 @@ export default function PautaGeral() {
                         <span className="text-sm text-gray-900">{processo.atividade}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">{processo.tipoLicenca}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-500">
-                          {new Date(processo.dataFormacao).toLocaleDateString('pt-BR')}
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {processo.situacao}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPrioridadeColor(processo.prioridade)}`}>
-                          {processo.prioridade}
-                        </span>
+                        <span className="text-sm text-gray-900">{processo.etapa}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleAssumir(processo)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-sm rounded-lg transition-colors"
                             title="Assumir processo"
                           >
                             <UserCheck className="w-4 h-4" />
@@ -191,7 +213,7 @@ export default function PautaGeral() {
                           </button>
                           <button
                             onClick={() => handleDetalhes(processo)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-lg transition-colors"
                             title="Ver detalhes"
                           >
                             <Eye className="w-4 h-4" />
@@ -205,6 +227,129 @@ export default function PautaGeral() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Modal de Confirmação de Assumir */}
+      {showAssumirModal && processoSelecionado && (
+        <AssumirProcessoModal
+          processo={processoSelecionado}
+          onConfirmar={handleConfirmarAssumir}
+          onCancelar={() => {
+            setShowAssumirModal(false);
+            setProcessoSelecionado(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface AssumirProcessoModalProps {
+  processo: ProcessoPauta;
+  onConfirmar: () => void;
+  onCancelar: () => void;
+}
+
+function AssumirProcessoModal({ processo, onConfirmar, onCancelar }: AssumirProcessoModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-3">
+            <UserCheck className="w-6 h-6 text-teal-700" />
+            <h3 className="text-xl font-semibold text-gray-900">Assumir Processo</h3>
+          </div>
+          <button
+            onClick={onCancelar}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          <p className="text-sm text-gray-600">
+            Revise as informações do processo antes de assumir a análise:
+          </p>
+
+          {/* Informações do Processo */}
+          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">
+              Informações do Processo
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-gray-500">Número:</span>
+                <p className="text-sm font-medium text-gray-900">{processo.numero}</p>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">Requerente:</span>
+                <p className="text-sm font-medium text-gray-900">{processo.requerente}</p>
+              </div>
+              <div>
+                <span className="text-xs text-gray-500">Data da Solicitação:</span>
+                <p className="text-sm font-medium text-gray-900">
+                  {new Date(processo.dataSolicitacao).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              {processo.responsavelTecnico && (
+                <div>
+                  <span className="text-xs text-gray-500">Responsável Técnico:</span>
+                  <p className="text-sm font-medium text-gray-900">{processo.responsavelTecnico}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Informações do Empreendimento */}
+          {processo.empreendimento && (
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2 flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Empreendimento
+              </h4>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs text-gray-500">Número:</span>
+                  <p className="text-sm font-medium text-gray-900">{processo.empreendimento.numero}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Nome:</span>
+                  <p className="text-sm font-medium text-gray-900">{processo.empreendimento.nome}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Atividades:</span>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {processo.empreendimento.atividades.map((atividade, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded border border-gray-300"
+                      >
+                        {atividade}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={onCancelar}
+            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirmar}
+            className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg transition-colors flex items-center gap-2"
+          >
+            <UserCheck className="w-4 h-4" />
+            Confirmar e Assumir
+          </button>
         </div>
       </div>
     </div>
