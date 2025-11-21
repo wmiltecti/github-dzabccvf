@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Search, Filter, Eye, CheckSquare } from 'lucide-react';
+import { FileText, Search, Filter, Eye, CheckSquare, ArrowLeft, Building2, Calendar, User, FileCheck, MapPin, Phone, Mail, Briefcase, DollarSign, Factory } from 'lucide-react';
 import { toast } from 'react-toastify';
 import PreProcessoFormalizacao from '../../components/PreProcessoFormalizacao';
 
@@ -91,6 +91,7 @@ export default function PreProcessos() {
   const [processos] = useState<PreProcesso[]>(mockPreProcessos);
   const [processoSelecionado, setProcessoSelecionado] = useState<PreProcesso | null>(null);
   const [mostrandoFormalizacao, setMostrandoFormalizacao] = useState(false);
+  const [mostrandoDetalhes, setMostrandoDetalhes] = useState(false);
 
   const handleFormar = (processo: PreProcesso) => {
     setProcessoSelecionado(processo);
@@ -98,7 +99,8 @@ export default function PreProcessos() {
   };
 
   const handleDetalhes = (processo: PreProcesso) => {
-    toast.info(`Visualizando detalhes do processo ${processo.numero}`);
+    setProcessoSelecionado(processo);
+    setMostrandoDetalhes(true);
   };
 
   const handleFormalizar = (processoId: string, setorId: string) => {
@@ -111,6 +113,11 @@ export default function PreProcessos() {
 
   const handleVoltar = () => {
     setMostrandoFormalizacao(false);
+    setProcessoSelecionado(null);
+  };
+
+  const handleVoltarDetalhes = () => {
+    setMostrandoDetalhes(false);
     setProcessoSelecionado(null);
   };
 
@@ -129,6 +136,10 @@ export default function PreProcessos() {
         onRecusar={handleRecusar}
       />
     );
+  }
+
+  if (mostrandoDetalhes && processoSelecionado) {
+    return <PreProcessoDetalhes processo={processoSelecionado} onVoltar={handleVoltarDetalhes} />;
   }
 
   return (
@@ -248,6 +259,296 @@ export default function PreProcessos() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface PreProcessoDetalhesProps {
+  processo: PreProcesso;
+  onVoltar: () => void;
+}
+
+function PreProcessoDetalhes({ processo, onVoltar }: PreProcessoDetalhesProps) {
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <button
+            onClick={onVoltar}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para listagem
+          </button>
+          <div className="flex items-center gap-3 mb-2">
+            <FileText className="w-8 h-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Detalhes do Pré-processo</h1>
+          </div>
+          <p className="text-gray-600">{processo.numero}</p>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+              Informações Gerais
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm text-gray-500">Número</label>
+                <p className="text-base font-medium text-gray-900">{processo.numero}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Requerente</label>
+                <p className="text-base font-medium text-gray-900">{processo.requerente}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Atividade Primária</label>
+                <p className="text-base font-medium text-gray-900">{processo.atividadePrimaria}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Situação</label>
+                <span className="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                  {processo.situacao}
+                </span>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Data de Solicitação
+                </label>
+                <p className="text-base font-medium text-gray-900">
+                  {new Date(processo.dataSolicitacao).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              {processo.responsavelTecnico && (
+                <div>
+                  <label className="text-sm text-gray-500 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Responsável Técnico
+                  </label>
+                  <p className="text-base font-medium text-gray-900">{processo.responsavelTecnico}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {processo.empreendimento && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Dados do Empreendimento
+              </h2>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm text-gray-500">Número do Empreendimento</label>
+                    <p className="text-base font-medium text-gray-900">{processo.empreendimento.numero}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-500">Nome do Empreendimento</label>
+                    <p className="text-base font-medium text-gray-900">{processo.empreendimento.nome}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-500 mb-2 block">Atividades do Empreendimento</label>
+                  <div className="flex flex-wrap gap-2">
+                    {processo.empreendimento.atividades.map((atividade, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-300"
+                      >
+                        {atividade}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Localização do Empreendimento
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <label className="text-xs text-gray-500">Endereço</label>
+                      <p className="text-sm text-gray-900">Rua Exemplo, 1234</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Bairro</label>
+                      <p className="text-sm text-gray-900">Centro</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Cidade/UF</label>
+                      <p className="text-sm text-gray-900">São Paulo - SP</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">CEP</label>
+                      <p className="text-sm text-gray-900">01234-567</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Coordenadas</label>
+                      <p className="text-sm text-gray-900">-23.5505° S, -46.6333° W</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Factory className="w-4 h-4" />
+                    Características do Empreendimento
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <label className="text-xs text-gray-500">Porte</label>
+                      <p className="text-sm text-gray-900">Médio Porte</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Potencial Poluidor</label>
+                      <p className="text-sm text-gray-900">Médio</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Área Total</label>
+                      <p className="text-sm text-gray-900">2.500 m²</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Área Construída</label>
+                      <p className="text-sm text-gray-900">1.800 m²</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    Informações Operacionais
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <label className="text-xs text-gray-500">Número de Funcionários</label>
+                      <p className="text-sm text-gray-900">45 colaboradores</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Horário de Funcionamento</label>
+                      <p className="text-sm text-gray-900">07:00 às 17:00 (Seg-Sex)</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Capacidade Produtiva</label>
+                      <p className="text-sm text-gray-900">500 unidades/dia</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Data de Início Operação</label>
+                      <p className="text-sm text-gray-900">15/03/2020</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Dados do Requerente
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm text-gray-500">Nome/Razão Social</label>
+                <p className="text-base font-medium text-gray-900">{processo.requerente}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">CPF/CNPJ</label>
+                <p className="text-base font-medium text-gray-900">12.345.678/0001-90</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <Phone className="w-4 h-4 text-gray-400 mt-1" />
+                <div>
+                  <label className="text-sm text-gray-500">Telefone</label>
+                  <p className="text-base font-medium text-gray-900">(11) 3456-7890</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Mail className="w-4 h-4 text-gray-400 mt-1" />
+                <div>
+                  <label className="text-sm text-gray-500">E-mail</label>
+                  <p className="text-base font-medium text-gray-900">contato@empresa.com.br</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              Informações da Licença Solicitada
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm text-gray-500">Tipo de Licença</label>
+                <p className="text-base font-medium text-gray-900">Licença Prévia (LP)</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Prazo Solicitado</label>
+                <p className="text-base font-medium text-gray-900">24 meses</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Valor da Taxa</label>
+                <p className="text-base font-medium text-gray-900">R$ 2.500,00</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-500">Status do Pagamento</label>
+                <span className="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                  Pago
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {processo.documentos && processo.documentos.length > 0 && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+                <FileCheck className="w-5 h-5" />
+                Documentos Anexados
+              </h2>
+              <div className="space-y-3">
+                {processo.documentos.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{doc.nome}</p>
+                        <p className="text-xs text-gray-500">{doc.tipo}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {doc.status && (
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            doc.status === 'aceito'
+                              ? 'bg-green-100 text-green-800'
+                              : doc.status === 'recusado'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {doc.status === 'aceito' ? 'Aceito' : doc.status === 'recusado' ? 'Recusado' : 'Pendente'}
+                        </span>
+                      )}
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Visualizar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
