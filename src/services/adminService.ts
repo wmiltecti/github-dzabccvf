@@ -45,6 +45,8 @@ export interface LicenseType {
   validity_period: number;
   time_unit: 'meses' | 'anos';
   description?: string;
+  depends_on_license_type_id?: string | null;
+  depends_on_license_type?: LicenseType | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
