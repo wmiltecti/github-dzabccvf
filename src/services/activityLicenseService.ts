@@ -100,6 +100,16 @@ export interface UpdateRequiredRequest {
   is_required: boolean;
 }
 
+export interface ReferenceUnit {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -273,6 +283,32 @@ export async function getPollutionPotentials(): Promise<PollutionPotential[]> {
 
   const data = await response.json();
   console.log('🔧 getPollutionPotentials - Data length:', data.length);
+  return data;
+}
+
+/**
+ * Carrega todas as unidades de referência disponíveis (para dropdown)
+ * GET /api/v1/reference-units
+ */
+export async function getReferenceUnits(): Promise<ReferenceUnit[]> {
+  console.log('🔧 getReferenceUnits - API_BASE_URL:', API_BASE_URL);
+  console.log('🔧 getReferenceUnits - URL completa:', `${API_BASE_URL}/reference-units`);
+  
+  const response = await fetch(`${API_BASE_URL}/reference-units`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  console.log('🔧 getReferenceUnits - Response status:', response.status);
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  const data = await response.json();
+  console.log('🔧 getReferenceUnits - Data length:', data.length);
   return data;
 }
 

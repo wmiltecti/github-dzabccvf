@@ -19,6 +19,13 @@ interface EnterpriseSize {
   name: string;
 }
 
+interface ReferenceUnit {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+}
+
 export default function ActivityForm({
   isOpen,
   onClose,
@@ -49,21 +56,7 @@ export default function ActivityForm({
   const [studyTypes, setStudyTypes] = useState<StudyType[]>([]);
   const [enterpriseSizes, setEnterpriseSizes] = useState<EnterpriseSize[]>([]);
   const [pollutionPotentials, setPollutionPotentials] = useState<PollutionPotential[]>([]);
-
-  const measurementUnits = [
-    'Unidade',
-    'Hectare (ha)',
-    'Metro quadrado (m²)',
-    'Metro cúbico (m³)',
-    'Litro (L)',
-    'Quilograma (kg)',
-    'Tonelada (t)',
-    'Megawatt (MW)',
-    'Quilowatt (kW)',
-    'Cabeças (animais)',
-    'Metros lineares (m)',
-    'Quilômetros (km)'
-  ];
+  const [referenceUnits, setReferenceUnits] = useState<ReferenceUnit[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -151,19 +144,22 @@ export default function ActivityForm({
       console.log('🔍 Carregando dados dos dropdowns da API...');
       
       // Carregar todos os dados em paralelo da API REST
-      const [licenseTypesData, pollutionPotentialsData, documentsData] = await Promise.all([
+      const [licenseTypesData, pollutionPotentialsData, documentsData, referenceUnitsData] = await Promise.all([
         activityLicenseService.getLicenseTypes(),
         activityLicenseService.getPollutionPotentials(),
         activityLicenseService.getDocumentTemplates(),
+        activityLicenseService.getReferenceUnits(),
       ]);
 
       console.log('✅ Tipos de licença carregados:', licenseTypesData.length, 'itens');
       console.log('✅ Potenciais poluidores carregados:', pollutionPotentialsData.length, 'itens');
       console.log('✅ Templates de documentos carregados:', documentsData.length, 'itens');
+      console.log('✅ Unidades de Referência carregadas:', referenceUnitsData.length, 'itens');
       
       setLicenseTypes(licenseTypesData || []);
       setPollutionPotentials(pollutionPotentialsData || []);
       setDocumentTemplates(documentsData || []);
+      setReferenceUnits(referenceUnitsData || []);
       setStudyTypes([]); // Backend não tem endpoint de study-types ainda
 
     } catch (error) {
@@ -567,12 +563,17 @@ export default function ActivityForm({
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Selecione a unidade...</option>
-                {measurementUnits.map(unit => (
-                  <option key={unit} value={unit}>
-                    {unit}
+                {referenceUnits.map(unit => (
+                  <option key={unit.id} value={unit.code}>
+                    {unit.code} - {unit.name}
                   </option>
                 ))}
               </select>
+              {referenceUnits.length === 0 && (
+                <p className="mt-1 text-xs text-gray-500">
+                  ℹ️ Cadastre Unidades de Referência para preencher este campo
+                </p>
+              )}
             </div>
 
             <div>
