@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { FolderOpen, Search, Filter, FileCheck } from 'lucide-react';
+import { FolderOpen, Search, Filter, ArrowRightLeft, FileCheck, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
+import TramitarModal from '../../components/analise/TramitarModal';
+import AnaliseModal from '../../components/analise/AnaliseModal';
 
 interface MeuProcessoItem {
   id: string;
   numero: string;
   requerente: string;
   atividade: string;
-  tipoLicenca: string;
-  dataAssumido: string;
-  prazoAnalise: string;
-  situacaoAnalise: 'Em Análise' | 'Pendente de Informações' | 'Aguardando Vistoria';
-  diasRestantes: number;
+  situacao: string;
+  etapa: string;
+  dataSolicitacao: string;
+  responsavelTecnico?: string;
+  tipoProcesso?: string;
+  empreendimento?: {
+    numero: string;
+    nome: string;
+    atividades: string[];
+  };
 }
 
 const mockMeusProcessos: MeuProcessoItem[] = [
@@ -20,42 +27,70 @@ const mockMeusProcessos: MeuProcessoItem[] = [
     numero: 'PROC-2025-023',
     requerente: 'Curtume Industrial São João',
     atividade: 'Curtimento de Couros',
-    tipoLicenca: 'LO - Licença de Operação',
-    dataAssumido: '2025-11-08',
-    prazoAnalise: '2025-12-08',
-    situacaoAnalise: 'Em Análise',
-    diasRestantes: 17
+    situacao: 'Em Análise',
+    etapa: 'Análise Técnica',
+    dataSolicitacao: '2025-11-08',
+    responsavelTecnico: 'João Silva - CREA 12345',
+    tipoProcesso: 'Licenciamento Ambiental',
+    empreendimento: {
+      numero: 'EMP-2025-020',
+      nome: 'Curtume Industrial São João',
+      atividades: ['Curtimento de Couros', 'Tratamento de Efluentes']
+    }
   },
   {
     id: '2',
     numero: 'PROC-2025-031',
     requerente: 'Madeireira Florestal Ltda',
     atividade: 'Beneficiamento de Madeira',
-    tipoLicenca: 'LI - Licença de Instalação',
-    dataAssumido: '2025-11-12',
-    prazoAnalise: '2025-12-12',
-    situacaoAnalise: 'Pendente de Informações',
-    diasRestantes: 21
+    situacao: 'Pendente',
+    etapa: 'Análise Documental',
+    dataSolicitacao: '2025-11-12',
+    responsavelTecnico: 'Maria Santos - CREA 67890',
+    tipoProcesso: 'Licenciamento Ambiental',
+    empreendimento: {
+      numero: 'EMP-2025-021',
+      nome: 'Madeireira Florestal',
+      atividades: ['Beneficiamento de Madeira', 'Secagem']
+    }
   },
   {
     id: '3',
     numero: 'PROC-2025-038',
     requerente: 'Granja Avícola Delta',
     atividade: 'Criação de Aves',
-    tipoLicenca: 'LP - Licença Prévia',
-    dataAssumido: '2025-11-15',
-    prazoAnalise: '2025-12-15',
-    situacaoAnalise: 'Aguardando Vistoria',
-    diasRestantes: 24
+    situacao: 'Em Análise',
+    etapa: 'Vistoria Técnica',
+    dataSolicitacao: '2025-11-15',
+    responsavelTecnico: 'Carlos Oliveira - CRMV 11223',
+    tipoProcesso: 'Licenciamento Ambiental',
+    empreendimento: {
+      numero: 'EMP-2025-022',
+      nome: 'Granja Avícola Delta',
+      atividades: ['Criação de Aves', 'Compostagem']
+    }
   }
 ];
 
 export default function MeuProcesso() {
   const [searchTerm, setSearchTerm] = useState('');
   const [processos] = useState<MeuProcessoItem[]>(mockMeusProcessos);
+  const [processoSelecionado, setProcessoSelecionado] = useState<MeuProcessoItem | null>(null);
+  const [showTramitarModal, setShowTramitarModal] = useState(false);
+  const [showAnaliseModal, setShowAnaliseModal] = useState(false);
 
-  const handleAnalisar = (processo: MeuProcessoItem) => {
-    toast.success(`Abrindo análise do processo ${processo.numero}`);
+  const handleTramitar = (processo: MeuProcessoItem) => {
+    setProcessoSelecionado(processo);
+    setShowTramitarModal(true);
+  };
+
+  const handleAnalise = (processo: MeuProcessoItem) => {
+    setProcessoSelecionado(processo);
+    setShowAnaliseModal(true);
+  };
+
+  const handleDetalhes = (processo: MeuProcessoItem) => {
+    toast.info(`Visualizando detalhes do processo ${processo.numero}`);
   };
 
   const filteredProcessos = processos.filter(p =>
@@ -68,25 +103,18 @@ export default function MeuProcesso() {
     switch (situacao) {
       case 'Em Análise':
         return 'bg-blue-100 text-blue-800';
-      case 'Pendente de Informações':
+      case 'Pendente':
         return 'bg-yellow-100 text-yellow-800';
       case 'Aguardando Vistoria':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPrazoColor = (dias: number) => {
-    if (dias <= 7) return 'text-red-600 font-bold';
-    if (dias <= 15) return 'text-yellow-600 font-semibold';
-    return 'text-green-600';
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <FolderOpen className="w-8 h-8 text-blue-600" />
@@ -97,7 +125,6 @@ export default function MeuProcesso() {
           </p>
         </div>
 
-        {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex items-center gap-4">
             <div className="flex-1 relative">
@@ -117,7 +144,6 @@ export default function MeuProcesso() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -133,16 +159,10 @@ export default function MeuProcesso() {
                     Atividade
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tipo de Licença
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data Assumido
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prazo Análise
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Situação
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Etapa
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -152,7 +172,7 @@ export default function MeuProcesso() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProcessos.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                       Você não possui processos atribuídos no momento
                     </td>
                   </tr>
@@ -171,37 +191,40 @@ export default function MeuProcesso() {
                         <span className="text-sm text-gray-900">{processo.atividade}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">{processo.tipoLicenca}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-500">
-                          {new Date(processo.dataAssumido).toLocaleDateString('pt-BR')}
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSituacaoColor(processo.situacao)}`}>
+                          {processo.situacao}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-500">
-                            {new Date(processo.prazoAnalise).toLocaleDateString('pt-BR')}
-                          </span>
-                          <span className={`text-xs ${getPrazoColor(processo.diasRestantes)}`}>
-                            {processo.diasRestantes} dias restantes
-                          </span>
+                        <span className="text-sm text-gray-900">{processo.etapa}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleTramitar(processo)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-sm rounded-lg transition-colors"
+                            title="Tramitar processo"
+                          >
+                            <ArrowRightLeft className="w-4 h-4" />
+                            Tramitar
+                          </button>
+                          <button
+                            onClick={() => handleAnalise(processo)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                            title="Analisar processo"
+                          >
+                            <FileCheck className="w-4 h-4" />
+                            Análise
+                          </button>
+                          <button
+                            onClick={() => handleDetalhes(processo)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-sm rounded-lg transition-colors"
+                            title="Ver detalhes"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Detalhes
+                          </button>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSituacaoColor(processo.situacaoAnalise)}`}>
-                          {processo.situacaoAnalise}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleAnalisar(processo)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                          title="Analisar processo"
-                        >
-                          <FileCheck className="w-4 h-4" />
-                          Analisar
-                        </button>
                       </td>
                     </tr>
                   ))
@@ -211,6 +234,32 @@ export default function MeuProcesso() {
           </div>
         </div>
       </div>
+
+      {showTramitarModal && processoSelecionado && (
+        <TramitarModal
+          processo={processoSelecionado}
+          onClose={() => {
+            setShowTramitarModal(false);
+            setProcessoSelecionado(null);
+          }}
+          onTramitar={(dados) => {
+            console.log('Tramitando processo:', dados);
+            toast.success('Processo tramitado com sucesso!');
+            setShowTramitarModal(false);
+            setProcessoSelecionado(null);
+          }}
+        />
+      )}
+
+      {showAnaliseModal && processoSelecionado && (
+        <AnaliseModal
+          processo={processoSelecionado}
+          onClose={() => {
+            setShowAnaliseModal(false);
+            setProcessoSelecionado(null);
+          }}
+        />
+      )}
     </div>
   );
 }
