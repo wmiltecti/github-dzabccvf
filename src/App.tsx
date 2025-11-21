@@ -15,9 +15,6 @@ import EmpreendimentoPage from './pages/inscricao/EmpreendimentoPage';
 import LicencaSolicitadaPage from './pages/inscricao/LicencaSolicitadaPage';
 import RevisaoPage from './pages/inscricao/RevisaoPage';
 import NotificationCenterPage from './pages/NotificationCenterPage';
-import PreProcessos from './pages/analise/PreProcessos';
-import PautaGeral from './pages/analise/PautaGeral';
-import MeuProcesso from './pages/analise/MeuProcesso';
 
 // Componente interno que usa o hook
 function AppRoutes() {
@@ -80,32 +77,6 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <NotificationCenterPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Rotas de Análise de Processos */}
-      <Route
-        path="/analise/pre-processos"
-        element={
-          <ProtectedRoute>
-            <PreProcessos />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/analise/pauta-geral"
-        element={
-          <ProtectedRoute>
-            <PautaGeral />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/analise/meu-processo"
-        element={
-          <ProtectedRoute>
-            <MeuProcesso />
           </ProtectedRoute>
         }
       />

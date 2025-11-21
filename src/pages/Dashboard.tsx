@@ -40,6 +40,9 @@ import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import Notificacoes from './Notificacoes';
+import PreProcessos from './analise/PreProcessos';
+import PautaGeral from './analise/PautaGeral';
+import MeuProcesso from './analise/MeuProcesso';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -1205,6 +1208,9 @@ export default function Dashboard() {
       case 'processesmotor': return renderProcessesMotor();
       case 'empreendimento': return renderEmpreendimento();
       case 'inscricoes': return renderInscricoes();
+      case 'analise-pre-processos': return <PreProcessos />;
+      case 'analise-pauta-geral': return <PautaGeral />;
+      case 'analise-meu-processo': return <MeuProcesso />;
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (
       //   <div className="text-center py-8 sm:py-12 px-4">
@@ -1356,10 +1362,14 @@ export default function Dashboard() {
                         <div className="mt-1 space-y-1 pl-6 sm:pl-8">
                           <button
                             onClick={() => {
-                              navigate('/analise/pre-processos');
+                              setActiveTab('analise-pre-processos');
                               setSidebarOpen(false);
                             }}
-                            className="w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-pre-processos'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
                           >
                             <img
                               src={submenuIcon}
@@ -1371,10 +1381,14 @@ export default function Dashboard() {
 
                           <button
                             onClick={() => {
-                              navigate('/analise/pauta-geral');
+                              setActiveTab('analise-pauta-geral');
                               setSidebarOpen(false);
                             }}
-                            className="w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-pauta-geral'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
                           >
                             <img
                               src={submenuIcon}
@@ -1386,10 +1400,14 @@ export default function Dashboard() {
 
                           <button
                             onClick={() => {
-                              navigate('/analise/meu-processo');
+                              setActiveTab('analise-meu-processo');
                               setSidebarOpen(false);
                             }}
-                            className="w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-meu-processo'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
                           >
                             <img
                               src={submenuIcon}
