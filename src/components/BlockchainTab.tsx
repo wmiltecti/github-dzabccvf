@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Link2 } from 'lucide-react';
 import { BLOCKCHAIN_PARAMS } from '../lib/parameters';
 
 interface BlockchainTabProps {
@@ -17,6 +17,18 @@ export default function BlockchainTab({ process }: BlockchainTabProps) {
 
   return (
     <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <Link2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-semibold text-blue-900 text-base">Blockchain</h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Registro imutável e transparente do processo de licenciamento ambiental
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
