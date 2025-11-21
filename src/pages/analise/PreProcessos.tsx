@@ -6,9 +6,9 @@ interface PreProcesso {
   id: string;
   numero: string;
   requerente: string;
-  atividade: string;
-  dataEntrada: string;
+  atividadePrimaria: string;
   situacao: string;
+  dataSolicitacao: string;
 }
 
 const mockPreProcessos: PreProcesso[] = [
@@ -16,24 +16,24 @@ const mockPreProcessos: PreProcesso[] = [
     id: '1',
     numero: 'PRE-2025-001',
     requerente: 'Empresa ABC Ltda',
-    atividade: 'Indústria de Alimentos',
-    dataEntrada: '2025-11-15',
+    atividadePrimaria: 'Indústria de Alimentos',
+    dataSolicitacao: '2025-11-15',
     situacao: 'Aguardando Formação'
   },
   {
     id: '2',
     numero: 'PRE-2025-002',
     requerente: 'Construtora XYZ S/A',
-    atividade: 'Construção Civil',
-    dataEntrada: '2025-11-18',
+    atividadePrimaria: 'Construção Civil',
+    dataSolicitacao: '2025-11-18',
     situacao: 'Documentação Incompleta'
   },
   {
     id: '3',
     numero: 'PRE-2025-003',
     requerente: 'Agropecuária Delta',
-    atividade: 'Criação de Suínos',
-    dataEntrada: '2025-11-20',
+    atividadePrimaria: 'Criação de Suínos',
+    dataSolicitacao: '2025-11-20',
     situacao: 'Aguardando Formação'
   }
 ];
@@ -53,7 +53,7 @@ export default function PreProcessos() {
   const filteredProcessos = processos.filter(p =>
     p.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.requerente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.atividade.toLowerCase().includes(searchTerm.toLowerCase())
+    p.atividadePrimaria.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -140,13 +140,13 @@ export default function PreProcessos() {
                     Requerente
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Atividade
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data de Entrada
+                    Atividade Primária
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Situação
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Data de Solicitação
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -172,12 +172,7 @@ export default function PreProcessos() {
                         <span className="text-sm text-gray-900">{processo.requerente}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">{processo.atividade}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-500">
-                          {new Date(processo.dataEntrada).toLocaleDateString('pt-BR')}
-                        </span>
+                        <span className="text-sm text-gray-900">{processo.atividadePrimaria}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -186,6 +181,11 @@ export default function PreProcessos() {
                             : 'bg-red-100 text-red-800'
                         }`}>
                           {processo.situacao}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-500">
+                          {new Date(processo.dataSolicitacao).toLocaleDateString('pt-BR')}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
