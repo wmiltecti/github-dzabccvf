@@ -165,43 +165,6 @@ export default function PreProcessos() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total de Pré-processos</p>
-                <p className="text-2xl font-bold text-gray-900">{processos.length}</p>
-              </div>
-              <FileText className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Aguardando Análise</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {processos.filter(p => p.situacao === 'Aguardando Análise').length}
-                </p>
-              </div>
-              <CheckSquare className="w-8 h-8 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Documentação Incompleta</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {processos.filter(p => p.situacao === 'Documentação Incompleta').length}
-                </p>
-              </div>
-              <FileText className="w-8 h-8 text-red-600" />
-            </div>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">

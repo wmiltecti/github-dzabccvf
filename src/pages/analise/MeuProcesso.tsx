@@ -117,55 +117,6 @@ export default function MeuProcesso() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Meus Processos</p>
-                <p className="text-2xl font-bold text-gray-900">{processos.length}</p>
-              </div>
-              <FolderOpen className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Em Análise</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {processos.filter(p => p.situacaoAnalise === 'Em Análise').length}
-                </p>
-              </div>
-              <FileCheck className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Pendente Info</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {processos.filter(p => p.situacaoAnalise === 'Pendente de Informações').length}
-                </p>
-              </div>
-              <FileCheck className="w-8 h-8 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Aguard. Vistoria</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {processos.filter(p => p.situacaoAnalise === 'Aguardando Vistoria').length}
-                </p>
-              </div>
-              <FileCheck className="w-8 h-8 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">

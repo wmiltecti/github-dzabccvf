@@ -116,55 +116,6 @@ export default function PautaGeral() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total na Pauta</p>
-                <p className="text-2xl font-bold text-gray-900">{processos.length}</p>
-              </div>
-              <ClipboardList className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Prioridade Alta</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {processos.filter(p => p.prioridade === 'Alta').length}
-                </p>
-              </div>
-              <ClipboardList className="w-8 h-8 text-red-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Prioridade Média</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {processos.filter(p => p.prioridade === 'Média').length}
-                </p>
-              </div>
-              <ClipboardList className="w-8 h-8 text-yellow-600" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Prioridade Baixa</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {processos.filter(p => p.prioridade === 'Baixa').length}
-                </p>
-              </div>
-              <ClipboardList className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
