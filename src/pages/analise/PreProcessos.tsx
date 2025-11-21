@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Search, Filter, Eye, CheckSquare } from 'lucide-react';
 import { toast } from 'react-toastify';
+import PreProcessoFormalizacaoModal from '../../components/PreProcessoFormalizacaoModal';
 
 interface PreProcesso {
   id: string;
@@ -9,6 +10,20 @@ interface PreProcesso {
   atividadePrimaria: string;
   situacao: string;
   dataSolicitacao: string;
+  responsavelTecnico?: string;
+  empreendimento?: {
+    numero: string;
+    nome: string;
+    atividades: string[];
+  };
+  documentos?: {
+    id: string;
+    nome: string;
+    tipo: string;
+    url: string;
+    status?: 'pendente' | 'aceito' | 'recusado';
+    motivoRecusa?: string;
+  }[];
 }
 
 const mockPreProcessos: PreProcesso[] = [
@@ -18,7 +33,19 @@ const mockPreProcessos: PreProcesso[] = [
     requerente: 'Empresa ABC Ltda',
     atividadePrimaria: 'Indústria de Alimentos',
     dataSolicitacao: '2025-11-15',
-    situacao: 'Aguardando Formação'
+    situacao: 'Aguardando Análise',
+    responsavelTecnico: 'João Silva - CREA 12345',
+    empreendimento: {
+      numero: 'EMP-2025-001',
+      nome: 'Fábrica de Laticínios ABC',
+      atividades: ['Indústria de Alimentos', 'Processamento de Leite', 'Armazenamento']
+    },
+    documentos: [
+      { id: '1', nome: 'Requerimento.pdf', tipo: 'Requerimento', url: '/docs/req1.pdf', status: 'pendente' },
+      { id: '2', nome: 'Comprovante_Pagamento.pdf', tipo: 'Comprovante de Pagamento', url: '/docs/pag1.pdf', status: 'pendente' },
+      { id: '3', nome: 'Projeto_Basico.pdf', tipo: 'Projeto Básico', url: '/docs/proj1.pdf', status: 'pendente' },
+      { id: '4', nome: 'Memorial_Descritivo.pdf', tipo: 'Memorial Descritivo', url: '/docs/mem1.pdf', status: 'pendente' }
+    ]
   },
   {
     id: '2',
@@ -26,7 +53,18 @@ const mockPreProcessos: PreProcesso[] = [
     requerente: 'Construtora XYZ S/A',
     atividadePrimaria: 'Construção Civil',
     dataSolicitacao: '2025-11-18',
-    situacao: 'Documentação Incompleta'
+    situacao: 'Aguardando Análise',
+    responsavelTecnico: 'Maria Santos - CREA 67890',
+    empreendimento: {
+      numero: 'EMP-2025-002',
+      nome: 'Condomínio Residencial Portal',
+      atividades: ['Construção Civil', 'Terraplenagem', 'Infraestrutura']
+    },
+    documentos: [
+      { id: '5', nome: 'Requerimento.pdf', tipo: 'Requerimento', url: '/docs/req2.pdf', status: 'pendente' },
+      { id: '6', nome: 'Comprovante_Pagamento.pdf', tipo: 'Comprovante de Pagamento', url: '/docs/pag2.pdf', status: 'pendente' },
+      { id: '7', nome: 'ART.pdf', tipo: 'ART/RRT', url: '/docs/art2.pdf', status: 'pendente' }
+    ]
   },
   {
     id: '3',
@@ -34,20 +72,41 @@ const mockPreProcessos: PreProcesso[] = [
     requerente: 'Agropecuária Delta',
     atividadePrimaria: 'Criação de Suínos',
     dataSolicitacao: '2025-11-20',
-    situacao: 'Aguardando Formação'
+    situacao: 'Aguardando Análise',
+    responsavelTecnico: 'Carlos Oliveira - CRMV 11223',
+    empreendimento: {
+      numero: 'EMP-2025-003',
+      nome: 'Granja Suína Delta',
+      atividades: ['Criação de Suínos', 'Sistema de Tratamento de Efluentes']
+    },
+    documentos: [
+      { id: '8', nome: 'Requerimento.pdf', tipo: 'Requerimento', url: '/docs/req3.pdf', status: 'pendente' },
+      { id: '9', nome: 'Comprovante_Pagamento.pdf', tipo: 'Comprovante de Pagamento', url: '/docs/pag3.pdf', status: 'pendente' }
+    ]
   }
 ];
 
 export default function PreProcessos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [processos] = useState<PreProcesso[]>(mockPreProcessos);
+  const [processoSelecionado, setProcessoSelecionado] = useState<PreProcesso | null>(null);
+  const [modalFormalizacaoOpen, setModalFormalizacaoOpen] = useState(false);
 
   const handleFormar = (processo: PreProcesso) => {
-    toast.success(`Formando processo ${processo.numero}`);
+    setProcessoSelecionado(processo);
+    setModalFormalizacaoOpen(true);
   };
 
   const handleDetalhes = (processo: PreProcesso) => {
     toast.info(`Visualizando detalhes do processo ${processo.numero}`);
+  };
+
+  const handleFormalizar = (processoId: string, setorId: string) => {
+    console.log(`Processo ${processoId} formalizado para setor ${setorId}`);
+  };
+
+  const handleRecusar = (processoId: string) => {
+    console.log(`Processo ${processoId} recusado`);
   };
 
   const filteredProcessos = processos.filter(p =>
@@ -105,9 +164,9 @@ export default function PreProcessos() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Aguardando Formação</p>
+                <p className="text-sm text-gray-600 mb-1">Aguardando Análise</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {processos.filter(p => p.situacao === 'Aguardando Formação').length}
+                  {processos.filter(p => p.situacao === 'Aguardando Análise').length}
                 </p>
               </div>
               <CheckSquare className="w-8 h-8 text-yellow-600" />
@@ -175,11 +234,7 @@ export default function PreProcessos() {
                         <span className="text-sm text-gray-900">{processo.atividadePrimaria}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          processo.situacao === 'Aguardando Formação'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                           {processo.situacao}
                         </span>
                       </td>
@@ -216,6 +271,18 @@ export default function PreProcessos() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Formalização */}
+      <PreProcessoFormalizacaoModal
+        isOpen={modalFormalizacaoOpen}
+        onClose={() => {
+          setModalFormalizacaoOpen(false);
+          setProcessoSelecionado(null);
+        }}
+        preProcesso={processoSelecionado}
+        onFormalizar={handleFormalizar}
+        onRecusar={handleRecusar}
+      />
     </div>
   );
 }
