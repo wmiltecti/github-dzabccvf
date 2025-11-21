@@ -19,6 +19,7 @@ interface FormData {
   validity_period: number | string;
   time_unit: 'meses' | 'anos' | '';
   description: string;
+  depends_on_license_type_id: string;
 }
 
 interface DocumentItem {
@@ -44,15 +45,19 @@ export default function LicenseTypeForm({
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
+  const [availableLicenseTypes, setAvailableLicenseTypes] = useState<LicenseType[]>([]);
 
   useEffect(() => {
+    loadAvailableLicenseTypes();
+
     if (item) {
       setFormData({
         abbreviation: item.abbreviation || '',
         name: item.name || '',
         validity_period: item.validity_period || '',
         time_unit: item.time_unit || '',
-        description: item.description || ''
+        description: item.description || '',
+        depends_on_license_type_id: item.depends_on_license_type_id || ''
       });
 
       // Load existing documents for this license type
@@ -65,11 +70,22 @@ export default function LicenseTypeForm({
         name: '',
         validity_period: '',
         time_unit: '',
-        description: ''
+        description: '',
+        depends_on_license_type_id: ''
       });
       setDocuments([]);
     }
   }, [item]);
+
+  const loadAvailableLicenseTypes = async () => {
+    try {
+      const types = await AdminService.getAll<LicenseType>('license_types', true);
+      setAvailableLicenseTypes(types);
+    } catch (error) {
+      console.error('Error loading license types:', error);
+      toast.error('Erro ao carregar tipos de licença');
+    }
+  };
 
   const loadLicenseTypeDocuments = async (licenseTypeId: string) => {
     try {
@@ -294,6 +310,32 @@ export default function LicenseTypeForm({
                 placeholder="Descrição detalhada do tipo de licença"
                 rows={4}
               />
+            </div>
+
+            {/* Dependência de Licença */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Depende de outro tipo de licença
+                <span className="text-gray-500 text-xs ml-2">(Opcional)</span>
+              </label>
+              <select
+                value={formData.depends_on_license_type_id}
+                onChange={(e) => handleInputChange('depends_on_license_type_id', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Nenhuma dependência</option>
+                {availableLicenseTypes
+                  .filter(type => type.id !== item?.id)
+                  .map(type => (
+                    <option key={type.id} value={type.id}>
+                      {type.abbreviation} - {type.name}
+                    </option>
+                  ))}
+              </select>
+              <p className="mt-2 text-sm text-gray-500">
+                Selecione um tipo de licença que deve ser obtido antes deste.
+                Exemplo: "Licença de Instalação" pode depender de "Licença Prévia".
+              </p>
             </div>
 
             {/* Divider */}
