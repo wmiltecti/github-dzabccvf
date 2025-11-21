@@ -160,8 +160,7 @@ export default function LicenseTypeForm({
         name: formData.name.trim(),
         validity_period: Number(formData.validity_period),
         time_unit: formData.time_unit,
-        description: formData.description.trim(),
-        depends_on_license_type_id: formData.depends_on_license_type_id || null
+        description: formData.description.trim()
       };
 
       let licenseTypeId: string;

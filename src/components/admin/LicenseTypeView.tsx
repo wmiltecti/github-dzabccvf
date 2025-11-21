@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calendar, CheckCircle, FileText, Clock, Link } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle, FileText, Clock } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AdminService, LicenseType, LicenseTypeDocument } from '../../services/adminService';
 
@@ -10,26 +10,13 @@ interface LicenseTypeViewProps {
 
 export default function LicenseTypeView({ item, onBack }: LicenseTypeViewProps) {
   const [documents, setDocuments] = useState<LicenseTypeDocument[]>([]);
-  const [dependsOnLicense, setDependsOnLicense] = useState<LicenseType | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (item?.id) {
       loadDocuments();
-      if (item.depends_on_license_type_id) {
-        loadDependsOnLicense(item.depends_on_license_type_id);
-      }
     }
   }, [item?.id]);
-
-  const loadDependsOnLicense = async (licenseTypeId: string) => {
-    try {
-      const license = await AdminService.getById<LicenseType>('license_types', licenseTypeId);
-      setDependsOnLicense(license);
-    } catch (error) {
-      console.error('Error loading depends on license:', error);
-    }
-  };
 
   const loadDocuments = async () => {
     try {
@@ -129,24 +116,6 @@ export default function LicenseTypeView({ item, onBack }: LicenseTypeViewProps) 
               <p className="text-gray-900 whitespace-pre-wrap">
                 {item.description}
               </p>
-            </div>
-          )}
-
-          {/* Dependency */}
-          {dependsOnLicense && (
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-500 mb-1 flex items-center gap-2">
-                <Link className="w-4 h-4" />
-                Depende de outro tipo de licença
-              </label>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-lg font-semibold text-blue-900">
-                  {dependsOnLicense.abbreviation} - {dependsOnLicense.name}
-                </p>
-                <p className="text-sm text-blue-700 mt-1">
-                  Esta licença só pode ser solicitada após a obtenção da licença acima.
-                </p>
-              </div>
             </div>
           )}
         </div>
