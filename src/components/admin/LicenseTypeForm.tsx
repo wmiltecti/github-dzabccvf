@@ -19,7 +19,7 @@ interface FormData {
   validity_period: number | string;
   time_unit: 'meses' | 'anos' | '';
   description: string;
-  depends_on_license_type_id: string;
+  depends_on_license_type_ids: string[];
 }
 
 interface DocumentItem {
@@ -40,7 +40,8 @@ export default function LicenseTypeForm({
     name: '',
     validity_period: '',
     time_unit: '',
-    description: ''
+    description: '',
+    depends_on_license_type_ids: []
   });
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,7 +58,7 @@ export default function LicenseTypeForm({
         validity_period: item.validity_period || '',
         time_unit: item.time_unit || '',
         description: item.description || '',
-        depends_on_license_type_id: item.depends_on_license_type_id || ''
+        depends_on_license_type_ids: item.depends_on_license_type_id ? [item.depends_on_license_type_id] : []
       });
 
       // Load existing documents for this license type
@@ -71,7 +72,7 @@ export default function LicenseTypeForm({
         validity_period: '',
         time_unit: '',
         description: '',
-        depends_on_license_type_id: ''
+        depends_on_license_type_ids: []
       });
       setDocuments([]);
     }
@@ -160,7 +161,10 @@ export default function LicenseTypeForm({
         name: formData.name.trim(),
         validity_period: Number(formData.validity_period),
         time_unit: formData.time_unit,
-        description: formData.description.trim()
+        description: formData.description.trim(),
+        depends_on_license_type_id: formData.depends_on_license_type_ids.length > 0
+          ? formData.depends_on_license_type_ids[0]
+          : null
       };
 
       let licenseTypeId: string;
@@ -318,24 +322,59 @@ export default function LicenseTypeForm({
                 Depende de outro tipo de licença
                 <span className="text-gray-500 text-xs ml-2">(Opcional)</span>
               </label>
-              <select
-                value={formData.depends_on_license_type_id}
-                onChange={(e) => handleInputChange('depends_on_license_type_id', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Nenhuma dependência</option>
-                {availableLicenseTypes
-                  .filter(type => type.id !== item?.id)
-                  .map(type => (
-                    <option key={type.id} value={type.id}>
-                      {type.abbreviation} - {type.name}
-                    </option>
-                  ))}
-              </select>
-              <p className="mt-2 text-sm text-gray-500">
-                Selecione um tipo de licença que deve ser obtido antes deste.
+              <p className="mb-3 text-sm text-gray-500">
+                Selecione os tipos de licença que devem ser obtidos antes deste.
                 Exemplo: "Licença de Instalação" pode depender de "Licença Prévia".
               </p>
+              <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                {availableLicenseTypes.filter(type => type.id !== item?.id).length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Nenhum tipo de licença disponível
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {availableLicenseTypes
+                      .filter(type => type.id !== item?.id)
+                      .map(type => (
+                        <label
+                          key={type.id}
+                          className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.depends_on_license_type_ids.includes(type.id)}
+                            onChange={(e) => {
+                              const newIds = e.target.checked
+                                ? [...formData.depends_on_license_type_ids, type.id]
+                                : formData.depends_on_license_type_ids.filter(id => id !== type.id);
+                              handleInputChange('depends_on_license_type_ids', newIds);
+                            }}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                          />
+                          <span className="ml-3 text-sm text-gray-900">
+                            <span className="font-medium">{type.abbreviation}</span> - {type.name}
+                          </span>
+                        </label>
+                      ))}
+                  </div>
+                )}
+              </div>
+              {formData.depends_on_license_type_ids.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="text-xs text-gray-500">Selecionados:</span>
+                  {formData.depends_on_license_type_ids.map(id => {
+                    const licenseType = availableLicenseTypes.find(t => t.id === id);
+                    return licenseType ? (
+                      <span
+                        key={id}
+                        className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded"
+                      >
+                        {licenseType.abbreviation}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Divider */}
