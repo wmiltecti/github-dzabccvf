@@ -194,14 +194,14 @@ export default function PreProcessoFormalizacao({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleClickRecusar}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
               >
                 <XCircle className="w-4 h-4" />
                 Recusar Pré-processo
               </button>
               <button
                 onClick={handleClickFormalizar}
-                className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2"
               >
                 <Check className="w-4 h-4" />
                 Formalizar
@@ -282,13 +282,13 @@ export default function PreProcessoFormalizacao({
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleAceitarTodos}
-                  className="px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white text-sm rounded-lg transition-colors"
+                  className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
                 >
                   Aceitar Todos
                 </button>
                 <button
                   onClick={handleRecusarTodos}
-                  className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors"
                 >
                   Recusar Todos
                 </button>
@@ -333,14 +333,14 @@ export default function PreProcessoFormalizacao({
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleVisualizarDocumento(doc)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-300"
                             title="Visualizar documento"
                           >
                             <Eye className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleAceitarDocumento(doc.id)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-300"
                             title="Aceitar documento"
                           >
                             <Check className="w-5 h-5" />
@@ -360,7 +360,7 @@ export default function PreProcessoFormalizacao({
                             />
                             <button
                               onClick={() => handleRecusarDocumento(doc.id, motivosRecusa[doc.id] || '')}
-                              className="px-3 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
+                              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-colors whitespace-nowrap"
                             >
                               Recusar
                             </button>
