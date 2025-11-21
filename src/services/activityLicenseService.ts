@@ -288,13 +288,13 @@ export async function getPollutionPotentials(): Promise<PollutionPotential[]> {
 
 /**
  * Carrega todas as unidades de referência disponíveis (para dropdown)
- * GET /api/v1/reference-units
+ * GET /api/v1/referencias/unidades-medida?is_active=true
  */
 export async function getReferenceUnits(): Promise<ReferenceUnit[]> {
   console.log('🔧 getReferenceUnits - API_BASE_URL:', API_BASE_URL);
-  console.log('🔧 getReferenceUnits - URL completa:', `${API_BASE_URL}/reference-units`);
+  console.log('🔧 getReferenceUnits - URL completa:', `${API_BASE_URL}/referencias/unidades-medida?is_active=true`);
   
-  const response = await fetch(`${API_BASE_URL}/reference-units`, {
+  const response = await fetch(`${API_BASE_URL}/referencias/unidades-medida?is_active=true`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

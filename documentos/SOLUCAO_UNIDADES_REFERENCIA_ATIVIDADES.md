@@ -19,8 +19,8 @@ Este array não tinha relação com a tabela `reference_units` do banco de dados
 
 ## ✅ Solução Implementada
 
-### 1. Backend API (assumido que será criado)
-Endpoint esperado: `GET /api/v1/reference-units`
+### 1. Backend API ✅ IMPLEMENTADO
+Endpoint: `GET /api/v1/referencias/unidades-medida?is_active=true`
 
 Retorna:
 ```json
@@ -56,7 +56,7 @@ export interface ReferenceUnit {
 #### Função criada:
 ```typescript
 export async function getReferenceUnits(): Promise<ReferenceUnit[]> {
-  const response = await fetch(`${API_BASE_URL}/reference-units`, {
+  const response = await fetch(`${API_BASE_URL}/referencias/unidades-medida?is_active=true`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -171,7 +171,7 @@ Valida:
 
 ## 📝 Notas Importantes
 
-1. **Backend deve implementar** o endpoint `/api/v1/reference-units`
+1. **✅ Backend implementado** - Endpoint: `GET /api/v1/referencias/unidades-medida?is_active=true`
 2. **Formato esperado** no banco:
    - `code`: Código da unidade (ex: "m²", "ha", "kg")
    - `name`: Nome descritivo (ex: "Metro Quadrado")
@@ -180,12 +180,13 @@ Valida:
 3. **Valor salvo no banco** é o `code` (não o `id`)
 4. **Display no select**: `{code} - {name}`
 
-## 🔄 Próximos Passos
+## ✅ Status da Implementação
 
-1. ✅ Backend implementar endpoint GET /reference-units
-2. ✅ Testar com dados reais do banco
-3. ✅ Validar que novas unidades aparecem automaticamente
-4. ✅ Confirmar que atividades existentes mantêm suas unidades
+1. ✅ **Backend implementado** - Endpoint `GET /api/v1/referencias/unidades-medida?is_active=true`
+2. ✅ **Frontend atualizado** - Usando endpoint correto da API
+3. 🧪 **Testar com dados reais** do banco
+4. 🧪 **Validar** que novas unidades aparecem automaticamente
+5. 🧪 **Confirmar** que atividades existentes mantêm suas unidades
 
 ## 📅 Data da Implementação
 21/11/2025
