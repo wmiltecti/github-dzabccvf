@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Search, Filter, Eye, CheckSquare } from 'lucide-react';
 import { toast } from 'react-toastify';
-import PreProcessoFormalizacaoModal from '../../components/PreProcessoFormalizacaoModal';
+import PreProcessoFormalizacao from '../../components/PreProcessoFormalizacao';
 
 interface PreProcesso {
   id: string;
@@ -90,11 +90,11 @@ export default function PreProcessos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [processos] = useState<PreProcesso[]>(mockPreProcessos);
   const [processoSelecionado, setProcessoSelecionado] = useState<PreProcesso | null>(null);
-  const [modalFormalizacaoOpen, setModalFormalizacaoOpen] = useState(false);
+  const [mostrandoFormalizacao, setMostrandoFormalizacao] = useState(false);
 
   const handleFormar = (processo: PreProcesso) => {
     setProcessoSelecionado(processo);
-    setModalFormalizacaoOpen(true);
+    setMostrandoFormalizacao(true);
   };
 
   const handleDetalhes = (processo: PreProcesso) => {
@@ -109,11 +109,27 @@ export default function PreProcessos() {
     console.log(`Processo ${processoId} recusado`);
   };
 
+  const handleVoltar = () => {
+    setMostrandoFormalizacao(false);
+    setProcessoSelecionado(null);
+  };
+
   const filteredProcessos = processos.filter(p =>
     p.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.requerente.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.atividadePrimaria.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (mostrandoFormalizacao && processoSelecionado) {
+    return (
+      <PreProcessoFormalizacao
+        preProcesso={processoSelecionado}
+        onVoltar={handleVoltar}
+        onFormalizar={handleFormalizar}
+        onRecusar={handleRecusar}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -271,18 +287,6 @@ export default function PreProcessos() {
           </div>
         </div>
       </div>
-
-      {/* Modal de Formalização */}
-      <PreProcessoFormalizacaoModal
-        isOpen={modalFormalizacaoOpen}
-        onClose={() => {
-          setModalFormalizacaoOpen(false);
-          setProcessoSelecionado(null);
-        }}
-        preProcesso={processoSelecionado}
-        onFormalizar={handleFormalizar}
-        onRecusar={handleRecusar}
-      />
     </div>
   );
 }
