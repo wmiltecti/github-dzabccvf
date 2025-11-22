@@ -216,21 +216,57 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Verificando se há modal de confirmação...")
         try:
-            # Procurar botão "Sim, Iniciar Novo" (botão vermelho do modal)
-            modal_confirmar = wait.until(
-                EC.element_to_be_clickable((
+            # Aguardar modal aparecer
+            time.sleep(1)
+            
+            # Tentar múltiplos seletores para o botão "Sim, Iniciar Novo"
+            modal_confirmar = None
+            
+            # Tentativa 1: Botão vermelho com texto específico
+            try:
+                modal_confirmar = driver.find_element(
                     By.XPATH,
-                    "//button[contains(., 'Sim, Iniciar Novo') or contains(., 'Sim')]"
-                ))
-            )
-            print(f"✓ Modal encontrado: '{modal_confirmar.text}'")
-            print("✓ Clicando em 'Sim, Iniciar Novo'...")
-            modal_confirmar.click()
-            time.sleep(2)
-            print("✅ Modal confirmado")
-            contexto['modal_confirmado'] = True
-        except TimeoutException:
-            print("✓ Nenhum modal de confirmação (ou já fechado)")
+                    "//button[contains(@class, 'bg-red') and contains(., 'Sim')]"
+                )
+                print("✓ Modal encontrado (bg-red)")
+            except:
+                pass
+            
+            # Tentativa 2: Qualquer botão com "Sim, Iniciar"
+            if not modal_confirmar:
+                try:
+                    modal_confirmar = driver.find_element(
+                        By.XPATH,
+                        "//button[contains(text(), 'Sim, Iniciar')]"
+                    )
+                    print("✓ Modal encontrado (texto)")
+                except:
+                    pass
+            
+            # Tentativa 3: Botão dentro de dialog/modal
+            if not modal_confirmar:
+                try:
+                    modal_confirmar = driver.find_element(
+                        By.XPATH,
+                        "//div[contains(@role, 'dialog')]//button[contains(., 'Sim')]"
+                    )
+                    print("✓ Modal encontrado (dialog)")
+                except:
+                    pass
+            
+            if modal_confirmar:
+                print(f"✓ Botão encontrado: '{modal_confirmar.text}'")
+                print("✓ Clicando em 'Sim, Iniciar Novo'...")
+                modal_confirmar.click()
+                time.sleep(3)
+                print("✅ Modal confirmado")
+                contexto['modal_confirmado'] = True
+            else:
+                print("⚠️ Modal não encontrado, tentando continuar...")
+                contexto['modal_confirmado'] = False
+                
+        except Exception as e:
+            print(f"⚠️ Erro ao buscar modal: {e}")
             contexto['modal_confirmado'] = False
         
         # =================================================================
