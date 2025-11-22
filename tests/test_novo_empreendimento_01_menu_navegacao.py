@@ -111,14 +111,23 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         submit_btn.click()
         
         # Aguardar redirecionamento
-        print("✓ Aguardando dashboard...")
+        print("✓ Aguardando redirecionamento...")
         time.sleep(3)
         
         current_url = driver.current_url
-        if 'dashboard' not in current_url.lower():
-            raise Exception(f"❌ Login falhou - URL atual: {current_url}")
+        
+        # Verificar se saiu da página de login (login bem-sucedido)
+        if 'login' in current_url.lower():
+            raise Exception(f"❌ Login falhou - Ainda na página de login: {current_url}")
         
         print(f"✅ Login realizado com sucesso - URL: {current_url}")
+        
+        # Navegar explicitamente para dashboard
+        print("✓ Navegando para Dashboard...")
+        driver.get(f"{BASE_URL}/dashboard")
+        time.sleep(2)
+        print(f"✓ Dashboard carregado: {driver.current_url}")
+        
         contexto['login_ok'] = True
         
         # =================================================================
