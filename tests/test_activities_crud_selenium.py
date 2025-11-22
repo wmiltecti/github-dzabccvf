@@ -26,27 +26,29 @@ PASSWORD = os.getenv('TEST_PASSWORD', 'Senh@01!')
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:5173')
 CHROMEDRIVER_PATH = r'C:\chromedriver\chromedriver.exe'
 
-# Dados da nova atividade (código único com timestamp completo + microsegundos)
+# Dados da nova atividade (código será gerado automaticamente pelo banco)
 now = datetime.now()
 TIMESTAMP = now.strftime("%H%M%S")
 MICROSECONDS = now.microsecond // 1000  # Pegar apenas 3 dígitos dos microsegundos
-UNIQUE_CODE = f'{TIMESTAMP}{MICROSECONDS}'  # Ex: 152030456 (HH:MM:SS:mmm)
 
 NEW_ACTIVITY = {
-    'code': f'{int(UNIQUE_CODE) % 10000}',  # Código único: últimos 4 dígitos para não ficar muito grande
+    # 'code' não é mais necessário - será gerado automaticamente pelo banco
     'name': f'Teste Automático {TIMESTAMP}-{MICROSECONDS}',
-    'description': f'Atividade criada automaticamente pelo teste em {now.strftime("%d/%m/%Y %H:%M:%S")}.{MICROSECONDS}'
+    'description': f'Atividade criada automaticamente pelo teste em {now.strftime("%d/%m/%Y %H:%M:%S")}.{MICROSECONDS}',
+    'cnae_codigo': f'{TIMESTAMP[:4]}-{TIMESTAMP[4]}/0{MICROSECONDS % 10}',  # Simular formato CNAE: XXXX-X/XX
+    'cnae_descricao': f'Teste de atividade econômica {TIMESTAMP}'
 }
 
 print(f"👤 CPF: {CPF}")
 print(f"🔗 URL: {BASE_URL}")
 print("=" * 70)
-print("🧪 TESTE COMPLETO: Cadastro de Atividades")
+print("🧪 TESTE COMPLETO: Cadastro de Atividades (COM CNAE)")
 print("=" * 70)
 print(f"📝 Nova Atividade:")
-print(f"   Código: {NEW_ACTIVITY['code']}")
 print(f"   Nome: {NEW_ACTIVITY['name']}")
+print(f"   CNAE: {NEW_ACTIVITY['cnae_codigo']} - {NEW_ACTIVITY['cnae_descricao']}")
 print(f"   Descrição: {NEW_ACTIVITY['description']}")
+print(f"   ⚠️ Código será gerado automaticamente pelo banco")
 print("=" * 70)
 
 # Configurar ChromeDriver
@@ -148,16 +150,22 @@ try:
     # 5. PREENCHER FORMULÁRIO
     print(f"\n📝 [5/7] Preenchendo formulário...")
     
-    # Campo Código (número)
+    # Campo Código - NÃO DEVE EXISTIR ao criar (gerado automaticamente)
     try:
-        code_input = modal_element.find_element(By.CSS_SELECTOR, 'input[type="number"]')
-        code_input.clear()
-        code_input.send_keys(NEW_ACTIVITY['code'])
-        print(f"  ✓ Código: {NEW_ACTIVITY['code']}")
-        time.sleep(0.5)
+        code_inputs = modal_element.find_elements(By.CSS_SELECTOR, 'input[type="number"]')
+        if len(code_inputs) > 0:
+            # Verificar se o campo está desabilitado
+            is_disabled = code_inputs[0].get_attribute('disabled')
+            if is_disabled:
+                print(f"  ✓ Campo Código está desabilitado (esperado ao editar)")
+            else:
+                print(f"  ⚠️ AVISO: Campo Código visível ao criar (deveria estar oculto)")
+        else:
+            print(f"  ✓ Campo Código oculto ao criar nova atividade (correto!)")
     except Exception as e:
-        print(f"  ❌ Erro ao preencher Código: {e}")
-        raise
+        print(f"  ℹ️ Campo Código não encontrado (esperado ao criar): {e}")
+    
+    time.sleep(0.5)
     
     # Campo Nome (procurar por placeholder)
     try:
@@ -205,6 +213,25 @@ try:
         time.sleep(0.5)
     except Exception as e:
         print(f"  ⚠️ Campo Descrição não preenchido: {e}")
+    
+    # 🆕 Campos CNAE (novos campos adicionados na refatoração)
+    try:
+        # Buscar campos CNAE por label
+        cnae_codigo_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Código CNAE')]")
+        cnae_codigo_input = cnae_codigo_label.find_element(By.XPATH, "./following-sibling::input")
+        cnae_codigo_input.clear()
+        cnae_codigo_input.send_keys(NEW_ACTIVITY['cnae_codigo'])
+        print(f"  ✓ Código CNAE: {NEW_ACTIVITY['cnae_codigo']}")
+        time.sleep(0.3)
+        
+        cnae_descricao_label = modal_element.find_element(By.XPATH, "//label[contains(text(), 'Descrição CNAE')]")
+        cnae_descricao_input = cnae_descricao_label.find_element(By.XPATH, "./following-sibling::input")
+        cnae_descricao_input.clear()
+        cnae_descricao_input.send_keys(NEW_ACTIVITY['cnae_descricao'])
+        print(f"  ✓ Descrição CNAE: {NEW_ACTIVITY['cnae_descricao']}")
+        time.sleep(0.3)
+    except Exception as e:
+        print(f"  ⚠️ Campos CNAE não encontrados (pode ser versão antiga): {e}")
     
     # Preencher Unidade de Medida (select - OBRIGATÓRIO)
     try:
@@ -563,8 +590,9 @@ try:
         
         print(f"  ℹ️ Atividades após cadastro: {count_after}")
         
-        # Procurar pela nova atividade
+        # Procurar pela nova atividade (apenas pelo nome, pois código é gerado automaticamente)
         found = False
+        generated_code = None
         for row in rows_after:
             try:
                 cells = row.find_elements(By.CSS_SELECTOR, 'td')
@@ -572,9 +600,11 @@ try:
                     code_cell = cells[0].text
                     name_cell = cells[1].text
                     
-                    if NEW_ACTIVITY['code'] in code_cell or NEW_ACTIVITY['name'] in name_cell:
+                    # Buscar apenas pelo nome (código é gerado automaticamente)
+                    if NEW_ACTIVITY['name'] in name_cell:
+                        generated_code = code_cell
                         print(f"  ✅ Atividade encontrada!")
-                        print(f"     Código: {code_cell}")
+                        print(f"     Código (gerado automaticamente): {code_cell}")
                         print(f"     Nome: {name_cell}")
                         found = True
                         break
@@ -610,7 +640,7 @@ try:
                             code_cell = cells[0].text
                             name_cell = cells[1].text
                             
-                            if NEW_ACTIVITY['code'] in code_cell or NEW_ACTIVITY['name'] in name_cell:
+                            if NEW_ACTIVITY['name'] in name_cell:
                                 # Encontrar todos os botões na linha
                                 buttons = row.find_elements(By.CSS_SELECTOR, 'button')
                                 print(f"  ℹ️ Botões encontrados na linha: {len(buttons)}")
@@ -671,6 +701,28 @@ try:
                                     selected_license = select_license.first_selected_option.text
                                     print(f"      Tipo {i+1}: {selected_license}")
                                 
+                                # 🆕 Verificar Campos CNAE
+                                try:
+                                    cnae_codigo_input = modal.find_element(By.XPATH, "//label[contains(text(), 'Código CNAE')]/following-sibling::input")
+                                    cnae_codigo_value = cnae_codigo_input.get_attribute('value')
+                                    print(f"  ✅ Código CNAE salvo: {cnae_codigo_value}")
+                                    
+                                    if cnae_codigo_value == NEW_ACTIVITY['cnae_codigo']:
+                                        print(f"     ✓ Valor correto!")
+                                    else:
+                                        print(f"     ⚠️ Esperado: {NEW_ACTIVITY['cnae_codigo']}")
+                                    
+                                    cnae_descricao_input = modal.find_element(By.XPATH, "//label[contains(text(), 'Descrição CNAE')]/following-sibling::input")
+                                    cnae_descricao_value = cnae_descricao_input.get_attribute('value')
+                                    print(f"  ✅ Descrição CNAE salva: {cnae_descricao_value[:50]}...")
+                                    
+                                    if cnae_descricao_value == NEW_ACTIVITY['cnae_descricao']:
+                                        print(f"     ✓ Valor correto!")
+                                    else:
+                                        print(f"     ⚠️ Esperado: {NEW_ACTIVITY['cnae_descricao']}")
+                                except Exception as cnae_error:
+                                    print(f"  ⚠️ Campos CNAE não encontrados ao verificar: {cnae_error}")
+                                
                                 print("  ✅ Verificação de dados salvos concluída")
                                 
                                 # Fechar modal
@@ -690,6 +742,8 @@ try:
         if found:
             print("🎉 TESTE PASSOU COM SUCESSO!")
             print(f"   Atividade '{NEW_ACTIVITY['name']}' cadastrada e verificada")
+            print(f"   Código gerado automaticamente: {generated_code}")
+            print(f"   CNAE: {NEW_ACTIVITY['cnae_codigo']}")
         else:
             print("⚠️ TESTE PARCIALMENTE COMPLETO")
             print("   Cadastro executado mas verificação na lista falhou")

@@ -5,7 +5,41 @@
 
 ---
 
-## 1. 🗄️ BANCO DE DADOS - Tabela Faltando (CRÍTICO)
+## 1. 🗄️ ERRO SQL - Coluna Faltando em documentation_templates (CRÍTICO)
+
+### ❌ Problema
+Erro ao editar atividade: `column documentation_templates_1.category does not exist`
+
+**Endpoint afetado:** `GET /api/v1/activities/{id}/license-config`
+
+### 📋 Detalhes do Erro
+```
+{
+  "code": "42703",
+  "details": null,
+  "hint": null,
+  "message": "column documentation_templates_1.category does not exist"
+}
+```
+
+### ✅ Solução
+O backend está tentando acessar uma coluna `category` na tabela `documentation_templates` que **não existe** ou tem outro nome.
+
+**Verificar no código do backend:**
+1. Query que busca `license-config` para uma atividade
+2. JOIN com tabela `documentation_templates`
+3. Campo `category` sendo selecionado
+
+**Ações:**
+- [ ] Verificar se coluna existe: `SELECT column_name FROM information_schema.columns WHERE table_name='documentation_templates'`
+- [ ] Se não existe, adicionar coluna ou ajustar query do backend
+- [ ] Se tem outro nome, atualizar o backend para usar o nome correto
+
+**Impacto:** Usuários **NÃO CONSEGUEM editar atividades** existentes.
+
+---
+
+## 2. 🗄️ BANCO DE DADOS - Tabela Faltando (CRÍTICO)
 
 ### ❌ Problema
 Erro ao salvar atividade: `Could not find the table 'public.activity_enterprise_size_ranges' in the schema cache`

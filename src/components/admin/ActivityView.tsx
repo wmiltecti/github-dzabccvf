@@ -161,6 +161,24 @@ export default function ActivityView({ item, onBack }: ActivityViewProps) {
             </div>
           </div>
 
+          {/* CNAE Information */}
+          {(item.cnae_codigo || item.cnae_descricao) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {item.cnae_codigo && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Código CNAE</label>
+                  <p className="text-gray-900 font-medium">{item.cnae_codigo}</p>
+                </div>
+              )}
+              {item.cnae_descricao && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Descrição CNAE</label>
+                  <p className="text-gray-900 font-medium">{item.cnae_descricao}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Description */}
           {item.description && (
             <div>

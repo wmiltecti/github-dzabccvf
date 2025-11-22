@@ -37,6 +37,8 @@ export default function ActivityForm({
     code: '',
     name: '',
     description: '',
+    cnae_codigo: '',
+    cnae_descricao: '',
     pollution_potential_id: '',
     measurement_unit: '',
     license_types: [], // Array de blocos: { license_type_id, documents[], studies[] }
@@ -71,6 +73,8 @@ export default function ActivityForm({
         code: item.code?.toString() || '',
         name: item.name || '',
         description: item.description || '',
+        cnae_codigo: item.cnae_codigo || '',
+        cnae_descricao: item.cnae_descricao || '',
         pollution_potential_id: item.pollution_potential_id || '',
         measurement_unit: item.measurement_unit || '',
         license_types: [],
@@ -90,6 +94,8 @@ export default function ActivityForm({
         code: '',
         name: '',
         description: '',
+        cnae_codigo: '',
+        cnae_descricao: '',
         pollution_potential_id: '',
         measurement_unit: '',
         license_types: [],
@@ -290,7 +296,8 @@ export default function ActivityForm({
 
 
   const validateForm = () => {
-    if (!formData.code) {
+    // Code é obrigatório apenas ao editar (ao criar, será gerado automaticamente)
+    if (item?.id && !formData.code) {
       toast.error('Código da atividade é obrigatório');
       return false;
     }
@@ -328,13 +335,19 @@ export default function ActivityForm({
 
     setLoading(true);
     try {
-      const activityData = {
-        code: parseFloat(formData.code),
+      const activityData: any = {
         name: formData.name,
         description: formData.description || null,
+        cnae_codigo: formData.cnae_codigo || null,
+        cnae_descricao: formData.cnae_descricao || null,
         pollution_potential_id: formData.pollution_potential_id,
         measurement_unit: formData.measurement_unit || null
       };
+      
+      // Incluir code apenas ao editar (ao criar, o banco gera automaticamente)
+      if (item?.id && formData.code) {
+        activityData.code = parseInt(formData.code);
+      }
 
       let activityId: string;
       const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -517,22 +530,23 @@ export default function ActivityForm({
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Código da Atividade <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.code}
-                onChange={(e) => handleInputChange('code', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: 1.1, 1.56, 2.3"
-                required
-              />
-            </div>
+            {/* Exibir código apenas ao editar (somente leitura) */}
+            {item?.id && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Código da Atividade (ID)
+                </label>
+                <input
+                  type="number"
+                  value={formData.code}
+                  disabled
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                />
+                <p className="text-xs text-gray-500 mt-1">ID gerado automaticamente (somente leitura)</p>
+              </div>
+            )}
 
-            <div>
+            <div className={item?.id ? '' : 'md:col-span-2'}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nome da Atividade <span className="text-red-500">*</span>
               </label>
@@ -544,6 +558,41 @@ export default function ActivityForm({
                 placeholder="Ex: Extração de areia"
                 required
               />
+              {!item?.id && (
+                <p className="text-xs text-gray-500 mt-1">O código da atividade será gerado automaticamente ao salvar</p>
+              )}
+            </div>
+          </div>
+
+          {/* CNAE Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Código CNAE
+              </label>
+              <input
+                type="text"
+                value={formData.cnae_codigo}
+                onChange={(e) => handleInputChange('cnae_codigo', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ex: 1011-2/01"
+                maxLength={10}
+              />
+              <p className="text-xs text-gray-500 mt-1">Código oficial CNAE do IBGE (formato: XXXX-X/XX)</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descrição CNAE
+              </label>
+              <input
+                type="text"
+                value={formData.cnae_descricao}
+                onChange={(e) => handleInputChange('cnae_descricao', e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Ex: Frigorífico - abate de bovinos"
+              />
+              <p className="text-xs text-gray-500 mt-1">Descrição da atividade econômica segundo CNAE</p>
             </div>
           </div>
 

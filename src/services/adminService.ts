@@ -74,21 +74,13 @@ export interface DocumentationTemplate {
   updated_at: string;
 }
 
-export interface LicenseTypeDocument {
-  id?: string;
-  license_type_id?: string;
-  documentation_template_id: string;
-  is_required: boolean;
-  documentation_templates?: DocumentationTemplate;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface Activity {
   id: string;
   code: number;
   name: string;
   description?: string;
+  cnae_codigo?: string;
+  cnae_descricao?: string;
   enterprise_size_id?: string;
   pollution_potential_id?: string;
   measurement_unit?: string;
@@ -252,7 +244,6 @@ export class AdminService {
       .from('activities')
       .select(`
         *,
-        enterprise_sizes(id, name),
         pollution_potentials(id, name)
       `);
     
@@ -275,7 +266,6 @@ export class AdminService {
       .from('activities')
       .select(`
         *,
-        enterprise_sizes(id, name),
         pollution_potentials(id, name)
       `)
       .eq('id', id)
@@ -386,7 +376,7 @@ export class AdminService {
       .from('billing_configurations')
       .select(`
         *,
-        activities(id, code, name, enterprise_sizes(name), pollution_potentials(name)),
+        activities(id, code, name, pollution_potentials(name)),
         license_types(id, abbreviation, name),
         reference_units(id, code, name),
         enterprise_sizes(id, name),
@@ -412,7 +402,7 @@ export class AdminService {
       .from('billing_configurations')
       .select(`
         *,
-        activities(id, code, name, enterprise_sizes(name), pollution_potentials(name)),
+        activities(id, code, name, pollution_potentials(name)),
         license_types(id, abbreviation, name),
         reference_units(id, code, name),
         enterprise_sizes(id, name),
@@ -467,77 +457,25 @@ export class AdminService {
 
   // Search functionality
   static async search<T>(
-    tableName: string,
-    searchTerm: string,
+    tableName: string, 
+    searchTerm: string, 
     searchFields: string[] = ['name']
   ): Promise<T[]> {
     let query = supabase.from(tableName).select('*');
-
+    
     // Build OR conditions for search
     const orConditions = searchFields.map(field => `${field}.ilike.%${searchTerm}%`).join(',');
     query = query.or(orConditions);
-
+    
     const { data, error } = await query
       .eq('is_active', true)
       .order('created_at', { ascending: false });
-
+    
     if (error) {
       console.error(`Error searching ${tableName}:`, error);
       throw error;
     }
-
+    
     return data || [];
-  }
-
-  // License Type Documents Management
-  static async getLicenseTypeDocuments(licenseTypeId: string): Promise<LicenseTypeDocument[]> {
-    const { data, error } = await supabase
-      .from('license_type_documents')
-      .select(`
-        id,
-        license_type_id,
-        documentation_template_id,
-        is_required,
-        created_at,
-        updated_at,
-        documentation_templates(*)
-      `)
-      .eq('license_type_id', licenseTypeId);
-
-    if (error) {
-      console.error('Error fetching license type documents:', error);
-      throw error;
-    }
-
-    return data || [];
-  }
-
-  static async updateLicenseTypeDocuments(
-    licenseTypeId: string,
-    documents: { documentation_template_id: string; is_required: boolean }[]
-  ): Promise<void> {
-    // Remove existing relationships
-    await supabase
-      .from('license_type_documents')
-      .delete()
-      .eq('license_type_id', licenseTypeId);
-
-    // Add new relationships
-    if (documents.length > 0) {
-      const relationships = documents.map(doc => ({
-        license_type_id: licenseTypeId,
-        documentation_template_id: doc.documentation_template_id,
-        is_required: doc.is_required
-      }));
-
-      const { error } = await supabase
-        .from('license_type_documents')
-        .insert(relationships);
-
-      if (error) {
-        console.error('Error updating license type documents:', error);
-        throw error;
-      }
-    }
   }
 }
