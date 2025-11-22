@@ -14,9 +14,9 @@ Arquitetura:
 Testes Disponíveis:
 01 - Menu e Navegação: Abre wizard de Novo Empreendimento
 02 - Imóvel: Cria e seleciona imóvel (Rural/Urbano/Linear)
-03 - Dados Gerais: Preenche dados do empreendimento (TODO)
-04 - Atividades: Seleciona atividades e preenche quantidades (TODO)
-05 - Caracterização: Preenche caracterização (TODO)
+03 - Dados Gerais: Preenche dados do empreendimento
+04 - Atividades: Seleciona atividades e preenche quantidades
+05 - Caracterização: Preenche caracterização completa
 
 Autor: GitHub Copilot
 Data: 2025-11-22
@@ -38,7 +38,7 @@ import test_novo_empreendimento_01_menu_navegacao as teste01
 import test_novo_empreendimento_02_imovel as teste02
 import test_novo_empreendimento_03_dados_gerais as teste03
 import test_novo_empreendimento_04_atividades as teste04
-# import test_novo_empreendimento_05_caracterizacao as teste05  # TODO
+import test_novo_empreendimento_05_caracterizacao as teste05
 
 
 class OrquestradorNovoEmpreendimento:
@@ -224,12 +224,11 @@ def main():
         ativo=True
     )
     
-    # TODO: Adicionar teste 05 quando implementado
-    # orquestrador.adicionar_teste(
-    #     nome="05 - Etapa Caracterização",
-    #     funcao=teste05.executar_teste,
-    #     ativo=True
-    # )
+    orquestrador.adicionar_teste(
+        nome="05 - Etapa Caracterização",
+        funcao=teste05.executar_teste_caracterizacao,
+        ativo=True
+    )
     
     # Executar todos os testes
     try:
