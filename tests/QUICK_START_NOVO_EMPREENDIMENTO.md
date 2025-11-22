@@ -29,7 +29,7 @@ python orchestrator_novo_empreendimento.py
 |---|-------|--------|-----------|
 | 01 | Menu e Navegação | ✅ Pronto | Login + Abre wizard |
 | 02 | Etapa Imóvel | ✅ Pronto | Cria imóvel aleatório |
-| 03 | Dados Gerais | 🚧 TODO | Preenche dados gerais |
+| 03 | Dados Gerais | ✅ Pronto | Auto-fill com botão 🪄 |
 | 04 | Atividades | 🚧 TODO | Seleciona atividades |
 | 05 | Caracterização | 🚧 TODO | Finaliza cadastro |
 

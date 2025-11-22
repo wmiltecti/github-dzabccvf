@@ -200,26 +200,45 @@ python test_novo_empreendimento_01_menu_navegacao.py
 
 ---
 
-### **Teste 03: Dados Gerais** 🚧 TODO
+### **Teste 03: Dados Gerais** ✅ Implementado
 
 **Arquivo:** `test_novo_empreendimento_03_dados_gerais.py`
 
 **Responsabilidades:**
 1. Validar que está na página Dados Gerais
-2. Preencher nome do empreendimento
-3. Preencher demais campos (telefone, email, etc)
-4. Adicionar pelo menos 1 partícipe (Requerente)
+2. **Clicar no botão "Preencher Dados"** (auto-fill) 🪄
+3. Validar que campos foram preenchidos
+4. Validar que partícipe foi adicionado
 5. **NÃO** interagir com mapa GeoFront
 6. Clicar em "Próximo"
 7. Validar navegação para "Atividades"
 
-**Campos esperados:**
-- Nome do empreendimento
-- Telefone
-- Email
-- Número de empregados
-- Descrição
-- Partícipes (mínimo 1 requerente)
+**Dados preenchidos automaticamente:**
+- Nome: "Complexo Industrial Mineração ABC"
+- Situação: "Planejado"
+- Número de empregados: 150
+- Horário de funcionamento: "07:00 às 17:00"
+- Descrição: Texto completo sobre mineração
+- Prazo de implantação: "24 meses"
+- Área construída: "5000 m²"
+- Capacidade de produção: "10.000 ton/mês"
+- **Partícipe automático:** "Empresa Mineração ABC Ltda" (Requerente)
+
+**Contexto retornado:**
+```python
+{
+    'teste': '03_dados_gerais',
+    'status': 'sucesso',
+    'driver': <WebDriver>,
+    'preencher_dados_ok': True,
+    'nome_preenchido': 'Complexo Industrial Mineração ABC',
+    'empregados_preenchido': '150',
+    'campos_validados': True,
+    'participe_adicionado': True,
+    'avancar_ok': True,
+    'atividades_ok': True
+}
+```
 
 ---
 
@@ -414,7 +433,7 @@ Ao executar o orquestrador, você verá:
 
 1. ✅ Teste 01 - Menu e Navegação (Implementado)
 2. ✅ Teste 02 - Etapa Imóvel (Implementado)
-3. 🚧 Teste 03 - Dados Gerais (TODO)
+3. ✅ Teste 03 - Dados Gerais (Implementado) 🪄
 4. 🚧 Teste 04 - Atividades (TODO)
 5. 🚧 Teste 05 - Caracterização (TODO)
 
