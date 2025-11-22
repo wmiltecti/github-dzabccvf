@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText, Map, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
-import { AdminService, Activity as ActivityType } from '../../services/adminService';
+import { getActivities, ActivityResponse } from '../../lib/api/activities';
 import GeoUpload from '../../components/geo/GeoUpload';
 
 interface AtividadesEmpreendimentoPageProps {
@@ -36,8 +36,8 @@ export default function AtividadesEmpreendimentoPage({
 }: AtividadesEmpreendimentoPageProps) {
   const { atividades, setAtividades, dadosGerais, setDadosGerais } = useEmpreendimentoStore();
 
-  const [availableActivities, setAvailableActivities] = useState<ActivityType[]>([]);
-  const [filteredActivities, setFilteredActivities] = useState<ActivityType[]>([]);
+  const [availableActivities, setAvailableActivities] = useState<ActivityResponse[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<ActivityResponse[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,12 +70,23 @@ export default function AtividadesEmpreendimentoPage({
   const loadActivities = async () => {
     try {
       setLoading(true);
-      const activities = await AdminService.getActivities(false);
-      setAvailableActivities(activities);
-      setFilteredActivities(activities);
+      const { data, error } = await getActivities(false);
+      
+      if (error) {
+        console.error('Erro ao carregar atividades:', error);
+        toast.error(error.message || 'Erro ao carregar atividades cadastradas');
+        setAvailableActivities([]);
+        setFilteredActivities([]);
+        return;
+      }
+      
+      setAvailableActivities(data || []);
+      setFilteredActivities(data || []);
     } catch (error) {
       console.error('Erro ao carregar atividades:', error);
       toast.error('Erro ao carregar atividades cadastradas');
+      setAvailableActivities([]);
+      setFilteredActivities([]);
     } finally {
       setLoading(false);
     }
@@ -113,7 +124,7 @@ export default function AtividadesEmpreendimentoPage({
     setFilteredActivities(filtered);
   };
 
-  const handleSelectActivity = (activity: ActivityType) => {
+  const handleSelectActivity = (activity: ActivityResponse) => {
     const alreadySelected = selectedActivities.some(a => a.activityId === activity.id);
 
     if (alreadySelected) {
@@ -126,8 +137,8 @@ export default function AtividadesEmpreendimentoPage({
       code: activity.code,
       name: activity.name,
       description: activity.description,
-      enterpriseSize: activity.enterprise_sizes?.name,
-      pollutionPotential: activity.pollution_potentials?.name,
+      enterpriseSize: activity.enterprise_size?.name,
+      pollutionPotential: activity.pollution_potential?.name,
       quantidade: '',
       unidade: activity.measurement_unit || '',
       area_ocupada: ''
@@ -328,11 +339,11 @@ export default function AtividadesEmpreendimentoPage({
                             <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                           )}
                           <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                            {activity.enterprise_sizes && (
-                              <span>Porte: {activity.enterprise_sizes.name}</span>
+                            {activity.enterprise_size && (
+                              <span>Porte: {activity.enterprise_size.name}</span>
                             )}
-                            {activity.pollution_potentials && (
-                              <span>Potencial Poluidor: {activity.pollution_potentials.name}</span>
+                            {activity.pollution_potential && (
+                              <span>Potencial Poluidor: {activity.pollution_potential.name}</span>
                             )}
                           </div>
                         </div>
