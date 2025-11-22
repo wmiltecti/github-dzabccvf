@@ -6,6 +6,7 @@ import PendenciaManager from '../../components/analise/PendenciaManager';
 import NotificacoesPendenciaModal from '../../components/analise/NotificacoesPendenciaModal';
 import TramitacoesModal from '../../components/analise/TramitacoesModal';
 import EmissaoLicenca from './EmissaoLicenca';
+import Pareceres from './Pareceres';
 
 interface MeuProcessoItem {
   id: string;
@@ -331,6 +332,7 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [showTramitacoes, setShowTramitacoes] = useState(false);
   const [showOpcoes, setShowOpcoes] = useState(false);
+  const [showPareceres, setShowPareceres] = useState(false);
   const [etapasConcluidas, setEtapasConcluidas] = useState<Set<Etapa>>(new Set());
 
   const etapaIndex = etapas.findIndex(e => e.id === etapaAtual);
@@ -361,6 +363,16 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
     toast.success('Análise concluída com sucesso!');
     onVoltar();
   };
+
+  if (showPareceres) {
+    return (
+      <Pareceres
+        processoId={processo.id}
+        numeroProcesso={processo.numero}
+        onVoltar={() => setShowPareceres(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -504,9 +516,18 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
                       setShowNotificacoes(true);
                       setShowOpcoes(false);
                     }}
-                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-200"
                   >
                     Notificações de Pendência
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPareceres(true);
+                      setShowOpcoes(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Pareceres
                   </button>
                 </div>
               )}
