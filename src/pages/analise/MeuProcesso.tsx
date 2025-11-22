@@ -437,9 +437,11 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
                       </span>
                     </div>
                     {idx < etapas.length - 1 && (
-                      <div className={`flex-1 h-1 mx-4 rounded transition-colors ${
-                        etapasConcluidas.has(etapa.id) ? 'bg-green-600' : 'bg-gray-200'
-                      }`} />
+                      <div className={`flex items-center justify-center mx-3 text-2xl transition-colors ${
+                        etapasConcluidas.has(etapa.id) ? 'text-green-600' : 'text-gray-300'
+                      }`}>
+                        ➤
+                      </div>
                     )}
                   </React.Fragment>
                 );
