@@ -71,7 +71,7 @@ export default function ActivityView({ item, onBack }: ActivityViewProps) {
 
       // Load enterprise size ranges
       const { data: sizeData, error: sizeError } = await supabase
-        .from('activity_enterprise_size_ranges')
+        .from('activity_enterprise_ranges')
         .select(`
           enterprise_size_id,
           min_value,

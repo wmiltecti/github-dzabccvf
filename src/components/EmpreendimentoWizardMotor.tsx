@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Building, Save, AlertTriangle, Plus, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../lib/store/empreendimento';
+import { createEnterprise } from '../services/enterpriseService';
 import EmpreendimentoStepper from './EmpreendimentoStepper';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -36,7 +37,13 @@ export default function EmpreendimentoWizardMotor({
   const { 
     currentStep: currentStepNumber,
     reset,
-    setEmpreendimentoId
+    setEmpreendimentoId,
+    dadosGerais,
+    participes,
+    property,
+    empreendimentoId: storeEmpreendimentoId,
+    atividades,
+    caracterizacao
   } = useEmpreendimentoStore();
   
   // Proteção contra execução dupla (React Strict Mode)
@@ -117,7 +124,70 @@ export default function EmpreendimentoWizardMotor({
       if (currentStepNumber < 4) {
         useEmpreendimentoStore.setState({ currentStep: currentStepNumber + 1 });
       } else {
-        // Último step - finalizar
+        // Último step - tentar persistir empreendimento no backend quando possível
+        try {
+          // Só tenta criar se ainda não houver um id persistido e houver dados mínimos
+          if (!storeEmpreendimentoId) {
+            console.log('🔍 Tentando criar empreendimento no backend com os dados coletados');
+
+            // Buscar um CPF/CNPJ presente nos participantes
+            const idParticipe = (participes || []).find(p => p.pessoa_cpf_cnpj && p.pessoa_cpf_cnpj.trim());
+
+            const cnpj_cpf = idParticipe?.pessoa_cpf_cnpj?.trim();
+            const nomeFromDados = (dadosGerais as any)?.nome_empreendimento;
+            const nomeFromParticipe = idParticipe?.pessoa_nome;
+
+            if (cnpj_cpf) {
+              const clean = cnpj_cpf.replace(/\D/g, '');
+              const tipo_pessoa = clean.length > 11 ? 'juridica' : 'fisica';
+
+              const payload: any = {
+                tipo_pessoa,
+                cnpj_cpf: clean,
+                endereco: property?.endereco || undefined,
+                cidade: property?.municipio || undefined,
+                cep: property?.car_codigo || undefined,
+                telefone: undefined,
+                email: undefined
+              };
+
+              if (tipo_pessoa === 'juridica') {
+                payload.razao_social = nomeFromDados || nomeFromParticipe || 'Empreendimento';
+                payload.nome_fantasia = nomeFromDados || nomeFromParticipe;
+              } else {
+                payload.nome_completo = nomeFromDados || nomeFromParticipe || 'Pessoa Física';
+              }
+
+              // Mesclar alguns dados gerais
+              if (dadosGerais) {
+                payload.descricao = (dadosGerais as any).descricao || undefined;
+                payload.porte = (dadosGerais as any).porte || undefined;
+              }
+
+              // Chama o serviço para criar
+              const created = await createEnterprise(payload);
+
+              // Se backend retornar um id, atualiza o store
+              if (created && (created as any).id) {
+                const returnedId = String((created as any).id);
+                setEmpreendimentoId(returnedId);
+                console.log('✅ Empreendimento criado no backend com id:', returnedId);
+                toast.success('Empreendimento salvo no backend com sucesso!');
+              } else {
+                // Se API não retornar id, registra e segue
+                console.warn('Empreendimento criado, mas sem id retornado pelo backend', created);
+                toast.info('Empreendimento gravado (sem id retornado)');
+              }
+            } else {
+              console.log('⚠️ Dados insuficientes para criar empreendimento (faltando CPF/CNPJ) — pulando criação automática');
+            }
+          }
+        } catch (err: any) {
+          console.error('❌ Falha ao persistir empreendimento no backend:', err);
+          toast.error('Não foi possível gravar o empreendimento no backend: ' + (err?.message || 'Erro desconhecido'));
+        }
+
+        // Finaliza o wizard (independente do resultado da criação)
         toast.success('✅ Empreendimento finalizado com sucesso!');
         setTimeout(() => {
           if (onClose) onClose();

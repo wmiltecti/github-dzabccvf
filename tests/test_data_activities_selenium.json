@@ -1,0 +1,254 @@
+{
+  "test_execution_info": {
+    "date": "21/11/2025 21:04:32.221",
+    "test_file": "tests/test_activities_crud_selenium.py",
+    "user_cpf": "61404694579",
+    "base_url": "http://localhost:5173"
+  },
+  "form_data_filled": {
+    "basic_info": {
+      "code": "2221",
+      "name": "Teste Automático 210432-221",
+      "description": "Atividade criada automaticamente pelo teste em 21/11/2025 21:04:32.221"
+    },
+    "reference_unit": {
+      "selected_option": "ha - área total requerida ao DNPM em hectares (ha)",
+      "selection_method": "select_by_index(1)",
+      "total_options_available": 24,
+      "api_endpoint": "GET /api/v1/referencias/unidades-medida?is_active=true"
+    },
+    "pollution_potential": {
+      "selected_option": "Alto",
+      "selection_method": "select_by_index(1)",
+      "total_options_available": 4
+    },
+    "enterprise_size_ranges": [
+      {
+        "range_number": 1,
+        "enterprise_size": "Excepcional",
+        "range_start": "0",
+        "range_end": "1000",
+        "selection_method": "select_by_index(1)"
+      },
+      {
+        "range_number": 2,
+        "enterprise_size": "Grande",
+        "range_start": "1001",
+        "range_end": "5000",
+        "selection_method": "select_by_index(2)",
+        "added_by_button": "Adicionar outro porte"
+      }
+    ],
+    "license_types": [
+      {
+        "license_type_number": 1,
+        "license_type": "AA - Autorização Ambiental",
+        "selection_method": "select_by_index(1)",
+        "total_options_available": 16,
+        "added_by_button": "Adicionar Tipo de Licença",
+        "documents": [
+          {
+            "document_number": 1,
+            "document_name": "Anotação de Responsabilidade Técnica (ART)",
+            "is_required": true,
+            "selection_method": "select_by_index(1)",
+            "total_options_available": 21,
+            "added_by_button": "Adicionar Documento"
+          }
+        ],
+        "study_types": [
+          {
+            "study_number": 1,
+            "study_name": "Anotação de Responsabilidade Técnica (ART)",
+            "is_required": true,
+            "selection_method": "select_by_index(1)",
+            "total_options_available": 21,
+            "added_by_button": "Adicionar Estudo"
+          }
+        ]
+      }
+    ]
+  },
+  "selenium_actions": {
+    "step_1_login": {
+      "input_cpf": "61404694579",
+      "input_password": "Senh@01!",
+      "button_clicked": "Entrar"
+    },
+    "step_2_navigation": {
+      "button_clicked": "Administração"
+    },
+    "step_3_activities": {
+      "menu_item_clicked": "Atividades"
+    },
+    "step_4_open_modal": {
+      "button_clicked": "+ Nova Atividade"
+    },
+    "step_5_fill_form": {
+      "fields": [
+        {
+          "field": "code",
+          "selector": "input[type='number']",
+          "action": "clear() + send_keys('2221')"
+        },
+        {
+          "field": "name",
+          "selector": "input[placeholder*='Extração']",
+          "action": "clear() + send_keys('Teste Automático 210432-221')"
+        },
+        {
+          "field": "description",
+          "selector": "textarea",
+          "action": "clear() + send_keys('Atividade criada automaticamente pelo teste em 21/11/2025 21:04:32.221')"
+        },
+        {
+          "field": "reference_unit_id",
+          "selector": "//label[contains(text(), 'Unidade de Medida')]/following-sibling::select",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "ha - área total requerida ao DNPM em hectares (ha)"
+        },
+        {
+          "field": "pollution_potential_id",
+          "selector": "//label[contains(text(), 'Potencial Poluidor')]/following-sibling::select",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "Alto"
+        },
+        {
+          "field": "enterprise_size_ranges[0].enterprise_size_id",
+          "selector": "//label[contains(text(), 'Porte do Empreendimento')]/following-sibling::select",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "Excepcional"
+        },
+        {
+          "field": "enterprise_size_ranges[0].range_start",
+          "selector": "//label[contains(text(), 'Faixa Inicial')]/following-sibling::input",
+          "action": "clear() + send_keys('0')"
+        },
+        {
+          "field": "enterprise_size_ranges[0].range_end",
+          "selector": "//label[contains(text(), 'Faixa Final')]/following-sibling::input",
+          "action": "clear() + send_keys('1000')"
+        },
+        {
+          "field": "add_size_button",
+          "selector": "//button[contains(., 'Adicionar outro porte')]",
+          "action": "click()"
+        },
+        {
+          "field": "enterprise_size_ranges[1].enterprise_size_id",
+          "selector": "//label[contains(text(), 'Porte do Empreendimento')][2]/following-sibling::select",
+          "action": "Select.select_by_index(2)",
+          "value_selected": "Grande"
+        },
+        {
+          "field": "enterprise_size_ranges[1].range_start",
+          "selector": "//label[contains(text(), 'Faixa Inicial')][2]/following-sibling::input",
+          "action": "clear() + send_keys('1001')"
+        },
+        {
+          "field": "enterprise_size_ranges[1].range_end",
+          "selector": "//label[contains(text(), 'Faixa Final')][2]/following-sibling::input",
+          "action": "clear() + send_keys('5000')"
+        },
+        {
+          "field": "add_license_button",
+          "selector": "//button[contains(., 'Adicionar Tipo de Licença')]",
+          "action": "click()"
+        },
+        {
+          "field": "license_types[0].license_type_id",
+          "selector": "//label[contains(text(), 'Tipo de Licença')]/following-sibling::select",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "AA - Autorização Ambiental"
+        },
+        {
+          "field": "add_document_button",
+          "selector": "//button[contains(., 'Adicionar Documento')]",
+          "action": "click()"
+        },
+        {
+          "field": "documents[0].template_id",
+          "selector": "select (último adicionado via reversed search)",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "Anotação de Responsabilidade Técnica (ART)"
+        },
+        {
+          "field": "documents[0].is_required",
+          "selector": "input[type='checkbox'] (último na lista)",
+          "action": "click() if not selected"
+        },
+        {
+          "field": "add_study_button",
+          "selector": "//button[contains(., 'Adicionar Estudo')]",
+          "action": "click()"
+        },
+        {
+          "field": "study_types[0].study_type_id",
+          "selector": "select (último adicionado via reversed search)",
+          "action": "Select.select_by_index(1)",
+          "value_selected": "Anotação de Responsabilidade Técnica (ART)"
+        },
+        {
+          "field": "study_types[0].is_required",
+          "selector": "input[type='checkbox'] (último na lista)",
+          "action": "click() if not selected"
+        }
+      ]
+    },
+    "step_6_save": {
+      "button_clicked": "Salvar",
+      "toast_success": "Atividade criada com sucesso!",
+      "modal_closed": true
+    },
+    "step_7_verify": {
+      "activity_found_in_list": true,
+      "activity_code_displayed": "2.221",
+      "activity_name_displayed": "Teste Automático 210432-221",
+      "total_activities_before": 62,
+      "total_activities_after": 62
+    }
+  },
+  "api_calls_detected": {
+    "reference_units": {
+      "endpoint": "GET /api/v1/referencias/unidades-medida?is_active=true",
+      "response_count": 24,
+      "sample_options": [
+        "Selecione a unidade...",
+        "ha - área total requerida ao DNPM em hectares (ha)",
+        "34534543 - gfdgddfg",
+        "M3_ANO - Metro cúbico por ano",
+        "M3_DIA - Metro cúbico por dia"
+      ]
+    },
+    "document_templates": {
+      "total_options": 21,
+      "first_selected": "Anotação de Responsabilidade Técnica (ART)"
+    },
+    "study_types": {
+      "total_options": 21,
+      "first_selected": "Anotação de Responsabilidade Técnica (ART)"
+    },
+    "save_documents_bulk": {
+      "endpoint": "POST /api/v1/activities/{id}/documents/bulk",
+      "status": 422,
+      "error": "Input should be a valid list",
+      "payload_sent": {
+        "documents": [
+          {
+            "template_id": "8cda4962-9e6f-4a20-b6fa-39adf2213582",
+            "is_required": true
+          }
+        ]
+      }
+    }
+  },
+  "validation_status": {
+    "form_fields_filled": "✅ SUCCESS",
+    "activity_created": "✅ SUCCESS",
+    "activity_visible_in_list": "✅ SUCCESS",
+    "documents_ui_filled": "✅ SUCCESS",
+    "study_types_ui_filled": "✅ SUCCESS",
+    "documents_api_saved": "❌ FAILED - Error 422",
+    "study_types_api_saved": "⚠️ UNKNOWN - Depends on documents"
+  }
+}

@@ -121,6 +121,38 @@ export async function getEnterpriseById(id: string): Promise<Enterprise> {
 }
 
 /**
+ * Cria um novo empreendimento no backend
+ * @param payload - Dados do empreendimento mínimo: { tipo_pessoa, cnpj_cpf, ... }
+ * @returns Enterprise criado pelo backend
+ */
+export async function createEnterprise(payload: Partial<Enterprise>): Promise<Enterprise> {
+  try {
+    const token = localStorage.getItem('auth_token');
+
+    if (!payload || !payload.tipo_pessoa || !payload.cnpj_cpf) {
+      throw new Error('Payload inválido: é necessário informar tipo_pessoa e cnpj_cpf');
+    }
+
+    const response = await axios.post<EnterpriseResponse>(
+      `${API_BASE_URL}`,
+      payload,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    );
+
+    if (response.data && response.data.success) {
+      return response.data.data;
+    }
+
+    throw new Error(response.data?.message || 'Erro ao criar empreendimento');
+  } catch (error: any) {
+    console.error('[enterpriseService] Erro ao criar empreendimento:', error);
+    throw new Error(error.response?.data?.message || error.message || 'Erro ao criar empreendimento');
+  }
+}
+
+/**
  * Helpers para formatação
  */
 
