@@ -176,98 +176,43 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         contexto['menu_empreendimento_ok'] = True
         
         # =================================================================
-        # ETAPA 3: CLICAR EM "NOVO EMPREENDIMENTO"
+        # ETAPA 3: CLICAR EM "NOVO EMPREENDIMENTO" (NA LISTA)
         # =================================================================
-        print("\n➕ ETAPA 3: CLICAR EM 'NOVO EMPREENDIMENTO'")
+        print("\n➕ ETAPA 3: CLICAR EM 'NOVO EMPREENDIMENTO' NA LISTA")
         print("-" * 80)
         
-        print("✓ Procurando botão 'Novo Empreendimento'...")
+        print("✓ Procurando botão 'Novo Empreendimento' na lista...")
         
-        # Tentar encontrar botão verde com texto "Novo Empreendimento"
+        # Garantir que estamos clicando no botão da LISTA, não do wizard interno
+        # Procurar especificamente o botão verde na área de listagem
         try:
             novo_btn = wait.until(
                 EC.element_to_be_clickable((
                     By.XPATH,
-                    "//button[contains(@class, 'bg-green-600') and (contains(., 'Novo Empreendimento') or contains(., 'Novo'))]"
+                    "//div[contains(@class, 'flex') and contains(@class, 'justify-between')]//button[contains(@class, 'bg-green-600') and contains(., 'Novo Empreendimento')]"
                 ))
             )
+            print(f"✓ Botão da lista encontrado: {novo_btn.text}")
         except TimeoutException:
-            # Alternativa: qualquer botão com o texto
-            novo_btn = wait.until(
-                EC.element_to_be_clickable((
-                    By.XPATH,
-                    "//button[contains(., 'Novo Empreendimento') or contains(., 'Novo')]"
-                ))
-            )
-        
-        print(f"✓ Botão encontrado: {novo_btn.text}")
+            # Alternativa: buscar pelo ícone Plus junto com o texto
+            try:
+                novo_btn = wait.until(
+                    EC.element_to_be_clickable((
+                        By.XPATH,
+                        "//button[contains(@class, 'bg-green-600')][.//svg or contains(., 'Novo Empreendimento')]"
+                    ))
+                )
+                print(f"✓ Botão encontrado (alternativa): {novo_btn.text}")
+            except TimeoutException:
+                raise Exception("❌ Botão 'Novo Empreendimento' não encontrado na lista")
         
         print("✓ Clicando em 'Novo Empreendimento'...")
         novo_btn.click()
-        time.sleep(2)
+        time.sleep(3)
         
         contexto['botao_novo_ok'] = True
         
-        # =================================================================
-        # ETAPA 3.5: VERIFICAR E CONFIRMAR MODAL (SE EXISTIR)
-        # =================================================================
-        print("\n🔔 ETAPA 3.5: VERIFICAR MODAL DE CONFIRMAÇÃO")
-        print("-" * 80)
-        
-        print("✓ Verificando se há modal de confirmação...")
-        try:
-            # Aguardar modal aparecer
-            time.sleep(1)
-            
-            # Tentar múltiplos seletores para o botão "Sim, Iniciar Novo"
-            modal_confirmar = None
-            
-            # Tentativa 1: Botão vermelho com texto específico
-            try:
-                modal_confirmar = driver.find_element(
-                    By.XPATH,
-                    "//button[contains(@class, 'bg-red') and contains(., 'Sim')]"
-                )
-                print("✓ Modal encontrado (bg-red)")
-            except:
-                pass
-            
-            # Tentativa 2: Qualquer botão com "Sim, Iniciar"
-            if not modal_confirmar:
-                try:
-                    modal_confirmar = driver.find_element(
-                        By.XPATH,
-                        "//button[contains(text(), 'Sim, Iniciar')]"
-                    )
-                    print("✓ Modal encontrado (texto)")
-                except:
-                    pass
-            
-            # Tentativa 3: Botão dentro de dialog/modal
-            if not modal_confirmar:
-                try:
-                    modal_confirmar = driver.find_element(
-                        By.XPATH,
-                        "//div[contains(@role, 'dialog')]//button[contains(., 'Sim')]"
-                    )
-                    print("✓ Modal encontrado (dialog)")
-                except:
-                    pass
-            
-            if modal_confirmar:
-                print(f"✓ Botão encontrado: '{modal_confirmar.text}'")
-                print("✓ Clicando em 'Sim, Iniciar Novo'...")
-                modal_confirmar.click()
-                time.sleep(3)
-                print("✅ Modal confirmado")
-                contexto['modal_confirmado'] = True
-            else:
-                print("⚠️ Modal não encontrado, tentando continuar...")
-                contexto['modal_confirmado'] = False
-                
-        except Exception as e:
-            print(f"⚠️ Erro ao buscar modal: {e}")
-            contexto['modal_confirmado'] = False
+        print("✓ Aguardando wizard abrir (NÃO deve aparecer modal)...")
         
         # =================================================================
         # ETAPA 4: VALIDAR WIZARD ABERTO
