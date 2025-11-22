@@ -302,8 +302,10 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
   const [showNotificacoes, setShowNotificacoes] = useState(false);
   const [showTramitacoes, setShowTramitacoes] = useState(false);
   const [showOpcoes, setShowOpcoes] = useState(false);
+  const [etapasConcluidas, setEtapasConcluidas] = useState<Set<Etapa>>(new Set());
 
   const etapaIndex = etapas.findIndex(e => e.id === etapaAtual);
+  const todasEtapasConcluidas = etapas.every(etapa => etapasConcluidas.has(etapa.id));
 
   const handleProxima = () => {
     if (etapaIndex < etapas.length - 1) {
@@ -317,8 +319,18 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
     }
   };
 
-  const handleConcluir = () => {
+  const handleConcluirEtapa = () => {
+    setEtapasConcluidas(prev => new Set(prev).add(etapaAtual));
     toast.success(`Etapa ${etapas[etapaIndex].label} concluída com sucesso!`);
+
+    if (etapaIndex < etapas.length - 1) {
+      setEtapaAtual(etapas[etapaIndex + 1].id);
+    }
+  };
+
+  const handleConcluirAnalise = () => {
+    toast.success('Análise concluída com sucesso!');
+    onVoltar();
   };
 
   return (
@@ -388,23 +400,54 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
             </div>
           </div>
 
-          <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {etapas.map((etapa) => (
-                <button
-                  key={etapa.id}
-                  onClick={() => setEtapaAtual(etapa.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    etapaAtual === etapa.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {etapa.icon}
-                  <span className="text-sm font-medium">{etapa.label}</span>
-                </button>
-              ))}
+          {/* Wizard Progress */}
+          <div className="bg-white p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              {etapas.map((etapa, idx) => {
+                const isConcluida = etapasConcluidas.has(etapa.id);
+                const isAtual = etapaAtual === etapa.id;
+                const isAcessivel = idx === 0 || etapasConcluidas.has(etapas[idx - 1].id);
+
+                return (
+                  <React.Fragment key={etapa.id}>
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => isAcessivel && setEtapaAtual(etapa.id)}
+                        disabled={!isAcessivel}
+                        className={`relative flex items-center justify-center w-12 h-12 rounded-full transition-all ${
+                          isConcluida
+                            ? 'bg-green-600 text-white'
+                            : isAtual
+                            ? 'bg-blue-600 text-white'
+                            : isAcessivel
+                            ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {isConcluida ? (
+                          <Check className="w-6 h-6" />
+                        ) : (
+                          etapa.icon
+                        )}
+                      </button>
+                      <span className={`mt-2 text-xs font-medium ${
+                        isAtual ? 'text-blue-600' : isConcluida ? 'text-green-600' : 'text-gray-600'
+                      }`}>
+                        {etapa.label}
+                      </span>
+                    </div>
+                    {idx < etapas.length - 1 && (
+                      <div className={`flex-1 h-1 mx-4 rounded transition-colors ${
+                        etapasConcluidas.has(etapa.id) ? 'bg-green-600' : 'bg-gray-200'
+                      }`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
+          </div>
+
+          <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-end">
 
             <div className="relative">
               <button
@@ -441,6 +484,22 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
 
           <div className="p-6 min-h-[400px]">
             <EtapaConteudo etapa={etapaAtual} processo={processo} />
+
+            {/* Botão de Concluir Etapa */}
+            <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={handleConcluirEtapa}
+                disabled={etapasConcluidas.has(etapaAtual)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg transition-colors ${
+                  etapasConcluidas.has(etapaAtual)
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                <Check className="w-5 h-5" />
+                {etapasConcluidas.has(etapaAtual) ? 'Etapa Concluída' : 'Concluir Etapa'}
+              </button>
+            </div>
           </div>
 
           <div className="border-t border-gray-200 bg-gray-50 p-4">
@@ -481,11 +540,17 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
                   Registro de Pendência
                 </button>
                 <button
-                  onClick={handleConcluir}
-                  className="flex items-center gap-1 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-lg transition-colors"
+                  onClick={handleConcluirAnalise}
+                  disabled={!todasEtapasConcluidas}
+                  className={`flex items-center gap-1 px-4 py-2 rounded-lg transition-colors ${
+                    todasEtapasConcluidas
+                      ? 'bg-teal-700 hover:bg-teal-800 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  title={!todasEtapasConcluidas ? 'Conclua todas as etapas para finalizar a análise' : ''}
                 >
                   <Check className="w-4 h-4" />
-                  Concluir
+                  Concluir Análise
                 </button>
                 <button
                   onClick={onVoltar}
