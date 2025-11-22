@@ -29,7 +29,6 @@ export interface LicenseType {
 export interface DocumentTemplate {
   id: string;
   name: string;
-  category?: string;
   description?: string;
   is_active: boolean;
   created_at: string;
@@ -75,7 +74,6 @@ export interface ActivityDocument {
   created_at: string;
   // Campos extras do join
   template_name?: string;
-  template_category?: string;
 }
 
 export interface ActivityLicenseConfig {
