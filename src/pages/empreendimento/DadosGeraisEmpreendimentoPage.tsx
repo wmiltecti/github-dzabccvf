@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, ArrowRight, ArrowLeft, Upload } from 'lucide-react';
+import { FileText, ArrowRight, ArrowLeft, Upload, Wand2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore, SituacaoEmpreendimento, EmpreendimentoParticipe } from '../../lib/store/empreendimento';
 import ParticipesManager, { Participe } from '../../components/ParticipesManager';
@@ -37,6 +37,7 @@ export default function DadosGeraisEmpreendimentoPage({
 
   const [showGeoUpload, setShowGeoUpload] = useState(false);
   const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
+  const [showGeoFrontIframe, setShowGeoFrontIframe] = useState(false);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -70,6 +71,39 @@ export default function DadosGeraisEmpreendimentoPage({
   const handleRemoveGeoFile = (fileName: string) => {
     setUploadedGeoFiles(prev => prev.filter(f => f !== fileName));
     toast.info(`Arquivo ${fileName} removido.`);
+  };
+
+  const preencherDadosAutomaticamente = () => {
+    // Dados de exemplo para preenchimento automático
+    const dadosExemplo = {
+      nome_empreendimento: 'Complexo Industrial Mineração ABC',
+      situacao: 'Planejado' as SituacaoEmpreendimento,
+      numero_empregados: 150,
+      horario_funcionamento: '07:00 às 17:00',
+      descricao: 'Empreendimento voltado para extração e beneficiamento de minérios, com capacidade de produção mensal de 10.000 toneladas. Inclui infraestrutura de apoio, áreas de processamento e escritórios administrativos.',
+      prazo_implantacao: '24 meses',
+      area_construida: '5000 m²',
+      capacidade_producao: '10.000 ton/mês'
+    };
+
+    setFormData(dadosExemplo);
+
+    // Adicionar participe de exemplo se não houver nenhum
+    if (participes.length === 0) {
+      const participeExemplo: EmpreendimentoParticipe = {
+        id: `temp-${Date.now()}`,
+        pessoa_id: 'exemplo-pessoa-id',
+        pessoa_nome: 'Empresa Mineração ABC Ltda',
+        pessoa_cpf_cnpj: '12.345.678/0001-90',
+        pessoa_tipo: 'Jurídica',
+        papel: 'Requerente',
+        pessoa_email: 'contato@mineracaoabc.com.br',
+        pessoa_telefone: '(11) 98765-4321'
+      };
+      addParticipe(participeExemplo);
+    }
+
+    toast.success('Dados preenchidos automaticamente! ✨');
   };
 
   const validateForm = (): boolean => {
@@ -111,9 +145,19 @@ export default function DadosGeraisEmpreendimentoPage({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <FileText className="w-5 h-5 text-green-600" />
-          <h2 className="text-xl font-bold text-gray-800">Dados Gerais do Empreendimento</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-green-600" />
+            <h2 className="text-xl font-bold text-gray-800">Dados Gerais do Empreendimento</h2>
+          </div>
+          <button
+            onClick={preencherDadosAutomaticamente}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+            title="Preencher dados de exemplo para teste"
+          >
+            <Wand2 className="w-4 h-4" />
+            Preencher Dados
+          </button>
         </div>
         <p className="text-gray-600 text-sm">
           Informe os dados básicos do empreendimento e os partícipes envolvidos
@@ -243,46 +287,73 @@ export default function DadosGeraisEmpreendimentoPage({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Dados Georreferenciados</h3>
             <button
-              onClick={() => setShowGeoUpload(true)}
+              onClick={() => setShowGeoFrontIframe(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Upload className="w-4 h-4" />
-              Upload de Arquivos Geo
+              Ver no Mapa
             </button>
           </div>
 
-          {uploadedGeoFiles.length > 0 ? (
-            <div className="space-y-2">
-              {uploadedGeoFiles.map((fileName, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">{fileName}</span>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveGeoFile(fileName)}
-                    className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+          {/* Área de arquivos - oculta por enquanto */}
+          <div className="hidden">
+            {uploadedGeoFiles.length > 0 ? (
+              <div className="space-y-2">
+                {uploadedGeoFiles.map((fileName, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
                   >
-                    Remover
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 text-sm">
-                Nenhum arquivo georreferenciado carregado
-              </p>
-              <p className="text-gray-500 text-xs mt-1">
-                Clique no botão acima para fazer upload de arquivos CSV, JSON, GeoJSON ou KML
-              </p>
-            </div>
-          )}
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-gray-700">{fileName}</span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveGeoFile(fileName)}
+                      className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 text-sm">
+                  Nenhum arquivo georreferenciado carregado
+                </p>
+                <p className="text-gray-500 text-xs mt-1">
+                  Clique no botão acima para fazer upload de arquivos CSV, JSON, GeoJSON ou KML
+                </p>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* GeoFront Iframe */}
+        {showGeoFrontIframe && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">GeoFront - Editor de Mapas</h3>
+              <button
+                onClick={() => setShowGeoFrontIframe(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <iframe 
+                src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                width="100%" 
+                height="800px" 
+                style={{ border: 'none' }}
+                title="GeoFront Editor"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <ParticipesManager

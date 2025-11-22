@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Home, ArrowRight, Search, CheckCircle, X } from 'lucide-react';
+import { Home, ArrowRight, Search, CheckCircle, X, Plus, Map } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
+import NewPropertyModal from '../../components/property/NewPropertyModal';
 
 interface ImovelEmpreendimentoPageProps {
   onNext: (data?: any) => void;
@@ -14,25 +15,69 @@ type SearchType = 'car' | 'matricula' | 'documento';
 export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelEmpreendimentoPageProps) {
   const { property, setProperty, setPropertyId } = useEmpreendimentoStore();
 
-  const [searchType, setSearchType] = useState<SearchType>('car');
+  const [searchType, setSearchType] = useState<SearchType>('documento');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchImovelResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedResult, setSelectedResult] = useState<SearchImovelResult | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showNewPropertyModal, setShowNewPropertyModal] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
+  const [newPropertyType, setNewPropertyType] = useState<'RURAL' | 'URBANO' | 'LINEAR' | ''>('');
+  const [showGeoFrontIframe, setShowGeoFrontIframe] = useState(false);
+  
+  // Estados para novo imóvel RURAL
+  const [newRuralData, setNewRuralData] = useState({
+    nome: '',
+    car_codigo: '',
+    car_situacao: 'Ativo',
+    municipio: '',
+    uf: '',
+    area_total: '',
+    sistema_referencia: 'SIRGAS 2000',
+    coordenadas_utm_lat: '',
+    coordenadas_utm_long: ''
+  });
+
+  // Estados para novo imóvel URBANO
+  const [newUrbanoData, setNewUrbanoData] = useState({
+    nome: '',
+    cep: '',
+    logradouro: '',
+    numero: '',
+    bairro: '',
+    complemento: '',
+    municipio: '',
+    uf: '',
+    matricula: '',
+    area_total: '',
+    sistema_referencia: 'SIRGAS 2000',
+    coordenadas_utm_lat: '',
+    coordenadas_utm_long: ''
+  });
+
+  // Estados para novo imóvel LINEAR
+  const [newLinearData, setNewLinearData] = useState({
+    nome: '',
+    municipio_inicio: '',
+    uf_inicio: '',
+    municipio_final: '',
+    uf_final: '',
+    extensao_km: '',
+    sistema_referencia: 'SIRGAS 2000'
+  });
+
+  // Abrir modal automaticamente se não houver imóvel selecionado (novo empreendimento)
+  useEffect(() => {
+    if (!property) {
+      console.log('🏠 Nenhum imóvel selecionado, abrindo modal de cadastro...');
+      setShowNewPropertyModal(true);
+    }
+  }, []); // Executa apenas na montagem do componente
 
   const getSearchPlaceholder = () => {
-    switch (searchType) {
-      case 'car':
-        return 'Digite o número do CAR...';
-      case 'matricula':
-        return 'Digite o número da matrícula...';
-      case 'documento':
-        return 'Digite o CPF ou CNPJ do proprietário...';
-      default:
-        return 'Digite para buscar...';
-    }
+    return 'Digite o CPF ou CNPJ do proprietário...';
   };
 
   const handleSearch = async () => {
@@ -49,27 +94,32 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     try {
       setSearching(true);
       setShowResults(true);
+      setSearchPerformed(false);
 
       const { data, error } = await searchImoveis(searchTerm.trim());
 
       if (error) {
         toast.error(error.message || 'Erro ao buscar imóveis');
         setSearchResults([]);
+        setSearchPerformed(true);
         return;
       }
 
       if (!data || data.length === 0) {
         toast.info('Nenhum imóvel encontrado');
         setSearchResults([]);
+        setSearchPerformed(true);
         return;
       }
 
       setSearchResults(data);
+      setSearchPerformed(true);
       toast.success(`${data.length} imóvel(is) encontrado(s)`);
     } catch (err: any) {
       console.error('Erro na busca:', err);
       toast.error('Erro ao realizar busca');
       setSearchResults([]);
+      setSearchPerformed(true);
     } finally {
       setSearching(false);
     }
@@ -78,6 +128,116 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
   const handleSelectProperty = (imovel: SearchImovelResult) => {
     setSelectedResult(imovel);
     setShowConfirmModal(true);
+  };
+
+  const handleOpenNewPropertyModal = () => {
+    setShowNewPropertyModal(true);
+    setNewPropertyType('');
+  };
+
+  const handleCloseNewPropertyModal = () => {
+    setShowNewPropertyModal(false);
+    setNewPropertyType('');
+    // Reset forms
+    setNewRuralData({
+      nome: '',
+      car_codigo: '',
+      car_situacao: 'Ativo',
+      municipio: '',
+      uf: '',
+      area_total: '',
+      sistema_referencia: 'SIRGAS 2000',
+      coordenadas_utm_lat: '',
+      coordenadas_utm_long: ''
+    });
+    setNewUrbanoData({
+      nome: '',
+      cep: '',
+      logradouro: '',
+      numero: '',
+      bairro: '',
+      complemento: '',
+      municipio: '',
+      uf: '',
+      matricula: '',
+      area_total: '',
+      sistema_referencia: 'SIRGAS 2000',
+      coordenadas_utm_lat: '',
+      coordenadas_utm_long: ''
+    });
+    setNewLinearData({
+      nome: '',
+      municipio_inicio: '',
+      uf_inicio: '',
+      municipio_final: '',
+      uf_final: '',
+      extensao_km: '',
+      sistema_referencia: 'SIRGAS 2000'
+    });
+  };
+
+  const handleSaveNewProperty = () => {
+    // Validações básicas
+    if (!newPropertyType) {
+      toast.error('Selecione o tipo de imóvel');
+      return;
+    }
+
+    let propertyData: any = {};
+
+    if (newPropertyType === 'RURAL') {
+      if (!newRuralData.nome || !newRuralData.car_codigo || !newRuralData.municipio) {
+        toast.error('Preencha todos os campos obrigatórios');
+        return;
+      }
+      propertyData = {
+        kind: 'RURAL',
+        nome: newRuralData.nome,
+        car_codigo: newRuralData.car_codigo,
+        municipio: newRuralData.municipio,
+        area: parseFloat(newRuralData.area_total) || 0,
+        endereco: `${newRuralData.municipio}, ${newRuralData.uf}`,
+        bairro: '',
+        matricula: ''
+      };
+    } else if (newPropertyType === 'URBANO') {
+      if (!newUrbanoData.nome || !newUrbanoData.logradouro || !newUrbanoData.municipio) {
+        toast.error('Preencha todos os campos obrigatórios');
+        return;
+      }
+      propertyData = {
+        kind: 'URBANO',
+        nome: newUrbanoData.nome,
+        matricula: newUrbanoData.matricula,
+        municipio: newUrbanoData.municipio,
+        area: parseFloat(newUrbanoData.area_total) || 0,
+        endereco: `${newUrbanoData.logradouro}, ${newUrbanoData.numero} - ${newUrbanoData.bairro}`,
+        bairro: newUrbanoData.bairro,
+        car_codigo: ''
+      };
+    } else if (newPropertyType === 'LINEAR') {
+      if (!newLinearData.nome || !newLinearData.municipio_inicio || !newLinearData.municipio_final) {
+        toast.error('Preencha todos os campos obrigatórios');
+        return;
+      }
+      propertyData = {
+        kind: 'LINEAR',
+        nome: newLinearData.nome,
+        municipio: newLinearData.municipio_inicio,
+        endereco: `De ${newLinearData.municipio_inicio}/${newLinearData.uf_inicio} até ${newLinearData.municipio_final}/${newLinearData.uf_final}`,
+        area: parseFloat(newLinearData.extensao_km) || 0,
+        bairro: '',
+        matricula: '',
+        car_codigo: ''
+      };
+    }
+
+    // Salva no store
+    setProperty(propertyData);
+    setPropertyId(propertyData.id || `new-${Date.now()}`);
+
+    toast.success('Imóvel cadastrado com sucesso!');
+    handleCloseNewPropertyModal();
   };
 
   const handleConfirmSelection = () => {
@@ -147,58 +307,10 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
             <h3 className="text-lg font-semibold mb-4">Buscar Imóvel</h3>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Busca
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('car');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'car'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Número CAR
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('matricula');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'matricula'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Matrícula
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('documento');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'documento'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  CPF/CNPJ
-                </button>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800">
+                  <span className="font-semibold">Tipo de Busca:</span> CPF/CNPJ do Proprietário
+                </p>
               </div>
             </div>
 
@@ -234,9 +346,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
             </div>
 
             <div className="text-xs text-gray-500">
-              {searchType === 'car' && '💡 Digite o código do Cadastro Ambiental Rural (CAR)'}
-              {searchType === 'matricula' && '💡 Digite o número de matrícula do imóvel'}
-              {searchType === 'documento' && '💡 Digite o CPF ou CNPJ do proprietário do imóvel'}
+              💡 Digite o CPF ou CNPJ do proprietário do imóvel
             </div>
           </div>
 
@@ -258,10 +368,22 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
               </div>
 
               {searchResults.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8">
                   <Home className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Nenhum imóvel encontrado</p>
-                  <p className="text-sm mt-1">Tente buscar com outros termos</p>
+                  <p className="text-gray-500">Nenhum imóvel encontrado</p>
+                  <p className="text-sm mt-1 text-gray-400">Tente buscar com outros termos ou cadastre um novo imóvel</p>
+                  
+                  {searchPerformed && (
+                    <div className="mt-4">
+                      <button
+                        onClick={handleOpenNewPropertyModal}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Cadastrar Novo Imóvel
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -391,6 +513,72 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
           </div>
         </div>
       )}
+
+      {/* Painel do Mapa do Imóvel */}
+      {property && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Mapa do Imóvel</h3>
+            <button
+              onClick={() => setShowGeoFrontIframe(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Map className="w-4 h-4" />
+              Ver no Mapa
+            </button>
+          </div>
+
+          {!showGeoFrontIframe && (
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <Map className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm">
+                Visualize e edite o mapa georreferenciado do imóvel
+              </p>
+              <p className="text-gray-500 text-xs mt-1">
+                Clique no botão acima para abrir o editor de mapas
+              </p>
+            </div>
+          )}
+
+          {/* GeoFront Iframe */}
+          {showGeoFrontIframe && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-800">GeoFront - Editor de Mapas</h4>
+                <button
+                  onClick={() => setShowGeoFrontIframe(false)}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Fechar
+                </button>
+              </div>
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <iframe 
+                  src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                  width="100%" 
+                  height="800px" 
+                  style={{ border: 'none' }}
+                  title="GeoFront Editor - Imóvel"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <NewPropertyModal
+        isOpen={showNewPropertyModal}
+        onClose={handleCloseNewPropertyModal}
+        onSave={handleSaveNewProperty}
+        propertyType={newPropertyType}
+        onPropertyTypeChange={setNewPropertyType}
+        ruralData={newRuralData}
+        urbanoData={newUrbanoData}
+        linearData={newLinearData}
+        onRuralChange={(field, value) => setNewRuralData(prev => ({ ...prev, [field]: value }))}
+        onUrbanoChange={(field, value) => setNewUrbanoData(prev => ({ ...prev, [field]: value }))}
+        onLinearChange={(field, value) => setNewLinearData(prev => ({ ...prev, [field]: value }))}
+      />
 
       {showConfirmModal && selectedResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

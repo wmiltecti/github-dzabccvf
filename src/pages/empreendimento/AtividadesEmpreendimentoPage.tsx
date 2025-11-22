@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText } from 'lucide-react';
+import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText, Map, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
-import { AdminService, Activity as ActivityType } from '../../services/adminService';
+import { getActivities, ActivityResponse } from '../../lib/api/activities';
 import GeoUpload from '../../components/geo/GeoUpload';
 
 interface AtividadesEmpreendimentoPageProps {
@@ -36,14 +36,15 @@ export default function AtividadesEmpreendimentoPage({
 }: AtividadesEmpreendimentoPageProps) {
   const { atividades, setAtividades, dadosGerais, setDadosGerais } = useEmpreendimentoStore();
 
-  const [availableActivities, setAvailableActivities] = useState<ActivityType[]>([]);
-  const [filteredActivities, setFilteredActivities] = useState<ActivityType[]>([]);
+  const [availableActivities, setAvailableActivities] = useState<ActivityResponse[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<ActivityResponse[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
   const [expandedActivityIndex, setExpandedActivityIndex] = useState<number | null>(null);
   const [uploadedAcoesFiles, setUploadedAcoesFiles] = useState<UploadedFile[]>([]);
+  const [showMapForActivity, setShowMapForActivity] = useState<{[key: number]: boolean}>({});
 
   const [consultasData, setConsultasData] = useState({
     unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
@@ -69,12 +70,121 @@ export default function AtividadesEmpreendimentoPage({
   const loadActivities = async () => {
     try {
       setLoading(true);
-      const activities = await AdminService.getActivities(false);
-      setAvailableActivities(activities);
-      setFilteredActivities(activities);
+      const { data, error } = await getActivities(false);
+      
+      if (error) {
+        console.warn('⚠️ API não disponível, usando dados mockados para desenvolvimento:', error);
+        
+        // Dados mockados temporários enquanto o backend não implementa a API
+        const atividadesMockadas: ActivityResponse[] = [
+          {
+            id: 'mock-1',
+            code: 77686,
+            name: 'Extração de areia, cascalho ou pedregulho',
+            description: 'Atividade de extração mineral não metálica',
+            measurement_unit: 'm³/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Médio Porte'
+            },
+            pollution_potential: {
+              id: 'pp-1',
+              name: 'Alto'
+            }
+          },
+          {
+            id: 'mock-2',
+            code: 12345,
+            name: 'Beneficiamento de minerais não metálicos',
+            description: 'Processamento e beneficiamento de minerais',
+            measurement_unit: 'ton/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-2',
+              name: 'Grande Porte'
+            },
+            pollution_potential: {
+              id: 'pp-2',
+              name: 'Médio'
+            }
+          },
+          {
+            id: 'mock-3',
+            code: 23456,
+            name: 'Fabricação de produtos de minerais não-metálicos',
+            description: 'Fabricação de produtos diversos a partir de minerais',
+            measurement_unit: 'unidades/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Pequeno Porte'
+            },
+            pollution_potential: {
+              id: 'pp-3',
+              name: 'Baixo'
+            }
+          },
+          {
+            id: 'mock-4',
+            code: 34567,
+            name: 'Transporte e armazenamento de minerais',
+            description: 'Logística e armazenagem de produtos minerais',
+            measurement_unit: 'ton/dia',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-2',
+              name: 'Médio Porte'
+            },
+            pollution_potential: {
+              id: 'pp-2',
+              name: 'Médio'
+            }
+          },
+          {
+            id: 'mock-5',
+            code: 45678,
+            name: 'Recuperação de áreas degradadas por mineração',
+            description: 'Atividades de recuperação e reabilitação ambiental',
+            measurement_unit: 'hectares',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Pequeno Porte'
+            },
+            pollution_potential: {
+              id: 'pp-3',
+              name: 'Baixo'
+            }
+          }
+        ];
+        
+        toast.warning('⚠️ Usando dados de exemplo. Backend precisa implementar a API.', {
+          autoClose: 5000
+        });
+        
+        setAvailableActivities(atividadesMockadas);
+        setFilteredActivities(atividadesMockadas);
+        return;
+      }
+      
+      setAvailableActivities(data || []);
+      setFilteredActivities(data || []);
     } catch (error) {
       console.error('Erro ao carregar atividades:', error);
       toast.error('Erro ao carregar atividades cadastradas');
+      setAvailableActivities([]);
+      setFilteredActivities([]);
     } finally {
       setLoading(false);
     }
@@ -112,7 +222,7 @@ export default function AtividadesEmpreendimentoPage({
     setFilteredActivities(filtered);
   };
 
-  const handleSelectActivity = (activity: ActivityType) => {
+  const handleSelectActivity = (activity: ActivityResponse) => {
     const alreadySelected = selectedActivities.some(a => a.activityId === activity.id);
 
     if (alreadySelected) {
@@ -125,8 +235,8 @@ export default function AtividadesEmpreendimentoPage({
       code: activity.code,
       name: activity.name,
       description: activity.description,
-      enterpriseSize: activity.enterprise_sizes?.name,
-      pollutionPotential: activity.pollution_potentials?.name,
+      enterpriseSize: activity.enterprise_size?.name,
+      pollutionPotential: activity.pollution_potential?.name,
       quantidade: '',
       unidade: activity.measurement_unit || '',
       area_ocupada: ''
@@ -167,6 +277,13 @@ export default function AtividadesEmpreendimentoPage({
 
   const toggleActivityExpansion = (index: number) => {
     setExpandedActivityIndex(expandedActivityIndex === index ? null : index);
+  };
+
+  const toggleMapForActivity = (index: number) => {
+    setShowMapForActivity(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   const handleAcoesFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -320,11 +437,11 @@ export default function AtividadesEmpreendimentoPage({
                             <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                           )}
                           <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                            {activity.enterprise_sizes && (
-                              <span>Porte: {activity.enterprise_sizes.name}</span>
+                            {activity.enterprise_size && (
+                              <span>Porte: {activity.enterprise_size.name}</span>
                             )}
-                            {activity.pollution_potentials && (
-                              <span>Potencial Poluidor: {activity.pollution_potentials.name}</span>
+                            {activity.pollution_potential && (
+                              <span>Potencial Poluidor: {activity.pollution_potential.name}</span>
                             )}
                           </div>
                         </div>
@@ -365,133 +482,170 @@ export default function AtividadesEmpreendimentoPage({
             };
 
             return (
-            <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded">
-                      Cód. {activity.code}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-gray-800">{activity.name}</h4>
-                  {activity.description && (
-                    <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                  )}
-
-                  <div className="flex gap-2 mt-3">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Porte do Empreendimento
-                      </label>
-                      <div className={`px-3 py-2 border rounded-lg text-sm font-medium ${getPorteColor(activity.enterpriseSize)}`}>
-                        {activity.enterpriseSize || (
-                          <span className="text-red-600 flex items-center gap-1">
-                            <span>⚠️</span>
-                            Não definido
-                          </span>
-                        )}
-                      </div>
+            <div key={index} className="bg-white rounded-lg border-2 border-gray-200 hover:border-green-300 transition-colors">
+              {/* Header da Atividade */}
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold bg-gray-700 text-white px-3 py-1 rounded-full">
+                        #{index + 1}
+                      </span>
+                      <span className="text-xs font-mono bg-white border border-gray-300 px-2 py-1 rounded">
+                        Cód. {activity.code}
+                      </span>
                     </div>
-                    {activity.pollutionPotential && (
-                      <div className="flex-1">
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Potencial Poluidor
-                        </label>
-                        <div className={`px-3 py-2 border rounded-lg text-sm font-medium ${getPotencialColor(activity.pollutionPotential)}`}>
-                          {activity.pollutionPotential}
-                        </div>
-                      </div>
+                    <h4 className="font-bold text-lg text-gray-900">{activity.name}</h4>
+                    {activity.description && (
+                      <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                     )}
                   </div>
-                </div>
-                <button
-                  onClick={() => handleRemoveActivity(index)}
-                  className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded"
-                  title="Remover atividade"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-gray-200">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Unidade de Medida
-                  </label>
-                  <input
-                    type="text"
-                    value={activity.unidade || ''}
-                    onChange={(e) => handleUpdateActivityData(index, 'unidade', e.target.value)}
-                    readOnly={!!activity.unidade}
-                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none ${
-                      activity.unidade
-                        ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-600'
-                        : 'border-gray-300 focus:ring-2 focus:ring-green-500'
-                    }`}
-                    placeholder={activity.unidade ? "Pré-definida pela atividade" : "Ex: ton/mês"}
-                    title={activity.unidade ? "Esta unidade foi definida no cadastro da atividade" : "Informe a unidade de medida"}
-                  />
+                  <button
+                    onClick={() => handleRemoveActivity(index)}
+                    className="ml-4 p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                    title="Remover atividade"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    {activity.unidade ? `Quantidade (${activity.unidade})` : 'Quantidade'}
-                  </label>
-                  <input
-                    type="number"
-                    value={activity.quantidade || ''}
-                    onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder={activity.unidade ? "Ex: 100" : "Informe a quantidade"}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Área Ocupada (m²)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={activity.area_ocupada || ''}
-                    onChange={(e) => handleUpdateActivityData(index, 'area_ocupada', e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Ex: 500.00"
-                  />
+                {/* Badges de Porte e Potencial */}
+                <div className="flex gap-3 mt-3">
+                  <div className="flex-1">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      PORTE DO EMPREENDIMENTO
+                    </label>
+                    <div className={`px-3 py-2 border-2 rounded-lg text-sm font-bold ${getPorteColor(activity.enterpriseSize)}`}>
+                      {activity.enterpriseSize || (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <span>⚠️</span>
+                          Não definido
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {activity.pollutionPotential && (
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        POTENCIAL POLUIDOR
+                      </label>
+                      <div className={`px-3 py-2 border-2 rounded-lg text-sm font-bold ${getPotencialColor(activity.pollutionPotential)}`}>
+                        {activity.pollutionPotential}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Seção de Dados Georreferenciados */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => toggleActivityExpansion(index)}
-                  className="flex items-center justify-between w-full text-left"
-                >
-                  <h4 className="text-sm font-semibold text-gray-900">Dados Georreferenciados e Consultas</h4>
-                  <span className="text-gray-500">
-                    {expandedActivityIndex === index ? '▼' : '▶'}
-                  </span>
-                </button>
+              {/* Dados Quantitativos */}
+              <div className="px-6 py-4 bg-gray-50">
+                <h5 className="text-xs font-bold text-gray-700 uppercase mb-3">Dados Quantitativos</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      Unidade de Medida
+                    </label>
+                    <input
+                      type="text"
+                      value={activity.unidade || ''}
+                      onChange={(e) => handleUpdateActivityData(index, 'unidade', e.target.value)}
+                      readOnly={!!activity.unidade}
+                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none ${
+                        activity.unidade
+                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-600'
+                          : 'bg-white border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500'
+                      }`}
+                      placeholder={activity.unidade ? "Pré-definida" : "Ex: ton/mês"}
+                      title={activity.unidade ? "Esta unidade foi definida no cadastro da atividade" : "Informe a unidade de medida"}
+                    />
+                  </div>
 
-                {expandedActivityIndex === index && (
-                  <div className="mt-4 space-y-4">
-                    {/* Upload de Arquivos Geo */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h5 className="text-sm font-medium text-gray-900">Arquivos Georreferenciados</h5>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      {activity.unidade ? `Quantidade (${activity.unidade})` : 'Quantidade'}
+                    </label>
+                    <input
+                      type="number"
+                      value={activity.quantidade || ''}
+                      onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder={activity.unidade ? "Ex: 100" : "Quantidade"}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      Área Ocupada (m²)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={activity.area_ocupada || ''}
+                      onChange={(e) => handleUpdateActivityData(index, 'area_ocupada', e.target.value)}
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Ex: 500.00"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção de Mapa da Atividade */}
+              <div className="px-6 py-4 border-t-2 border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h5 className="text-sm font-bold text-gray-900 uppercase flex items-center gap-2">
+                    <Map className="w-4 h-4 text-blue-600" />
+                    Mapa da Atividade
+                  </h5>
+                  <button
+                    onClick={() => toggleMapForActivity(index)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <Map className="w-4 h-4" />
+                    {showMapForActivity[index] ? 'Ocultar Mapa' : 'Ver no Mapa'}
+                  </button>
+                </div>
+
+                {!showMapForActivity[index] && (
+                  <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                    <Map className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">
+                      Visualize e edite o mapa georreferenciado desta atividade
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      Clique em "Ver no Mapa" para abrir o editor
+                    </p>
+                  </div>
+                )}
+
+                {/* GeoFront Iframe */}
+                {showMapForActivity[index] && (
+                  <div className="space-y-4">
+                    <div className="border-2 border-blue-300 rounded-lg overflow-hidden">
+                      <iframe 
+                        src={`https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002&atividade=${activity.activityId}`}
+                        width="100%" 
+                        height="600px" 
+                        style={{ border: 'none' }}
+                        title={`GeoFront Editor - Atividade ${activity.name}`}
+                      />
+                    </div>
+
+                    {/* Área de arquivos georreferenciados */}
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-300">
+                      <h6 className="text-xs font-bold text-gray-700 uppercase mb-3">Arquivos Georreferenciados</h6>
+                      
+                      <div className="hidden">
+                        <GeoUpload
+                          onDataLoad={(data, fileName) => handleGeoUpload(index, data, fileName)}
+                        />
                       </div>
 
-                      <GeoUpload
-                        onDataLoad={(data, fileName) => handleGeoUpload(index, data, fileName)}
-                      />
-
-                      {activity.geoFiles && activity.geoFiles.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          <p className="text-xs font-medium text-gray-700">Arquivos carregados:</p>
+                      {activity.geoFiles && activity.geoFiles.length > 0 ? (
+                        <div className="space-y-2">
                           {activity.geoFiles.map((file, fileIdx) => (
                             <div
                               key={fileIdx}
-                              className="flex items-center justify-between bg-white p-2 rounded border border-gray-200"
+                              className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200"
                             >
                               <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-green-600" />
@@ -499,7 +653,7 @@ export default function AtividadesEmpreendimentoPage({
                               </div>
                               <button
                                 onClick={() => handleRemoveGeoFile(index, file)}
-                                className="text-red-600 hover:text-red-800"
+                                className="text-red-600 hover:bg-red-50 p-2 rounded transition-colors"
                                 title="Remover arquivo"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -507,6 +661,10 @@ export default function AtividadesEmpreendimentoPage({
                             </div>
                           ))}
                         </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-3">
+                          Use o mapa acima para definir a área desta atividade
+                        </p>
                       )}
                     </div>
                   </div>

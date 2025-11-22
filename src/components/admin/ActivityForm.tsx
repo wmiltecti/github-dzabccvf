@@ -143,7 +143,7 @@ export default function ActivityForm({
     try {
       console.log('🔍 Carregando dados dos dropdowns da API...');
       
-      // Carregar todos os dados em paralelo da API REST
+      // Carregar dados essenciais em paralelo da API REST
       const [licenseTypesData, pollutionPotentialsData, documentsData, referenceUnitsData] = await Promise.all([
         activityLicenseService.getLicenseTypes(),
         activityLicenseService.getPollutionPotentials(),
@@ -160,7 +160,16 @@ export default function ActivityForm({
       setPollutionPotentials(pollutionPotentialsData || []);
       setDocumentTemplates(documentsData || []);
       setReferenceUnits(referenceUnitsData || []);
-      setStudyTypes([]); // Backend não tem endpoint de study-types ainda
+
+      // Tentar carregar tipos de estudo (pode não estar implementado no backend)
+      try {
+        const studyTypesData = await activityLicenseService.getStudyTypes();
+        console.log('✅ Tipos de estudo carregados:', studyTypesData.length, 'itens');
+        setStudyTypes(studyTypesData || []);
+      } catch (studyError) {
+        console.warn('⚠️ Tipos de estudo não disponíveis (endpoint não implementado no backend)');
+        setStudyTypes([]);
+      }
 
     } catch (error) {
       console.error('❌ Erro ao carregar dados da API:', error);
