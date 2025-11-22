@@ -121,14 +121,10 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             raise Exception(f"❌ Login falhou - Ainda na página de login: {current_url}")
         
         print(f"✅ Login realizado com sucesso - URL: {current_url}")
-        
-        # Navegar explicitamente para dashboard
-        print("✓ Navegando para Dashboard...")
-        driver.get(f"{BASE_URL}/dashboard")
-        time.sleep(2)
-        print(f"✓ Dashboard carregado: {driver.current_url}")
-        
         contexto['login_ok'] = True
+        
+        # Aguardar carregamento da página principal
+        time.sleep(2)
         
         # =================================================================
         # ETAPA 2: NAVEGAR PARA EMPREENDIMENTO
