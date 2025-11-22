@@ -216,17 +216,20 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Verificando se há modal de confirmação...")
         try:
-            # Procurar modal de confirmação
-            modal_confirmar = driver.find_element(
-                By.XPATH,
-                "//button[contains(., 'Confirmar') or contains(., 'Sim') or contains(., 'Continuar') or contains(., 'OK')]"
+            # Procurar botão "Sim, Iniciar Novo" (botão vermelho do modal)
+            modal_confirmar = wait.until(
+                EC.element_to_be_clickable((
+                    By.XPATH,
+                    "//button[contains(., 'Sim, Iniciar Novo') or contains(., 'Sim')]"
+                ))
             )
-            print(f"✓ Modal encontrado, clicando em confirmar...")
+            print(f"✓ Modal encontrado: '{modal_confirmar.text}'")
+            print("✓ Clicando em 'Sim, Iniciar Novo'...")
             modal_confirmar.click()
             time.sleep(2)
             print("✅ Modal confirmado")
             contexto['modal_confirmado'] = True
-        except:
+        except TimeoutException:
             print("✓ Nenhum modal de confirmação (ou já fechado)")
             contexto['modal_confirmado'] = False
         
