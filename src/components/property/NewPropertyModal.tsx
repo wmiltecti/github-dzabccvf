@@ -511,7 +511,7 @@ export default function NewPropertyModal({
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Cadastrar Imóvel
+            Salvar Imóvel
           </button>
         </div>
       </div>

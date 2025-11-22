@@ -37,7 +37,7 @@ BASE_URL = "http://localhost:5173"
 import test_novo_empreendimento_01_menu_navegacao as teste01
 import test_novo_empreendimento_02_imovel as teste02
 import test_novo_empreendimento_03_dados_gerais as teste03
-# import test_novo_empreendimento_04_atividades as teste04  # TODO
+import test_novo_empreendimento_04_atividades as teste04
 # import test_novo_empreendimento_05_caracterizacao as teste05  # TODO
 
 
@@ -218,10 +218,16 @@ def main():
         ativo=True
     )
     
-    # TODO: Adicionar testes 04, 05 quando implementados
+    orquestrador.adicionar_teste(
+        nome="04 - Etapa Atividades",
+        funcao=teste04.executar_teste_atividades,
+        ativo=True
+    )
+    
+    # TODO: Adicionar teste 05 quando implementado
     # orquestrador.adicionar_teste(
-    #     nome="04 - Etapa Atividades",
-    #     funcao=teste04.executar_teste,
+    #     nome="05 - Etapa Caracterização",
+    #     funcao=teste05.executar_teste,
     #     ativo=True
     # )
     

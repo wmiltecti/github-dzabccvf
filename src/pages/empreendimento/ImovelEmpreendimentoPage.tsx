@@ -15,7 +15,7 @@ type SearchType = 'car' | 'matricula' | 'documento';
 export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelEmpreendimentoPageProps) {
   const { property, setProperty, setPropertyId } = useEmpreendimentoStore();
 
-  const [searchType, setSearchType] = useState<SearchType>('car');
+  const [searchType, setSearchType] = useState<SearchType>('documento');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchImovelResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -68,17 +68,16 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     sistema_referencia: 'SIRGAS 2000'
   });
 
-  const getSearchPlaceholder = () => {
-    switch (searchType) {
-      case 'car':
-        return 'Digite o número do CAR...';
-      case 'matricula':
-        return 'Digite o número da matrícula...';
-      case 'documento':
-        return 'Digite o CPF ou CNPJ do proprietário...';
-      default:
-        return 'Digite para buscar...';
+  // Abrir modal automaticamente se não houver imóvel selecionado (novo empreendimento)
+  useEffect(() => {
+    if (!property) {
+      console.log('🏠 Nenhum imóvel selecionado, abrindo modal de cadastro...');
+      setShowNewPropertyModal(true);
     }
+  }, []); // Executa apenas na montagem do componente
+
+  const getSearchPlaceholder = () => {
+    return 'Digite o CPF ou CNPJ do proprietário...';
   };
 
   const handleSearch = async () => {
@@ -308,58 +307,10 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
             <h3 className="text-lg font-semibold mb-4">Buscar Imóvel</h3>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Busca
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('car');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'car'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Número CAR
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('matricula');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'matricula'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  Matrícula
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchType('documento');
-                    setSearchTerm('');
-                    setSearchResults([]);
-                    setShowResults(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    searchType === 'documento'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  CPF/CNPJ
-                </button>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-800">
+                  <span className="font-semibold">Tipo de Busca:</span> CPF/CNPJ do Proprietário
+                </p>
               </div>
             </div>
 
@@ -395,9 +346,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
             </div>
 
             <div className="text-xs text-gray-500">
-              {searchType === 'car' && '💡 Digite o código do Cadastro Ambiental Rural (CAR)'}
-              {searchType === 'matricula' && '💡 Digite o número de matrícula do imóvel'}
-              {searchType === 'documento' && '💡 Digite o CPF ou CNPJ do proprietário do imóvel'}
+              💡 Digite o CPF ou CNPJ do proprietário do imóvel
             </div>
           </div>
 

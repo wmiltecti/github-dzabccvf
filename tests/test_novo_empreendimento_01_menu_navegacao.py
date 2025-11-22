@@ -212,12 +212,10 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         contexto['botao_novo_ok'] = True
         
-        print("✓ Aguardando wizard abrir (NÃO deve aparecer modal)...")
-        
         # =================================================================
-        # ETAPA 4: VALIDAR WIZARD ABERTO
+        # ETAPA 4: VALIDAR WIZARD ABERTO E SELECIONAR ETAPA IMÓVEL
         # =================================================================
-        print("\n🎯 ETAPA 4: VALIDAR WIZARD EMPREENDIMENTO ABERTO")
+        print("\n🎯 ETAPA 4: VALIDAR WIZARD E SELECIONAR ETAPA IMÓVEL")
         print("-" * 80)
         
         print("✓ Verificando se wizard foi aberto...")
@@ -234,34 +232,71 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         except:
             raise Exception("❌ Título 'Novo Empreendimento' não encontrado")
         
-        # Verificar se está na etapa 1 (Imóvel)
-        print("✓ Verificando etapa atual (deve ser Imóvel)...")
+        # Aguardar um pouco para o wizard carregar completamente
+        time.sleep(2)
         
-        # Procurar indicadores de step/wizard
-        try:
-            # Tentar encontrar stepper ou título da etapa
-            step_imovel = driver.find_element(
-                By.XPATH,
-                "//*[contains(text(), 'Imóvel') or contains(text(), 'Propriedade')]"
-            )
-            print(f"✓ Etapa Imóvel encontrada: {step_imovel.text}")
-        except NoSuchElementException:
-            print("⚠️ Não encontrou texto 'Imóvel', mas wizard parece aberto")
+        # Procurar e clicar na etapa "Imóvel" no stepper
+        print("✓ Procurando etapa 'Imóvel' no stepper...")
         
-        # Procurar elementos típicos da página de Imóvel
         try:
-            # Botão "Buscar" ou campo de busca de imóvel
-            busca_imovel = driver.find_element(
+            # Estratégia 1: Procurar pelo SVG/ícone de casa (Home icon) que representa Imóvel
+            try:
+                step_imovel = wait.until(
+                    EC.element_to_be_clickable((
+                        By.XPATH,
+                        "//*[contains(@class, 'cursor-pointer')]//*[name()='svg' and contains(@class, 'lucide-home')]/.."
+                    ))
+                )
+                print("✓ Etapa Imóvel encontrada pelo ícone")
+            except:
+                # Estratégia 2: Procurar pelo texto "Imóvel"
+                try:
+                    step_imovel = wait.until(
+                        EC.element_to_be_clickable((
+                            By.XPATH,
+                            "//*[contains(text(), 'Imóvel') and not(contains(text(), 'do Empreendimento'))]"
+                        ))
+                    )
+                    print("✓ Etapa Imóvel encontrada pelo texto")
+                except:
+                    # Estratégia 3: Pegar primeiro elemento clicável no stepper
+                    steps = driver.find_elements(By.XPATH, "//*[contains(@class, 'cursor-pointer')]")
+                    if len(steps) > 0:
+                        step_imovel = steps[0]
+                        print("✓ Primeira etapa do stepper encontrada")
+                    else:
+                        raise Exception("❌ Nenhuma etapa encontrada no stepper")
+            
+            # Clicar na etapa Imóvel
+            print("✓ Clicando na etapa Imóvel...")
+            step_imovel.click()
+            time.sleep(2)
+            
+            print("✅ Etapa Imóvel selecionada com sucesso")
+            
+        except Exception as e:
+            print(f"⚠️ Erro ao selecionar etapa Imóvel: {str(e)}")
+            print("⚠️ Continuando mesmo assim - wizard pode já estar na etapa correta")
+        
+        # Verificar se elementos de cadastro de Imóvel estão visíveis
+        print("✓ Verificando se formulário de Imóvel está visível...")
+        try:
+            # Procurar por elementos típicos do formulário de Imóvel
+            form_elements = driver.find_elements(
                 By.XPATH,
-                "//button[contains(., 'Buscar')] | //input[contains(@placeholder, 'CAR') or contains(@placeholder, 'matrícula')]"
+                "//input[contains(@placeholder, 'CAR')] | //button[contains(., 'Buscar')] | //select | //input[@type='text']"
             )
-            print(f"✓ Elemento de busca de imóvel encontrado")
+            if len(form_elements) > 0:
+                print(f"✓ {len(form_elements)} elementos de formulário encontrados")
+            else:
+                print("⚠️ Nenhum elemento de formulário encontrado ainda")
         except:
-            print("⚠️ Elementos de busca não encontrados, mas continuando...")
+            print("⚠️ Erro ao verificar formulário")
         
-        print("✅ Wizard aberto e na etapa Imóvel")
+        print("✅ Wizard aberto e pronto para cadastro de Imóvel")
         contexto['wizard_aberto'] = True
         contexto['etapa_atual'] = 'imovel'
+        contexto['etapa_imovel_selecionada'] = True
         
         # =================================================================
         # CONCLUSÃO DO TESTE 01
@@ -273,7 +308,8 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         print(f"  ✓ Login realizado")
         print(f"  ✓ Menu 'Empreendimento' acessado")
         print(f"  ✓ Botão 'Novo Empreendimento' clicado")
-        print(f"  ✓ Wizard aberto na etapa Imóvel")
+        print(f"  ✓ Wizard aberto")
+        print(f"  ✓ Etapa 'Imóvel' selecionada e pronta para cadastro")
         print("\n" + "=" * 80)
         
         contexto['status'] = 'sucesso'

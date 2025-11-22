@@ -74,6 +74,10 @@ export default function EmpreendimentoWizardMotor({
     try {
       console.log('🔧 Iniciando workflow de empreendimento...');
       
+      // IMPORTANTE: Limpar todos os dados anteriores ao criar novo empreendimento
+      console.log('🧹 Limpando dados anteriores...');
+      reset();
+      
       // TODO: Implementar chamada ao backend para criar empreendimento
       // Por enquanto, apenas inicializa localmente
       
@@ -255,14 +259,6 @@ export default function EmpreendimentoWizardMotor({
         </div>
 
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 w-full xl:w-auto">
-          <button
-            onClick={handleNewEmpreendimento}
-            className="px-3 py-1.5 text-sm text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
-            title="Iniciar novo empreendimento"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Empreendimento
-          </button>
           <button
             onClick={handleSaveDraft}
             className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
