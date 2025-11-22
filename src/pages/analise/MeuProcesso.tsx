@@ -287,13 +287,14 @@ interface AnaliseViewProps {
   onVoltar: () => void;
 }
 
-type Etapa = 'imovel' | 'empreendimento' | 'caracterizacao' | 'documentacao';
+type Etapa = 'imovel' | 'empreendimento' | 'caracterizacao' | 'documentacao' | 'analise_geo';
 
 const etapas: { id: Etapa; label: string; icon: React.ReactNode }[] = [
   { id: 'imovel', label: 'Imóvel', icon: <Home className="w-5 h-5" /> },
   { id: 'empreendimento', label: 'Empreendimento', icon: <Building2 className="w-5 h-5" /> },
   { id: 'caracterizacao', label: 'Caracterização', icon: <FileText className="w-5 h-5" /> },
-  { id: 'documentacao', label: 'Documentação', icon: <FolderOpen className="w-5 h-5" /> }
+  { id: 'documentacao', label: 'Documentação', icon: <FolderOpen className="w-5 h-5" /> },
+  { id: 'analise_geo', label: 'Análise Geo', icon: <MapPin className="w-5 h-5" /> }
 ];
 
 function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
@@ -715,6 +716,230 @@ function EtapaConteudo({ etapa, processo }: { etapa: Etapa; processo: MeuProcess
               <p className="text-sm text-gray-600">
                 Listagem dos partícipes e seus respectivos documentos.
               </p>
+            </div>
+          </div>
+        </div>
+      );
+
+    case 'analise_geo':
+      return (
+        <div className="space-y-6">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Análise Georreferenciada</h4>
+
+          {/* GeoFront Iframe */}
+          <div className="bg-white rounded-lg border border-gray-300 overflow-hidden">
+            <iframe
+              src={`https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=${processo.numero}`}
+              width="100%"
+              height="800px"
+              style={{ border: 'none' }}
+              title="GeoFront - Análise Georreferenciada"
+            />
+          </div>
+
+          {/* Seção de Consultas */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Consultas</h3>
+
+            <div className="space-y-6">
+              {/* Unidades de Conservação ICMBio */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação ICMBio</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Unidades de Conservação Estaduais */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Estaduais</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Zonas de Amortecimento */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Zonas de Amortecimento de Unidades de Conservação Estaduais</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Unidades de Conservação Municipais */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Unidades de Conservação Municipais</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Grupo</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Embargos IBAMA */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos IBAMA</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Embargos ICMBio */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos ICMBio</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Descrição da Infração</th>
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área de Sobreposição</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Embargos Estaduais */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Embargos Estaduais</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Data do Embargo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Terras Indígenas */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Terras Indígenas</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Nome</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Desmatamento PRODES */}
+              <div>
+                <div className="bg-gray-50 px-4 py-2 border border-gray-300">
+                  <h4 className="text-sm font-semibold text-gray-900 text-center">Desmatamento PRODES</h4>
+                </div>
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-300">
+                      <th className="border-r border-gray-300 px-3 py-2 text-left text-xs font-medium text-gray-700">Data da Detecção</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">Área da Sobreposição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-gray-50">
+                      <td className="border-r border-gray-300 px-3 py-3 text-sm text-gray-600">Nada Encontrado</td>
+                      <td className="px-3 py-3 text-sm text-gray-600 text-center">---</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
