@@ -373,7 +373,119 @@ try:
                 select_license.select_by_index(1)  # Selecionar primeira licença disponível
                 selected_license = select_license.first_selected_option.text
                 print(f"  ✓ Tipo de Licença selecionado: {selected_license}")
-                time.sleep(0.5)
+                time.sleep(1)
+                
+                # ===== ADICIONAR DOCUMENTO EXIGIDO =====
+                try:
+                    print(f"\n  📄 Adicionando Documentos Exigidos...")
+                    add_doc_button = modal_element.find_element(By.XPATH, "//button[contains(., 'Adicionar Documento')]")
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_doc_button)
+                    time.sleep(0.5)
+                    driver.execute_script("arguments[0].click();", add_doc_button)
+                    time.sleep(1.5)
+                    print(f"    ✓ Botão 'Adicionar Documento' clicado")
+                    
+                    # Procurar todos os selects na modal (depois de clicar adicionar)
+                    all_selects = modal_element.find_elements(By.TAG_NAME, "select")
+                    print(f"    ℹ️ Total de selects na modal: {len(all_selects)}")
+                    
+                    # O dropdown de documento deve ser um dos últimos adicionados
+                    doc_select = None
+                    for select_elem in reversed(all_selects):
+                        try:
+                            # Verificar se não é um select que já identificamos
+                            select_obj = Select(select_elem)
+                            first_option = select_obj.options[0].text if select_obj.options else ""
+                            
+                            # Se a primeira opção contém texto relacionado a documento ou é um placeholder genérico
+                            if "documento" in first_option.lower() or "selecione" in first_option.lower():
+                                # Verificar se tem opções além do placeholder
+                                if len(select_obj.options) > 1:
+                                    doc_select = select_obj
+                                    print(f"    ℹ️ Documentos disponíveis: {len(select_obj.options)}")
+                                    break
+                        except:
+                            continue
+                    
+                    if doc_select and len(doc_select.options) > 1:
+                        doc_select.select_by_index(1)  # Selecionar primeiro documento
+                        selected_doc = doc_select.first_selected_option.text
+                        print(f"    ✓ Documento selecionado: {selected_doc}")
+                        time.sleep(0.5)
+                        
+                        # Marcar como obrigatório
+                        try:
+                            doc_checkboxes = modal_element.find_elements(By.XPATH, "//input[@type='checkbox']")
+                            # Pegar o último checkbox adicionado (deve ser do documento)
+                            if doc_checkboxes:
+                                last_checkbox = doc_checkboxes[-1]
+                                if not last_checkbox.is_selected():
+                                    driver.execute_script("arguments[0].click();", last_checkbox)
+                                    print(f"    ✓ Marcado como obrigatório")
+                                time.sleep(0.3)
+                        except Exception as e:
+                            print(f"    ⚠️ Checkbox obrigatório não encontrado: {e}")
+                    else:
+                        print(f"    ⚠️ Nenhum documento disponível ou dropdown não encontrado")
+                        
+                except Exception as e:
+                    print(f"    ⚠️ Erro ao adicionar documento: {e}")
+                
+                # ===== ADICIONAR TIPO DE ESTUDO APLICÁVEL =====
+                try:
+                    print(f"\n  📚 Adicionando Tipos de Estudo Aplicáveis...")
+                    add_study_button = modal_element.find_element(By.XPATH, "//button[contains(., 'Adicionar Estudo')]")
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_study_button)
+                    time.sleep(0.5)
+                    driver.execute_script("arguments[0].click();", add_study_button)
+                    time.sleep(1.5)
+                    print(f"    ✓ Botão 'Adicionar Estudo' clicado")
+                    
+                    # Procurar todos os selects na modal novamente
+                    all_selects = modal_element.find_elements(By.TAG_NAME, "select")
+                    print(f"    ℹ️ Total de selects na modal: {len(all_selects)}")
+                    
+                    # O dropdown de estudo deve ser o último adicionado
+                    study_select = None
+                    for select_elem in reversed(all_selects):
+                        try:
+                            select_obj = Select(select_elem)
+                            first_option = select_obj.options[0].text if select_obj.options else ""
+                            
+                            # Se a primeira opção contém texto relacionado a estudo ou tipo
+                            if "estudo" in first_option.lower() or "tipo" in first_option.lower() or "selecione" in first_option.lower():
+                                # Verificar se tem opções além do placeholder
+                                if len(select_obj.options) > 1:
+                                    study_select = select_obj
+                                    print(f"    ℹ️ Tipos de estudo disponíveis: {len(select_obj.options)}")
+                                    break
+                        except:
+                            continue
+                    
+                    if study_select and len(study_select.options) > 1:
+                        study_select.select_by_index(1)  # Selecionar primeiro estudo
+                        selected_study = study_select.first_selected_option.text
+                        print(f"    ✓ Tipo de estudo selecionado: {selected_study}")
+                        time.sleep(0.5)
+                        
+                        # Marcar como obrigatório
+                        try:
+                            study_checkboxes = modal_element.find_elements(By.XPATH, "//input[@type='checkbox']")
+                            # Pegar o último checkbox adicionado (deve ser do estudo)
+                            if study_checkboxes:
+                                last_checkbox = study_checkboxes[-1]
+                                if not last_checkbox.is_selected():
+                                    driver.execute_script("arguments[0].click();", last_checkbox)
+                                    print(f"    ✓ Marcado como obrigatório")
+                                time.sleep(0.3)
+                        except Exception as e:
+                            print(f"    ⚠️ Checkbox obrigatório não encontrado: {e}")
+                    else:
+                        print(f"    ⚠️ Nenhum tipo de estudo disponível ou dropdown não encontrado")
+                        
+                except Exception as e:
+                    print(f"    ⚠️ Erro ao adicionar tipo de estudo: {e}")
+                
             else:
                 print(f"  ⚠️ Nenhum tipo de licença disponível no dropdown (API não retornou dados?)")
                 print(f"  ⚠️ Continuando sem tipo de licença (teste vai falhar na validação)")
@@ -485,6 +597,93 @@ try:
         
         driver.save_screenshot('tests/screenshots/activities_list_final.png')
         print("  📸 Screenshot: activities_list_final.png")
+        
+        # VERIFICAR DADOS SALVOS (Porte e Tipo de Licença)
+        if found:
+            print("\n🔎 [BONUS] Verificando dados salvos (Porte e Tipo de Licença)...")
+            try:
+                # Encontrar a linha da atividade e clicar no botão de editar
+                for row in rows_after:
+                    try:
+                        cells = row.find_elements(By.CSS_SELECTOR, 'td')
+                        if len(cells) >= 2:
+                            code_cell = cells[0].text
+                            name_cell = cells[1].text
+                            
+                            if NEW_ACTIVITY['code'] in code_cell or NEW_ACTIVITY['name'] in name_cell:
+                                # Encontrar todos os botões na linha
+                                buttons = row.find_elements(By.CSS_SELECTOR, 'button')
+                                print(f"  ℹ️ Botões encontrados na linha: {len(buttons)}")
+                                
+                                # Procurar pelo botão de editar (geralmente o primeiro ou com ícone de lápis)
+                                edit_button = None
+                                for btn in buttons:
+                                    # Tentar identificar pelo ícone ou título
+                                    try:
+                                        # Verificar se tem ícone de lápis
+                                        btn.find_element(By.CSS_SELECTOR, 'svg')
+                                        # Primeiro botão com SVG geralmente é editar
+                                        edit_button = btn
+                                        break
+                                    except:
+                                        continue
+                                
+                                if not edit_button and len(buttons) > 0:
+                                    edit_button = buttons[0]  # Fallback: primeiro botão
+                                
+                                if edit_button:
+                                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", edit_button)
+                                    time.sleep(0.5)
+                                    driver.execute_script("arguments[0].click();", edit_button)
+                                    print("  ✓ Botão de edição clicado")
+                                    time.sleep(2)
+                                else:
+                                    print("  ⚠️ Botão de editar não encontrado")
+                                    break
+                                
+                                # Verificar modal abriu
+                                modal = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '[role="dialog"]')))
+                                
+                                # Verificar Portes do Empreendimento
+                                porte_selects = modal.find_elements(By.XPATH, "//label[contains(text(), 'Porte do Empreendimento')]/following-sibling::select")
+                                print(f"  ℹ️ Portes salvos: {len(porte_selects)}")
+                                
+                                for i, porte_select in enumerate(porte_selects):
+                                    select_porte = Select(porte_select)
+                                    selected_porte = select_porte.first_selected_option.text
+                                    print(f"      Porte {i+1}: {selected_porte}")
+                                
+                                # Verificar faixas
+                                faixa_inicial_inputs = modal.find_elements(By.XPATH, "//label[contains(text(), 'Faixa Inicial')]/following-sibling::input")
+                                faixa_final_inputs = modal.find_elements(By.XPATH, "//label[contains(text(), 'Faixa Final')]/following-sibling::input")
+                                
+                                for i in range(len(faixa_inicial_inputs)):
+                                    inicial = faixa_inicial_inputs[i].get_attribute('value')
+                                    final = faixa_final_inputs[i].get_attribute('value') if i < len(faixa_final_inputs) else 'N/A'
+                                    print(f"      Faixa {i+1}: {inicial} - {final}")
+                                
+                                # Verificar Tipos de Licença
+                                license_selects = modal.find_elements(By.XPATH, "//label[contains(text(), 'Tipo de Licença')]/following-sibling::select")
+                                print(f"  ℹ️ Tipos de Licença salvos: {len(license_selects)}")
+                                
+                                for i, license_select in enumerate(license_selects):
+                                    select_license = Select(license_select)
+                                    selected_license = select_license.first_selected_option.text
+                                    print(f"      Tipo {i+1}: {selected_license}")
+                                
+                                print("  ✅ Verificação de dados salvos concluída")
+                                
+                                # Fechar modal
+                                close_button = modal.find_element(By.CSS_SELECTOR, 'button[aria-label*="Fechar"], button[title*="Fechar"]')
+                                driver.execute_script("arguments[0].click();", close_button)
+                                time.sleep(1)
+                                
+                                break
+                    except:
+                        continue
+                        
+            except Exception as e:
+                print(f"  ⚠️ Erro ao verificar dados salvos: {e}")
         
         # RESULTADO FINAL
         print("\n" + "=" * 70)
