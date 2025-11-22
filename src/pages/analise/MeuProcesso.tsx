@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { FolderOpen, Search, Filter, ArrowRightLeft, FileCheck, Eye, ArrowLeft, Building2, Calendar, User, MapPin, Phone, Mail, Briefcase, DollarSign, Factory, FileText, ChevronRight, ChevronLeft, Check, Home, AlertCircle, Menu, X } from 'lucide-react';
+import { FolderOpen, Search, Filter, ArrowRightLeft, FileCheck, Eye, ArrowLeft, Building2, Calendar, User, MapPin, Phone, Mail, Briefcase, DollarSign, Factory, FileText, ChevronRight, ChevronLeft, Check, Home, AlertCircle, Menu, X, Award } from 'lucide-react';
 import { toast } from 'react-toastify';
 import TramitarModal from '../../components/analise/TramitarModal';
 import PendenciaManager from '../../components/analise/PendenciaManager';
 import NotificacoesPendenciaModal from '../../components/analise/NotificacoesPendenciaModal';
 import TramitacoesModal from '../../components/analise/TramitacoesModal';
+import EmissaoLicenca from './EmissaoLicenca';
 
 interface MeuProcessoItem {
   id: string;
@@ -81,6 +82,7 @@ export default function MeuProcesso() {
   const [showTramitarModal, setShowTramitarModal] = useState(false);
   const [mostrandoAnalise, setMostrandoAnalise] = useState(false);
   const [mostrandoDetalhes, setMostrandoDetalhes] = useState(false);
+  const [mostrandoEmissaoLicenca, setMostrandoEmissaoLicenca] = useState(false);
 
   const handleTramitar = (processo: MeuProcessoItem) => {
     setProcessoSelecionado(processo);
@@ -95,6 +97,11 @@ export default function MeuProcesso() {
   const handleDetalhes = (processo: MeuProcessoItem) => {
     setProcessoSelecionado(processo);
     setMostrandoDetalhes(true);
+  };
+
+  const handleEmissaoLicenca = (processo: MeuProcessoItem) => {
+    setProcessoSelecionado(processo);
+    setMostrandoEmissaoLicenca(true);
   };
 
   const filteredProcessos = processos.filter(p =>
@@ -134,6 +141,19 @@ export default function MeuProcesso() {
         processo={processoSelecionado}
         onVoltar={() => {
           setMostrandoDetalhes(false);
+          setProcessoSelecionado(null);
+        }}
+      />
+    );
+  }
+
+  if (mostrandoEmissaoLicenca && processoSelecionado) {
+    return (
+      <EmissaoLicenca
+        processoId={processoSelecionado.id}
+        numeroProcesso={processoSelecionado.numero}
+        onVoltar={() => {
+          setMostrandoEmissaoLicenca(false);
           setProcessoSelecionado(null);
         }}
       />
@@ -251,6 +271,14 @@ export default function MeuProcesso() {
                           >
                             <Eye className="w-4 h-4" />
                             Detalhes
+                          </button>
+                          <button
+                            onClick={() => handleEmissaoLicenca(processo)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                            title="Emitir Licença"
+                          >
+                            <Award className="w-4 h-4" />
+                            Emitir Licença
                           </button>
                         </div>
                       </td>
