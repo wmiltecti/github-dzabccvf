@@ -73,10 +73,108 @@ export default function AtividadesEmpreendimentoPage({
       const { data, error } = await getActivities(false);
       
       if (error) {
-        console.error('Erro ao carregar atividades:', error);
-        toast.error(error.message || 'Erro ao carregar atividades cadastradas');
-        setAvailableActivities([]);
-        setFilteredActivities([]);
+        console.warn('⚠️ API não disponível, usando dados mockados para desenvolvimento:', error);
+        
+        // Dados mockados temporários enquanto o backend não implementa a API
+        const atividadesMockadas: ActivityResponse[] = [
+          {
+            id: 'mock-1',
+            code: 77686,
+            name: 'Extração de areia, cascalho ou pedregulho',
+            description: 'Atividade de extração mineral não metálica',
+            measurement_unit: 'm³/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Médio Porte'
+            },
+            pollution_potential: {
+              id: 'pp-1',
+              name: 'Alto'
+            }
+          },
+          {
+            id: 'mock-2',
+            code: 12345,
+            name: 'Beneficiamento de minerais não metálicos',
+            description: 'Processamento e beneficiamento de minerais',
+            measurement_unit: 'ton/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-2',
+              name: 'Grande Porte'
+            },
+            pollution_potential: {
+              id: 'pp-2',
+              name: 'Médio'
+            }
+          },
+          {
+            id: 'mock-3',
+            code: 23456,
+            name: 'Fabricação de produtos de minerais não-metálicos',
+            description: 'Fabricação de produtos diversos a partir de minerais',
+            measurement_unit: 'unidades/mês',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Pequeno Porte'
+            },
+            pollution_potential: {
+              id: 'pp-3',
+              name: 'Baixo'
+            }
+          },
+          {
+            id: 'mock-4',
+            code: 34567,
+            name: 'Transporte e armazenamento de minerais',
+            description: 'Logística e armazenagem de produtos minerais',
+            measurement_unit: 'ton/dia',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-2',
+              name: 'Médio Porte'
+            },
+            pollution_potential: {
+              id: 'pp-2',
+              name: 'Médio'
+            }
+          },
+          {
+            id: 'mock-5',
+            code: 45678,
+            name: 'Recuperação de áreas degradadas por mineração',
+            description: 'Atividades de recuperação e reabilitação ambiental',
+            measurement_unit: 'hectares',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            enterprise_size: {
+              id: 'es-1',
+              name: 'Pequeno Porte'
+            },
+            pollution_potential: {
+              id: 'pp-3',
+              name: 'Baixo'
+            }
+          }
+        ];
+        
+        toast.warning('⚠️ Usando dados de exemplo. Backend precisa implementar a API.', {
+          autoClose: 5000
+        });
+        
+        setAvailableActivities(atividadesMockadas);
+        setFilteredActivities(atividadesMockadas);
         return;
       }
       
