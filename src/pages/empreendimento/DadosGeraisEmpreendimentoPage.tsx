@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, ArrowRight, ArrowLeft, Upload } from 'lucide-react';
+import { FileText, ArrowRight, ArrowLeft, Upload, Wand2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore, SituacaoEmpreendimento, EmpreendimentoParticipe } from '../../lib/store/empreendimento';
 import ParticipesManager, { Participe } from '../../components/ParticipesManager';
@@ -73,6 +73,39 @@ export default function DadosGeraisEmpreendimentoPage({
     toast.info(`Arquivo ${fileName} removido.`);
   };
 
+  const preencherDadosAutomaticamente = () => {
+    // Dados de exemplo para preenchimento automático
+    const dadosExemplo = {
+      nome_empreendimento: 'Complexo Industrial Mineração ABC',
+      situacao: 'Planejado' as SituacaoEmpreendimento,
+      numero_empregados: 150,
+      horario_funcionamento: '07:00 às 17:00',
+      descricao: 'Empreendimento voltado para extração e beneficiamento de minérios, com capacidade de produção mensal de 10.000 toneladas. Inclui infraestrutura de apoio, áreas de processamento e escritórios administrativos.',
+      prazo_implantacao: '24 meses',
+      area_construida: '5000 m²',
+      capacidade_producao: '10.000 ton/mês'
+    };
+
+    setFormData(dadosExemplo);
+
+    // Adicionar participe de exemplo se não houver nenhum
+    if (participes.length === 0) {
+      const participeExemplo: EmpreendimentoParticipe = {
+        id: `temp-${Date.now()}`,
+        pessoa_id: 'exemplo-pessoa-id',
+        pessoa_nome: 'Empresa Mineração ABC Ltda',
+        pessoa_cpf_cnpj: '12.345.678/0001-90',
+        pessoa_tipo: 'Jurídica',
+        papel: 'Requerente',
+        pessoa_email: 'contato@mineracaoabc.com.br',
+        pessoa_telefone: '(11) 98765-4321'
+      };
+      addParticipe(participeExemplo);
+    }
+
+    toast.success('Dados preenchidos automaticamente! ✨');
+  };
+
   const validateForm = (): boolean => {
     if (!formData.nome_empreendimento?.trim()) {
       toast.error('Nome do Empreendimento é obrigatório');
@@ -112,9 +145,19 @@ export default function DadosGeraisEmpreendimentoPage({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <FileText className="w-5 h-5 text-green-600" />
-          <h2 className="text-xl font-bold text-gray-800">Dados Gerais do Empreendimento</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-green-600" />
+            <h2 className="text-xl font-bold text-gray-800">Dados Gerais do Empreendimento</h2>
+          </div>
+          <button
+            onClick={preencherDadosAutomaticamente}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+            title="Preencher dados de exemplo para teste"
+          >
+            <Wand2 className="w-4 h-4" />
+            Preencher Dados
+          </button>
         </div>
         <p className="text-gray-600 text-sm">
           Informe os dados básicos do empreendimento e os partícipes envolvidos
