@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { ArrowLeft, FileText, Plus, Eye, Edit, Trash2, X, Upload, AlertCircle, Check } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Eye, Edit, Trash2, X, Upload, AlertCircle, Check, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Licenca {
   id: string;
   numero?: string;
+  tipo: string;
   situacao: 'Rascunho' | 'Emitida' | 'Cancelada' | 'Suspensa' | 'Vencida';
   validade?: string;
   dataCriacao: string;
+  dataEmissao?: string;
 }
 
 interface Condicionante {
@@ -16,11 +18,29 @@ interface Condicionante {
   dataCriacao: string;
 }
 
+interface ProcessoMock {
+  requerente: string;
+  endereco: string;
+  municipio: string;
+  atividadePrimaria: string;
+  atividadesSecundarias: string[];
+  areaTotal: string;
+}
+
 interface EmissaoLicencaProps {
   processoId: string;
   numeroProcesso: string;
   onVoltar: () => void;
 }
+
+const processoMockData: ProcessoMock = {
+  requerente: 'Curtume Industrial São João Ltda',
+  endereco: 'Rua das Indústrias, 1250, Bairro Industrial',
+  municipio: 'Porto Velho - RO',
+  atividadePrimaria: 'Curtimento de Couros e Peles',
+  atividadesSecundarias: ['Tratamento de Efluentes Industriais', 'Estação de Tratamento de Águas'],
+  areaTotal: '25.000 m²'
+};
 
 export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }: EmissaoLicencaProps) {
   const [licencas, setLicencas] = useState<Licenca[]>([]);
@@ -40,6 +60,7 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
   const [showSuspenderModal, setShowSuspenderModal] = useState(false);
   const [licencaSuspender, setLicencaSuspender] = useState<Licenca | null>(null);
   const [motivoSuspensao, setMotivoSuspensao] = useState('');
+  const [tipoLicenca] = useState('LO');
 
   const getSituacaoColor = (situacao: Licenca['situacao']) => {
     switch (situacao) {
@@ -72,8 +93,15 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
       return;
     }
 
+    const rascunhoExistente = licencas.find(l => l.situacao === 'Rascunho');
+    if (rascunhoExistente) {
+      toast.warning('Já existe um rascunho para este processo. Descarte-o antes de criar um novo.');
+      return;
+    }
+
     const novoRascunho: Licenca = {
       id: Date.now().toString(),
+      tipo: tipoLicenca,
       situacao: 'Rascunho',
       dataCriacao: new Date().toISOString()
     };
@@ -95,6 +123,11 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
     const notificacoesPendentes = false;
     const etapasConcluidas = true;
 
+    if (!rascunho || rascunho.situacao !== 'Rascunho') {
+      toast.error('É necessário ter um rascunho válido para emitir a licença.');
+      return;
+    }
+
     if (notificacoesPendentes) {
       toast.error('Não é possível emitir a licença com notificações de pendência abertas.');
       return;
@@ -105,7 +138,8 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
       return;
     }
 
-    const numeroLicenca = `0000001/${new Date().getFullYear()}`;
+    const proximoNumero = (licencas.filter(l => l.numero).length + 1).toString().padStart(7, '0');
+    const numeroLicenca = `${proximoNumero}/${new Date().getFullYear()}`;
     const dataValidade = new Date();
     dataValidade.setFullYear(dataValidade.getFullYear() + 2);
 
@@ -113,12 +147,14 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
       ...rascunho,
       numero: numeroLicenca,
       situacao: 'Emitida',
-      validade: dataValidade.toISOString().split('T')[0]
+      validade: dataValidade.toISOString().split('T')[0],
+      dataEmissao: new Date().toISOString().split('T')[0]
     };
 
     setLicencas(licencas.map(l => l.id === rascunho.id ? licencaEmitida : l));
     setShowRascunhoViewer(false);
-    toast.success('Licença emitida com sucesso!');
+    setRascunhoAtual(null);
+    toast.success('Licença emitida com sucesso! Número: ' + numeroLicenca);
   };
 
   const handleCancelarLicenca = (licenca: Licenca) => {
@@ -368,6 +404,13 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
                             {licenca.situacao === 'Emitida' && (
                               <>
                                 <button
+                                  onClick={() => toast.info('Download da licença em desenvolvimento')}
+                                  className="text-green-600 hover:text-green-700 p-1"
+                                  title="Baixar Licença"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+                                <button
                                   onClick={() => handleCancelarLicenca(licenca)}
                                   className="text-red-600 hover:text-red-700 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
                                   title="Cancelar Licença"
@@ -382,6 +425,16 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
                                   Suspender
                                 </button>
                               </>
+                            )}
+                            {(licenca.situacao === 'Cancelada' || licenca.situacao === 'Suspensa') && (
+                              <button
+                                onClick={() => toast.info(`Download da licença ${licenca.situacao.toLowerCase()} com marca d'água`)}
+                                className="text-gray-600 hover:text-gray-700 text-xs px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 flex items-center gap-1"
+                                title={`Baixar Licença ${licenca.situacao}`}
+                              >
+                                <Download className="w-3 h-3" />
+                                Baixar
+                              </button>
                             )}
                           </div>
                         </td>
@@ -560,13 +613,15 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
 
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    LICENÇA DE OPERAÇÃO Nº 0000001/{new Date().getFullYear()}
+                    {rascunhoAtual.tipo === 'LO' ? 'LICENÇA DE OPERAÇÃO' :
+                     rascunhoAtual.tipo === 'LP' ? 'LICENÇA PRÉVIA' :
+                     rascunhoAtual.tipo === 'LI' ? 'LICENÇA DE INSTALAÇÃO' : 'LICENÇA'} Nº {rascunhoAtual.numero || '0000001'}/{new Date().getFullYear()}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    Data de Emissão: {new Date().toLocaleDateString('pt-BR')}
+                    Data de Emissão: {rascunhoAtual.dataEmissao ? new Date(rascunhoAtual.dataEmissao).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Validade: {new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toLocaleDateString('pt-BR')}
+                    Validade: {rascunhoAtual.validade ? new Date(rascunhoAtual.validade).toLocaleDateString('pt-BR') : new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
 
@@ -574,7 +629,9 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
                   <p className="text-sm text-gray-700 leading-relaxed text-justify">
                     A Secretaria do Estado de Desenvolvimento Ambiental (SEDAM), no uso das suas atribuições
                     que lhe são conferidas pela Lei Estadual n° 3.686 de 08 de Dezembro de 2015, expede a
-                    presente <strong>Licença de Operação</strong>.
+                    presente <strong>{rascunhoAtual.tipo === 'LO' ? 'Licença de Operação' :
+                     rascunhoAtual.tipo === 'LP' ? 'Licença Prévia' :
+                     rascunhoAtual.tipo === 'LI' ? 'Licença de Instalação' : 'Licença'}</strong>.
                   </p>
                 </div>
 
@@ -582,27 +639,38 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <span className="text-xs font-semibold text-gray-500">REQUERENTE:</span>
-                      <p className="text-sm text-gray-900">Empresa Exemplo Ltda</p>
+                      <p className="text-sm text-gray-900">{processoMockData.requerente}</p>
                     </div>
                     <div>
                       <span className="text-xs font-semibold text-gray-500">MUNICÍPIO:</span>
-                      <p className="text-sm text-gray-900">Porto Velho - RO</p>
+                      <p className="text-sm text-gray-900">{processoMockData.municipio}</p>
                     </div>
                   </div>
 
                   <div>
                     <span className="text-xs font-semibold text-gray-500">ENDEREÇO DO IMÓVEL:</span>
-                    <p className="text-sm text-gray-900">Rua Exemplo, 123, Bairro Centro</p>
+                    <p className="text-sm text-gray-900">{processoMockData.endereco}</p>
                   </div>
 
                   <div>
                     <span className="text-xs font-semibold text-gray-500">ATIVIDADE PRIMÁRIA:</span>
-                    <p className="text-sm text-gray-900">Extração de areia, cascalho ou pedregulho</p>
+                    <p className="text-sm text-gray-900">{processoMockData.atividadePrimaria}</p>
                   </div>
+
+                  {processoMockData.atividadesSecundarias.length > 0 && (
+                    <div>
+                      <span className="text-xs font-semibold text-gray-500">ATIVIDADES SECUNDÁRIAS:</span>
+                      <ul className="text-sm text-gray-900 list-disc list-inside">
+                        {processoMockData.atividadesSecundarias.map((ativ, idx) => (
+                          <li key={idx}>{ativ}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <div>
                     <span className="text-xs font-semibold text-gray-500">ÁREA TOTAL DO EMPREENDIMENTO:</span>
-                    <p className="text-sm text-gray-900">10.000 m²</p>
+                    <p className="text-sm text-gray-900">{processoMockData.areaTotal}</p>
                   </div>
                 </div>
 
