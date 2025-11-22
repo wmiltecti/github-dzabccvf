@@ -37,6 +37,7 @@ export default function DadosGeraisEmpreendimentoPage({
 
   const [showGeoUpload, setShowGeoUpload] = useState(false);
   const [uploadedGeoFiles, setUploadedGeoFiles] = useState<string[]>([]);
+  const [showGeoFrontIframe, setShowGeoFrontIframe] = useState(false);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -243,7 +244,7 @@ export default function DadosGeraisEmpreendimentoPage({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Dados Georreferenciados</h3>
             <button
-              onClick={() => setShowGeoUpload(true)}
+              onClick={() => setShowGeoFrontIframe(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Upload className="w-4 h-4" />
@@ -283,6 +284,30 @@ export default function DadosGeraisEmpreendimentoPage({
             </div>
           )}
         </div>
+
+        {/* GeoFront Iframe */}
+        {showGeoFrontIframe && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">GeoFront - Editor de Mapas</h3>
+              <button
+                onClick={() => setShowGeoFrontIframe(false)}
+                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Fechar
+              </button>
+            </div>
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <iframe 
+                src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                width="100%" 
+                height="800px" 
+                style={{ border: 'none' }}
+                title="GeoFront Editor"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <ParticipesManager
