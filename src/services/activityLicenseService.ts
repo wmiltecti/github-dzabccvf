@@ -408,7 +408,7 @@ export async function addLicenseTypesBulk(
     {
       method: 'POST',
       headers: getHeaders(),
-      body: JSON.stringify(licenseTypes), // API espera a lista diretamente, não um objeto com propriedade
+      body: JSON.stringify({ license_types: licenseTypes }),
     }
   );
 
