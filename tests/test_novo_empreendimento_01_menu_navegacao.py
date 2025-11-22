@@ -204,9 +204,31 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Clicando em 'Novo Empreendimento'...")
         novo_btn.click()
-        time.sleep(3)
+        time.sleep(2)
         
         contexto['botao_novo_ok'] = True
+        
+        # =================================================================
+        # ETAPA 3.5: VERIFICAR E CONFIRMAR MODAL (SE EXISTIR)
+        # =================================================================
+        print("\n🔔 ETAPA 3.5: VERIFICAR MODAL DE CONFIRMAÇÃO")
+        print("-" * 80)
+        
+        print("✓ Verificando se há modal de confirmação...")
+        try:
+            # Procurar modal de confirmação
+            modal_confirmar = driver.find_element(
+                By.XPATH,
+                "//button[contains(., 'Confirmar') or contains(., 'Sim') or contains(., 'Continuar') or contains(., 'OK')]"
+            )
+            print(f"✓ Modal encontrado, clicando em confirmar...")
+            modal_confirmar.click()
+            time.sleep(2)
+            print("✅ Modal confirmado")
+            contexto['modal_confirmado'] = True
+        except:
+            print("✓ Nenhum modal de confirmação (ou já fechado)")
+            contexto['modal_confirmado'] = False
         
         # =================================================================
         # ETAPA 4: VALIDAR WIZARD ABERTO
