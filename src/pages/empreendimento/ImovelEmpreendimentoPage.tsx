@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, ArrowRight, Search, CheckCircle, X, Plus } from 'lucide-react';
+import { Home, ArrowRight, Search, CheckCircle, X, Plus, Map } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import { searchImoveis, SearchImovelResult } from '../../lib/api/property';
@@ -25,6 +25,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
   const [showNewPropertyModal, setShowNewPropertyModal] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [newPropertyType, setNewPropertyType] = useState<'RURAL' | 'URBANO' | 'LINEAR' | ''>('');
+  const [showGeoFrontIframe, setShowGeoFrontIframe] = useState(false);
   
   // Estados para novo imóvel RURAL
   const [newRuralData, setNewRuralData] = useState({
@@ -561,6 +562,58 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Painel do Mapa do Imóvel */}
+      {property && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Mapa do Imóvel</h3>
+            <button
+              onClick={() => setShowGeoFrontIframe(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Map className="w-4 h-4" />
+              Ver no Mapa
+            </button>
+          </div>
+
+          {!showGeoFrontIframe && (
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <Map className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 text-sm">
+                Visualize e edite o mapa georreferenciado do imóvel
+              </p>
+              <p className="text-gray-500 text-xs mt-1">
+                Clique no botão acima para abrir o editor de mapas
+              </p>
+            </div>
+          )}
+
+          {/* GeoFront Iframe */}
+          {showGeoFrontIframe && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-semibold text-gray-800">GeoFront - Editor de Mapas</h4>
+                <button
+                  onClick={() => setShowGeoFrontIframe(false)}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Fechar
+                </button>
+              </div>
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <iframe 
+                  src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                  width="100%" 
+                  height="800px" 
+                  style={{ border: 'none' }}
+                  title="GeoFront Editor - Imóvel"
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
