@@ -403,7 +403,7 @@ export default function ActivityForm({
         // Fallback: salvar diretamente no Supabase
         // Primeiro, deletar ranges existentes
         await supabase
-          .from('activity_enterprise_size_ranges')
+          .from('activity_enterprise_ranges')
           .delete()
           .eq('activity_id', activityId);
         
@@ -418,7 +418,7 @@ export default function ActivityForm({
           }));
           
           const { error: rangesError } = await supabase
-            .from('activity_enterprise_size_ranges')
+            .from('activity_enterprise_ranges')
             .insert(rangesForSupabase);
           
           if (rangesError) {
