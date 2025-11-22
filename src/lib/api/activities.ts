@@ -54,7 +54,7 @@ export async function getActivities(includeInactive = false): Promise<{
       params.append('include_inactive', 'true');
     }
 
-    const url = `/api/v1/activities${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `/activities${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await http.get<ActivityResponse[]>(url);
 
     console.log('✅ getActivities - Sucesso:', response.data.length, 'atividades encontradas');
@@ -85,7 +85,7 @@ export async function getActivityById(id: string): Promise<{
   try {
     console.log('📡 getActivityById - Buscando atividade:', id);
 
-    const response = await http.get<ActivityResponse>(`/api/v1/activities/${id}`);
+    const response = await http.get<ActivityResponse>(`/activities/${id}`);
 
     console.log('✅ getActivityById - Sucesso');
     
@@ -118,7 +118,7 @@ export async function searchActivities(searchTerm: string): Promise<{
     const params = new URLSearchParams();
     params.append('q', searchTerm);
 
-    const response = await http.get<ActivityResponse[]>(`/api/v1/activities/search?${params.toString()}`);
+    const response = await http.get<ActivityResponse[]>(`/activities/search?${params.toString()}`);
 
     console.log('✅ searchActivities - Sucesso:', response.data.length, 'resultados');
     

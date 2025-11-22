@@ -3,10 +3,22 @@
 ## 📋 Contexto
 A funcionalidade de seleção de atividades no cadastro de Novo Empreendimento precisa dos seguintes endpoints da API.
 
+## 🔧 Configuração de URLs
+
+**Base URL do Backend:** `http://localhost:8000/api/v1`
+
+**Importante:** Os endpoints listados abaixo são **relativos** à base URL. Exemplo:
+- Endpoint documentado: `GET /activities`
+- URL completa no backend: `http://localhost:8000/api/v1/activities`
+
+O frontend já está configurado com `baseURL: 'http://localhost:8000/api/v1'` no arquivo `http.ts`, então as chamadas são feitas apenas com o path relativo (ex: `/activities`).
+
 ## 🎯 Endpoints Necessários
 
-### 1. **GET /api/v1/activities**
+### 1. **GET /activities**
 Listar todas as atividades cadastradas
+
+**URL Completa:** `http://localhost:8000/api/v1/activities`
 
 **Query Parameters:**
 - `include_inactive` (opcional, boolean): Se `true`, inclui atividades inativas. Padrão: `false`
@@ -70,8 +82,10 @@ Listar todas as atividades cadastradas
 
 ---
 
-### 2. **GET /api/v1/activities/{id}**
+### 2. **GET /activities/{id}**
 Buscar uma atividade específica por ID
+
+**URL Completa:** `http://localhost:8000/api/v1/activities/{id}`
 
 **Path Parameters:**
 - `id` (string, uuid): ID da atividade
@@ -108,8 +122,10 @@ Buscar uma atividade específica por ID
 
 ---
 
-### 3. **GET /api/v1/activities/search** (Opcional - Futuro)
+### 3. **GET /activities/search** (Opcional - Futuro)
 Buscar atividades por termo de pesquisa
+
+**URL Completa:** `http://localhost:8000/api/v1/activities/search`
 
 **Query Parameters:**
 - `q` (string, obrigatório): Termo de busca (busca em code, name, description)
@@ -169,7 +185,7 @@ Relacionamento N:N entre atividades e portes, com faixas numéricas:
 ## 🔄 Lógica de Negócio
 
 ### Buscar Porte da Atividade
-Para o endpoint `/api/v1/activities`, o backend deve:
+Para o endpoint `/activities` (completo: `http://localhost:8000/api/v1/activities`), o backend deve:
 
 1. Buscar todas as atividades ativas (se `include_inactive=false`)
 2. Para cada atividade, fazer join com `activity_enterprise_size_ranges`
@@ -236,8 +252,8 @@ enterprise_size_ranges: [
 
 ## ✅ Checklist de Implementação
 
-- [ ] Criar endpoint `GET /api/v1/activities`
-- [ ] Criar endpoint `GET /api/v1/activities/{id}`
+- [ ] Criar endpoint `GET /activities` (rota completa: `/api/v1/activities`)
+- [ ] Criar endpoint `GET /activities/{id}` (rota completa: `/api/v1/activities/{id}`)
 - [ ] Garantir que o join com `activity_enterprise_size_ranges` está funcionando
 - [ ] Garantir que o join com `enterprise_sizes` retorna o nome do porte
 - [ ] Garantir que o join com `pollution_potentials` retorna o potencial poluidor
