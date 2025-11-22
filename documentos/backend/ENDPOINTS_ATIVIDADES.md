@@ -250,8 +250,37 @@ enterprise_size_ranges: [
 
 ---
 
+## ⚙️ Configuração CORS (CRÍTICO)
+
+O frontend roda em `http://localhost:5173` e precisa acessar `http://localhost:8000/api/v1`.
+
+**FastAPI - Adicionar no main.py:**
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # Frontend Vite
+        "http://127.0.0.1:5173"   # Variante localhost
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+**⚠️ Sem CORS configurado, o navegador bloqueia as requisições com erro:**
+```
+Access to XMLHttpRequest at 'http://localhost:8000/api/v1/activities' from origin 'http://localhost:5173' 
+has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+---
+
 ## ✅ Checklist de Implementação
 
+- [ ] **Configurar CORS** para aceitar requisições de `http://localhost:5173`
 - [ ] Criar endpoint `GET /activities` (rota completa: `/api/v1/activities`)
 - [ ] Criar endpoint `GET /activities/{id}` (rota completa: `/api/v1/activities/{id}`)
 - [ ] Garantir que o join com `activity_enterprise_size_ranges` está funcionando
