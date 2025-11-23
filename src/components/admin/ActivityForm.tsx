@@ -528,62 +528,26 @@ export default function ActivityForm({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Exibir código apenas ao editar (somente leitura) */}
-            {item?.id && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Código da Atividade (ID)
-                </label>
-                <input
-                  type="number"
-                  value={formData.code}
-                  disabled
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-500 mt-1">ID gerado automaticamente (somente leitura)</p>
-              </div>
-            )}
-
-            <div className={item?.id ? '' : 'md:col-span-2'}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome da Atividade <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: Extração de areia"
-                required
-              />
-              {!item?.id && (
-                <p className="text-xs text-gray-500 mt-1">O código da atividade será gerado automaticamente ao salvar</p>
-              )}
-            </div>
-          </div>
-
-          {/* CNAE Fields */}
+          {/* CNAE Fields - Primeira linha */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Código CNAE
+                Código da Atividade
               </label>
               <input
                 type="text"
                 value={formData.cnae_codigo}
                 onChange={(e) => handleInputChange('cnae_codigo', e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Ex: 1011-2/01"
+                placeholder="Ex: 16.2"
                 maxLength={10}
               />
-              <p className="text-xs text-gray-500 mt-1">Código oficial CNAE do IBGE (formato: XXXX-X/XX)</p>
+              <p className="text-xs text-gray-500 mt-1">Código da Atividade</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descrição CNAE
+                Descrição
               </label>
               <input
                 type="text"
@@ -594,6 +558,22 @@ export default function ActivityForm({
               />
               <p className="text-xs text-gray-500 mt-1">Descrição da atividade econômica segundo CNAE</p>
             </div>
+          </div>
+
+          {/* Nome da Atividade */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nome da Atividade <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: Extração de areia"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">O código da atividade será gerado automaticamente ao salvar</p>
           </div>
 
           <div>

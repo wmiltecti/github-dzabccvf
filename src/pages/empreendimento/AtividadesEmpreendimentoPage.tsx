@@ -306,7 +306,7 @@ export default function AtividadesEmpreendimentoPage({
           className="mb-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Atividade do Sistema
+          Adicionar Atividade
         </button>
       )}
 
@@ -654,7 +654,7 @@ export default function AtividadesEmpreendimentoPage({
           <Activity className="w-12 h-12 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-600">Nenhuma atividade selecionada</p>
           <p className="text-sm text-gray-500 mt-1">
-            Clique em "Atividade do Sistema" para começar
+            Clique em "Adicionar Atividade" para começar
           </p>
         </div>
       )}
