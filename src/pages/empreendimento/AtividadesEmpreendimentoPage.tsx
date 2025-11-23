@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText, Map, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, ArrowRight, ArrowLeft, Plus, Trash2, Search, CheckCircle, Upload, FileText, Map, ChevronDown, ChevronUp, Star, Info } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import { getActivities, ActivityResponse } from '../../lib/api/activities';
+import { getReferenceUnits, ReferenceUnit } from '../../services/activityLicenseService';
 import GeoUpload from '../../components/geo/GeoUpload';
 
 interface AtividadesEmpreendimentoPageProps {
@@ -21,6 +22,7 @@ interface SelectedActivity {
   unidade?: string;
   area_ocupada?: string;
   geoFiles?: string[];
+  isPrincipal?: boolean;
 }
 
 interface UploadedFile {
@@ -39,6 +41,7 @@ export default function AtividadesEmpreendimentoPage({
   const [availableActivities, setAvailableActivities] = useState<ActivityResponse[]>([]);
   const [filteredActivities, setFilteredActivities] = useState<ActivityResponse[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<SelectedActivity[]>([]);
+  const [referenceUnits, setReferenceUnits] = useState<ReferenceUnit[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showActivitySelector, setShowActivitySelector] = useState(false);
@@ -60,6 +63,7 @@ export default function AtividadesEmpreendimentoPage({
 
   useEffect(() => {
     loadActivities();
+    loadReferenceUnits();
     loadSavedActivities();
   }, []);
 
@@ -67,121 +71,43 @@ export default function AtividadesEmpreendimentoPage({
     filterActivities();
   }, [searchTerm, availableActivities]);
 
+  const loadReferenceUnits = async () => {
+    try {
+      const units = await getReferenceUnits();
+      setReferenceUnits(units || []);
+      console.log('✅ Unidades de Referência carregadas:', units?.length || 0);
+    } catch (error) {
+      console.error('❌ Erro ao carregar Unidades de Referência:', error);
+      toast.warning('Não foi possível carregar as unidades de medida');
+    }
+  };
+
   const loadActivities = async () => {
     try {
       setLoading(true);
       const { data, error } = await getActivities(false);
       
       if (error) {
-        console.warn('⚠️ API não disponível, usando dados mockados para desenvolvimento:', error);
-        
-        // Dados mockados temporários enquanto o backend não implementa a API
-        const atividadesMockadas: ActivityResponse[] = [
-          {
-            id: 'mock-1',
-            code: 77686,
-            name: 'Extração de areia, cascalho ou pedregulho',
-            description: 'Atividade de extração mineral não metálica',
-            measurement_unit: 'm³/mês',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            enterprise_size: {
-              id: 'es-1',
-              name: 'Médio Porte'
-            },
-            pollution_potential: {
-              id: 'pp-1',
-              name: 'Alto'
-            }
-          },
-          {
-            id: 'mock-2',
-            code: 12345,
-            name: 'Beneficiamento de minerais não metálicos',
-            description: 'Processamento e beneficiamento de minerais',
-            measurement_unit: 'ton/mês',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            enterprise_size: {
-              id: 'es-2',
-              name: 'Grande Porte'
-            },
-            pollution_potential: {
-              id: 'pp-2',
-              name: 'Médio'
-            }
-          },
-          {
-            id: 'mock-3',
-            code: 23456,
-            name: 'Fabricação de produtos de minerais não-metálicos',
-            description: 'Fabricação de produtos diversos a partir de minerais',
-            measurement_unit: 'unidades/mês',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            enterprise_size: {
-              id: 'es-1',
-              name: 'Pequeno Porte'
-            },
-            pollution_potential: {
-              id: 'pp-3',
-              name: 'Baixo'
-            }
-          },
-          {
-            id: 'mock-4',
-            code: 34567,
-            name: 'Transporte e armazenamento de minerais',
-            description: 'Logística e armazenagem de produtos minerais',
-            measurement_unit: 'ton/dia',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            enterprise_size: {
-              id: 'es-2',
-              name: 'Médio Porte'
-            },
-            pollution_potential: {
-              id: 'pp-2',
-              name: 'Médio'
-            }
-          },
-          {
-            id: 'mock-5',
-            code: 45678,
-            name: 'Recuperação de áreas degradadas por mineração',
-            description: 'Atividades de recuperação e reabilitação ambiental',
-            measurement_unit: 'hectares',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            enterprise_size: {
-              id: 'es-1',
-              name: 'Pequeno Porte'
-            },
-            pollution_potential: {
-              id: 'pp-3',
-              name: 'Baixo'
-            }
-          }
-        ];
-        
-        toast.warning('⚠️ Usando dados de exemplo. Backend precisa implementar a API.', {
-          autoClose: 5000
-        });
-        
-        setAvailableActivities(atividadesMockadas);
-        setFilteredActivities(atividadesMockadas);
+        console.error('❌ Erro ao carregar atividades da API:', error);
+        toast.error('Erro ao carregar atividades cadastradas. Verifique se o backend está rodando.');
+        setAvailableActivities([]);
+        setFilteredActivities([]);
         return;
       }
       
-      setAvailableActivities(data || []);
-      setFilteredActivities(data || []);
+      if (!data || data.length === 0) {
+        console.warn('⚠️ Nenhuma atividade encontrada no banco de dados');
+        toast.warning('Nenhuma atividade cadastrada no sistema');
+        setAvailableActivities([]);
+        setFilteredActivities([]);
+        return;
+      }
+
+      console.log('✅ Atividades carregadas:', data.length);
+      setAvailableActivities(data);
+      setFilteredActivities(data);
     } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
+      console.error('❌ Exceção ao carregar atividades:', error);
       toast.error('Erro ao carregar atividades cadastradas');
       setAvailableActivities([]);
       setFilteredActivities([]);
@@ -239,7 +165,8 @@ export default function AtividadesEmpreendimentoPage({
       pollutionPotential: activity.pollution_potential?.name,
       quantidade: '',
       unidade: activity.measurement_unit || '',
-      area_ocupada: ''
+      area_ocupada: '',
+      isPrincipal: selectedActivities.length === 0 // Primeira atividade é principal por padrão
     };
 
     setSelectedActivities([...selectedActivities, newActivity]);
@@ -250,8 +177,24 @@ export default function AtividadesEmpreendimentoPage({
 
   const handleRemoveActivity = (index: number) => {
     const activity = selectedActivities[index];
-    setSelectedActivities(selectedActivities.filter((_, i) => i !== index));
+    const updatedActivities = selectedActivities.filter((_, i) => i !== index);
+    
+    // Se removeu a atividade principal e ainda há outras, definir a primeira como principal
+    if (activity.isPrincipal && updatedActivities.length > 0) {
+      updatedActivities[0].isPrincipal = true;
+    }
+    
+    setSelectedActivities(updatedActivities);
     toast.info(`Atividade "${activity.name}" removida`);
+  };
+
+  const handleSetPrincipal = (index: number) => {
+    const updated = selectedActivities.map((activity, i) => ({
+      ...activity,
+      isPrincipal: i === index
+    }));
+    setSelectedActivities(updated);
+    toast.success(`"${updated[index].name}" definida como atividade principal`);
   };
 
   const handleUpdateActivityData = (index: number, field: string, value: string) => {
@@ -363,7 +306,7 @@ export default function AtividadesEmpreendimentoPage({
           className="mb-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Adicionar Atividade do Sistema
+          Atividade do Sistema
         </button>
       )}
 
@@ -494,6 +437,22 @@ export default function AtividadesEmpreendimentoPage({
                       <span className="text-xs font-mono bg-white border border-gray-300 px-2 py-1 rounded">
                         Cód. {activity.code}
                       </span>
+                      {activity.isPrincipal && (
+                        <span className="flex items-center gap-1 text-xs font-bold bg-amber-500 text-white px-3 py-1 rounded-full shadow-md">
+                          <Star className="w-3 h-3 fill-current" />
+                          PRINCIPAL
+                        </span>
+                      )}
+                      {!activity.isPrincipal && selectedActivities.length > 1 && (
+                        <button
+                          onClick={() => handleSetPrincipal(index)}
+                          className="flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-amber-600 px-2 py-1 rounded border border-gray-300 hover:border-amber-500 transition-colors"
+                          title="Definir como atividade principal"
+                        >
+                          <Star className="w-3 h-3" />
+                          Definir como principal
+                        </button>
+                      )}
                     </div>
                     <h4 className="font-bold text-lg text-gray-900">{activity.name}</h4>
                     {activity.description && (
@@ -512,8 +471,18 @@ export default function AtividadesEmpreendimentoPage({
                 {/* Badges de Porte e Potencial */}
                 <div className="flex gap-3 mt-3">
                   <div className="flex-1">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
                       PORTE DO EMPREENDIMENTO
+                      <div className="group relative">
+                        <Info className="w-3.5 h-3.5 text-blue-500 cursor-help" />
+                        <div className="absolute left-0 top-6 invisible group-hover:visible bg-gray-800 text-white text-xs rounded-lg p-3 w-64 z-50 shadow-xl">
+                          <div className="font-semibold mb-1">ℹ️ Cálculo Automático</div>
+                          <p className="leading-relaxed">
+                            O porte é definido automaticamente com base na <strong>quantidade</strong> informada abaixo e nas faixas configuradas para esta atividade no sistema.
+                          </p>
+                          <div className="absolute -top-1 left-4 w-2 h-2 bg-gray-800 transform rotate-45"></div>
+                        </div>
+                      </div>
                     </label>
                     <div className={`px-3 py-2 border-2 rounded-lg text-sm font-bold ${getPorteColor(activity.enterpriseSize)}`}>
                       {activity.enterpriseSize || (
@@ -545,31 +514,36 @@ export default function AtividadesEmpreendimentoPage({
                     <label className="block text-xs font-semibold text-gray-700 mb-2">
                       Unidade de Medida
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={activity.unidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'unidade', e.target.value)}
-                      readOnly={!!activity.unidade}
-                      className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg focus:outline-none ${
-                        activity.unidade
-                          ? 'bg-gray-100 border-gray-300 cursor-not-allowed text-gray-600'
-                          : 'bg-white border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500'
-                      }`}
-                      placeholder={activity.unidade ? "Pré-definida" : "Ex: ton/mês"}
-                      title={activity.unidade ? "Esta unidade foi definida no cadastro da atividade" : "Informe a unidade de medida"}
-                    />
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      title="Selecione a unidade de medida"
+                    >
+                      <option value="">Selecione a unidade...</option>
+                      {referenceUnits.map(unit => (
+                        <option key={unit.id} value={unit.code}>
+                          {unit.name}
+                        </option>
+                      ))}
+                    </select>
+                    {referenceUnits.length === 0 && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        ℹ️ Cadastre Unidades de Referência para preencher este campo
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-2">
-                      {activity.unidade ? `Quantidade (${activity.unidade})` : 'Quantidade'}
+                      Quantidade
                     </label>
                     <input
                       type="number"
                       value={activity.quantidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
                       className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder={activity.unidade ? "Ex: 100" : "Quantidade"}
+                      placeholder="Ex: 100"
                     />
                   </div>
 
@@ -680,7 +654,7 @@ export default function AtividadesEmpreendimentoPage({
           <Activity className="w-12 h-12 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-600">Nenhuma atividade selecionada</p>
           <p className="text-sm text-gray-500 mt-1">
-            Clique em "Adicionar Atividade do Sistema" para começar
+            Clique em "Atividade do Sistema" para começar
           </p>
         </div>
       )}
