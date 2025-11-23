@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, FileText, Eye, X, Upload, AlertCircle, Check, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Eye, X, Upload, AlertCircle, Check, Download, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Licenca {
@@ -48,6 +48,12 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
   const [licencaSuspender, setLicencaSuspender] = useState<Licenca | null>(null);
   const [motivoSuspensao, setMotivoSuspensao] = useState('');
   const [tipoLicenca] = useState('LO');
+
+  const condicionantes = [
+    { id: '1', texto: 'O empreendimento deverá manter sistema de tratamento de efluentes em perfeito funcionamento.' },
+    { id: '2', texto: 'Realizar monitoramento trimestral da qualidade das águas residuárias.' },
+    { id: '3', texto: 'Implementar programa de gerenciamento de resíduos sólidos conforme PNRS.' }
+  ];
 
   const getSituacaoColor = (situacao: Licenca['situacao']) => {
     switch (situacao) {
