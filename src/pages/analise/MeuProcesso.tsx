@@ -1272,3 +1272,6 @@ function MeuProcessoDetalhes({ processo, onVoltar }: MeuProcessoDetalhesProps) {
     </div>
   );
 }
+
+export { AnaliseView };
+export type { MeuProcessoItem };

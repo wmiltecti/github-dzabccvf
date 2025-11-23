@@ -3,7 +3,7 @@ import { FileText, Search, Filter, Eye, Award, CheckCircle, ArrowRightLeft, File
 import { toast } from 'react-toastify';
 import EmissaoLicenca from './EmissaoLicenca';
 import TramitarModal from '../../components/analise/TramitarModal';
-import Pareceres from './Pareceres';
+import { AnaliseView, MeuProcessoItem } from './MeuProcesso';
 
 interface Processo {
   id: string;
@@ -88,10 +88,19 @@ export default function AssinaturaDigital() {
   }
 
   if (mostrandoAnalise && processoSelecionado) {
+    const processoParaAnalise: MeuProcessoItem = {
+      id: processoSelecionado.id,
+      numero: processoSelecionado.numero,
+      requerente: processoSelecionado.requerente,
+      tipo: processoSelecionado.tipo,
+      status: processoSelecionado.status,
+      dataRecebimento: processoSelecionado.dataAnalise,
+      prazo: '30 dias'
+    };
+
     return (
-      <Pareceres
-        processoId={processoSelecionado.id}
-        numeroProcesso={processoSelecionado.numero}
+      <AnaliseView
+        processo={processoParaAnalise}
         onVoltar={() => {
           setMostrandoAnalise(false);
           setProcessoSelecionado(null);
