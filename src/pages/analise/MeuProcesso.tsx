@@ -7,6 +7,7 @@ import NotificacoesPendenciaModal from '../../components/analise/NotificacoesPen
 import TramitacoesModal from '../../components/analise/TramitacoesModal';
 import Pareceres from './Pareceres';
 import Condicionantes from './Condicionantes';
+import EmissaoLicenca from './EmissaoLicenca';
 
 interface MeuProcessoItem {
   id: string;
@@ -307,6 +308,7 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
   const [showOpcoes, setShowOpcoes] = useState(false);
   const [showPareceres, setShowPareceres] = useState(false);
   const [showCondicionantes, setShowCondicionantes] = useState(false);
+  const [showVisualizarRascunho, setShowVisualizarRascunho] = useState(false);
   const [etapasConcluidas, setEtapasConcluidas] = useState<Set<Etapa>>(new Set());
 
   const etapaIndex = etapas.findIndex(e => e.id === etapaAtual);
@@ -354,6 +356,16 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
         processoId={processo.id}
         numeroProcesso={processo.numero}
         onVoltar={() => setShowCondicionantes(false)}
+      />
+    );
+  }
+
+  if (showVisualizarRascunho) {
+    return (
+      <EmissaoLicenca
+        processoId={processo.id}
+        numeroProcesso={processo.numero}
+        onVoltar={() => setShowVisualizarRascunho(false)}
       />
     );
   }
@@ -521,6 +533,15 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
                     className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-200"
                   >
                     Condicionantes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowVisualizarRascunho(true);
+                      setShowOpcoes(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Visualizar Rascunho
                   </button>
                 </div>
               )}
