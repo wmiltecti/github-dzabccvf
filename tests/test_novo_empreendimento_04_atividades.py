@@ -5,7 +5,7 @@ TESTE 04 - ETAPA ATIVIDADES (NOVO EMPREENDIMENTO)
 
 Este teste valida a etapa de Atividades no fluxo do Motor BPMN:
 - Valida página de Atividades
-- Clica em "Adicionar Atividade do Sistema"
+- Clica em "Adicionar Atividade"
 - Seleciona uma atividade do sistema
 - Preenche dados quantitativos (quantidade e área ocupada)
 - Avança para próxima etapa (Caracterização)
@@ -143,18 +143,18 @@ def executar_teste_atividades(
         log_sucesso("✅ Na página de Atividades")
         
         # ===============================================================
-        # ETAPA 2: CLICAR EM 'ADICIONAR ATIVIDADE DO SISTEMA'
+        # ETAPA 2: CLICAR EM 'ADICIONAR ATIVIDADE'
         # ===============================================================
-        log_etapa("ETAPA 2: CLICAR EM 'ADICIONAR ATIVIDADE DO SISTEMA'", "➕")
+        log_etapa("ETAPA 2: CLICAR EM 'ADICIONAR ATIVIDADE'", "➕")
         
-        log_sucesso("Procurando botão 'Adicionar Atividade do Sistema'...")
+        log_sucesso("Procurando botão 'Adicionar Atividade'...")
         btn_adicionar = wait.until(EC.element_to_be_clickable((
             By.XPATH,
-            "//button[contains(., 'Adicionar Atividade do Sistema')]"
+            "//button[contains(., 'Adicionar Atividade')]"
         )))
         log_sucesso(f"Botão encontrado: {btn_adicionar.text}")
         
-        log_sucesso("Clicando em 'Adicionar Atividade do Sistema'...")
+        log_sucesso("Clicando em 'Adicionar Atividade'...")
         btn_adicionar.click()
         time.sleep(1)
         

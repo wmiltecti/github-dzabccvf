@@ -298,7 +298,7 @@ const entityConfigs = {
     title: 'Atividades',
     tableName: 'activities',
     columns: [
-      { key: 'cnae_codigo', label: 'CNAE', type: 'text' as const },
+      { key: 'cnae_codigo', label: 'Código', type: 'text' as const },
       { key: 'name', label: 'Nome', type: 'text' as const },
       { 
         key: 'pollution_potentials', 

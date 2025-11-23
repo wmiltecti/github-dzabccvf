@@ -39,6 +39,7 @@ import test_novo_empreendimento_02_imovel as teste02
 import test_novo_empreendimento_03_dados_gerais as teste03
 import test_novo_empreendimento_04_atividades as teste04
 import test_novo_empreendimento_05_caracterizacao as teste05
+import test_novo_empreendimento_06_validacao_dados as teste06
 
 
 class OrquestradorNovoEmpreendimento:
@@ -233,6 +234,35 @@ def main():
     # Executar todos os testes
     try:
         orquestrador.executar_todos()
+        
+        # Se todos os testes passaram, executar validação do banco de dados
+        if not any(t['status'] == 'erro' for t in orquestrador.testes):
+            print("\n" + "=" * 100)
+            print(" " * 30 + "EXECUTANDO VALIDAÇÃO DE DADOS NO BANCO")
+            print("=" * 100 + "\n")
+            
+            # Extrair contexto com IDs dos registros
+            contexto_validacao = {}
+            for teste in orquestrador.testes:
+                if teste['status'] == 'sucesso' and 'contexto' in teste:
+                    contexto_teste = teste['contexto']
+                    if 'property_id' in contexto_teste:
+                        contexto_validacao['property_id'] = contexto_teste['property_id']
+                    if 'enterprise_id' in contexto_teste:
+                        contexto_validacao['enterprise_id'] = contexto_teste['enterprise_id']
+            
+            # Executar validação
+            relatorio_validacao = teste06.executar_validacao_completa(contexto_validacao)
+            
+            # Adicionar resultado ao orquestrador
+            orquestrador.testes.append({
+                'nome': '06 - Validação de Dados no Banco',
+                'funcao': teste06.executar_validacao_completa,
+                'ativo': True,
+                'status': 'sucesso' if relatorio_validacao['sucesso_geral'] else 'erro',
+                'contexto': relatorio_validacao
+            })
+    
     except KeyboardInterrupt:
         print("\n\n⚠️  Execução interrompida pelo usuário (Ctrl+C)")
     finally:

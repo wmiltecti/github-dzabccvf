@@ -345,7 +345,7 @@ export default function DadosGeraisEmpreendimentoPage({
             </div>
             <div className="border border-gray-300 rounded-lg overflow-hidden">
               <iframe 
-                src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002&context=empreendimento"
                 width="100%" 
                 height="800px" 
                 style={{ border: 'none' }}
