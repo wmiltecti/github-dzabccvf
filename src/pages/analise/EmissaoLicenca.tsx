@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, FileText, Plus, Eye, Edit, Trash2, X, Upload, AlertCircle, Check, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Eye, X, Upload, AlertCircle, Check, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 interface Licenca {
@@ -10,12 +10,6 @@ interface Licenca {
   validade?: string;
   dataCriacao: string;
   dataEmissao?: string;
-}
-
-interface Condicionante {
-  id: string;
-  texto: string;
-  dataCriacao: string;
 }
 
 interface ProcessoMock {
@@ -44,13 +38,6 @@ const processoMockData: ProcessoMock = {
 
 export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }: EmissaoLicencaProps) {
   const [licencas, setLicencas] = useState<Licenca[]>([]);
-  const [condicionantes, setCondicionantes] = useState<Condicionante[]>([]);
-  const [showCondicionantesMenu, setShowCondicionantesMenu] = useState(false);
-  const [showCadastrarCondicionante, setShowCadastrarCondicionante] = useState(false);
-  const [showVerCondicionantes, setShowVerCondicionantes] = useState(false);
-  const [novaCondicionante, setNovaCondicionante] = useState('');
-  const [condicionanteEditando, setCondicionanteEditando] = useState<string | null>(null);
-  const [textoEditando, setTextoEditando] = useState('');
   const [showRascunhoViewer, setShowRascunhoViewer] = useState(false);
   const [rascunhoAtual, setRascunhoAtual] = useState<Licenca | null>(null);
   const [showCancelarModal, setShowCancelarModal] = useState(false);
@@ -216,56 +203,6 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
     }
   };
 
-  const handleAdicionarCondicionante = () => {
-    if (!novaCondicionante.trim()) {
-      toast.error('Digite o texto da condicionante.');
-      return;
-    }
-
-    const condicionante: Condicionante = {
-      id: Date.now().toString(),
-      texto: novaCondicionante,
-      dataCriacao: new Date().toISOString()
-    };
-
-    setCondicionantes([...condicionantes, condicionante]);
-    setNovaCondicionante('');
-    setShowCadastrarCondicionante(false);
-    toast.success('Condicionante adicionada com sucesso!');
-  };
-
-  const handleEditarCondicionante = (id: string) => {
-    const condicionante = condicionantes.find(c => c.id === id);
-    if (condicionante) {
-      setCondicionanteEditando(id);
-      setTextoEditando(condicionante.texto);
-    }
-  };
-
-  const handleSalvarEdicao = () => {
-    if (!textoEditando.trim()) {
-      toast.error('O texto da condicionante não pode estar vazio.');
-      return;
-    }
-
-    setCondicionantes(
-      condicionantes.map(c =>
-        c.id === condicionanteEditando
-          ? { ...c, texto: textoEditando }
-          : c
-      )
-    );
-
-    setCondicionanteEditando(null);
-    setTextoEditando('');
-    toast.success('Condicionante atualizada com sucesso!');
-  };
-
-  const handleExcluirCondicionante = (id: string) => {
-    setCondicionantes(condicionantes.filter(c => c.id !== id));
-    toast.info('Condicionante excluída.');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -292,41 +229,6 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
                 <FileText className="w-4 h-4" />
                 Emitir Rascunho
               </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowCondicionantesMenu(!showCondicionantesMenu)}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <FileText className="w-4 h-4" />
-                  Condicionantes
-                </button>
-
-                {showCondicionantesMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                    <button
-                      onClick={() => {
-                        setShowCadastrarCondicionante(true);
-                        setShowCondicionantesMenu(false);
-                      }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-200"
-                    >
-                      <Plus className="w-4 h-4 inline mr-2" />
-                      Cadastrar Nova
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowVerCondicionantes(true);
-                        setShowCondicionantesMenu(false);
-                      }}
-                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Eye className="w-4 h-4 inline mr-2" />
-                      Ver Condicionantes
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -447,142 +349,6 @@ export default function EmissaoLicenca({ processoId, numeroProcesso, onVoltar }:
           </div>
         </div>
       </div>
-
-      {showCadastrarCondicionante && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Condicionantes Específicas</h3>
-              <button
-                onClick={() => {
-                  setShowCadastrarCondicionante(false);
-                  setNovaCondicionante('');
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <textarea
-                value={novaCondicionante}
-                onChange={(e) => setNovaCondicionante(e.target.value)}
-                placeholder="Digite o texto da condicionante específica..."
-                className="w-full h-40 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-              <button
-                onClick={() => {
-                  setShowCadastrarCondicionante(false);
-                  setNovaCondicionante('');
-                }}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAdicionarCondicionante}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Adicionar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showVerCondicionantes && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Condicionantes Cadastradas</h3>
-              <button
-                onClick={() => setShowVerCondicionantes(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              {condicionantes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Nenhuma condicionante cadastrada</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {condicionantes.map((condicionante) => (
-                    <div
-                      key={condicionante.id}
-                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                    >
-                      {condicionanteEditando === condicionante.id ? (
-                        <div className="space-y-3">
-                          <textarea
-                            value={textoEditando}
-                            onChange={(e) => setTextoEditando(e.target.value)}
-                            className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                          />
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setCondicionanteEditando(null);
-                                setTextoEditando('');
-                              }}
-                              className="px-3 py-1 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-100"
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              onClick={handleSalvarEdicao}
-                              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                              Salvar
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start justify-between">
-                          <p className="text-sm text-gray-700 flex-1">{condicionante.texto}</p>
-                          <div className="flex items-center gap-2 ml-4">
-                            <button
-                              onClick={() => handleEditarCondicionante(condicionante.id)}
-                              className="text-blue-600 hover:text-blue-700 p-1"
-                              title="Editar"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleExcluirCondicionante(condicionante.id)}
-                              className="text-red-600 hover:text-red-700 p-1"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end p-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowVerCondicionantes(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showRascunhoViewer && rascunhoAtual && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

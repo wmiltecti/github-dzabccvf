@@ -43,6 +43,7 @@ import Notificacoes from './Notificacoes';
 import PreProcessos from './analise/PreProcessos';
 import PautaGeral from './analise/PautaGeral';
 import MeuProcesso from './analise/MeuProcesso';
+import AssinaturaDigital from './analise/AssinaturaDigital';
 import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
@@ -1211,6 +1212,7 @@ export default function Dashboard() {
       case 'analise-pre-processos': return <PreProcessos />;
       case 'analise-pauta-geral': return <PautaGeral />;
       case 'analise-meu-processo': return <MeuProcesso />;
+      case 'analise-assinatura-digital': return <AssinaturaDigital />;
       // case 'form-wizard': return <FormWizard />;
       // case 'companies': return (
       //   <div className="text-center py-8 sm:py-12 px-4">
@@ -1415,6 +1417,25 @@ export default function Dashboard() {
                               className="w-4 h-4 flex-shrink-0 mr-2"
                             />
                             Minha Pauta
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setActiveTab('analise-assinatura-digital');
+                              setSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                              activeTab === 'analise-assinatura-digital'
+                                ? 'bg-green-50 text-green-700'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`}
+                          >
+                            <img
+                              src={submenuIcon}
+                              alt="Assinatura Digital"
+                              className="w-4 h-4 flex-shrink-0 mr-2"
+                            />
+                            Assinatura Digital
                           </button>
                         </div>
                       )}
