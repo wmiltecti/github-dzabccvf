@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FileText, Search, Filter, Eye, Award, CheckCircle, ArrowRightLeft } from 'lucide-react';
+import { FileText, Search, Filter, Eye, Award, CheckCircle, ArrowRightLeft, FileCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
 import EmissaoLicenca from './EmissaoLicenca';
 import TramitarModal from '../../components/analise/TramitarModal';
+import { AnaliseView, MeuProcessoItem } from './MeuProcesso';
 
 interface Processo {
   id: string;
@@ -17,7 +18,7 @@ interface Processo {
 const processosMock: Processo[] = [
   {
     id: '1',
-    numero: '2025.0001.LA',
+    numero: 'LO/001/2025',
     requerente: 'Curtume Industrial São João Ltda',
     tipo: 'Licença de Operação',
     status: 'Análise Concluída',
@@ -26,7 +27,7 @@ const processosMock: Processo[] = [
   },
   {
     id: '2',
-    numero: '2025.0002.LA',
+    numero: 'LP/001/2025',
     requerente: 'Mineradora Roraima S.A.',
     tipo: 'Licença Prévia',
     status: 'Análise Concluída',
@@ -35,7 +36,7 @@ const processosMock: Processo[] = [
   },
   {
     id: '3',
-    numero: '2025.0003.LA',
+    numero: 'LI/001/2025',
     requerente: 'Frigorífico Regional Ltda',
     tipo: 'Licença de Instalação',
     status: 'Análise Concluída',
@@ -50,6 +51,7 @@ export default function AssinaturaDigital() {
   const [processoSelecionado, setProcessoSelecionado] = useState<Processo | null>(null);
   const [showEmissaoLicenca, setShowEmissaoLicenca] = useState(false);
   const [showTramitarModal, setShowTramitarModal] = useState(false);
+  const [mostrandoAnalise, setMostrandoAnalise] = useState(false);
 
   const processosFiltrados = processos.filter(processo =>
     processo.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,6 +69,11 @@ export default function AssinaturaDigital() {
     setShowTramitarModal(true);
   };
 
+  const handleAnalise = (processo: Processo) => {
+    setProcessoSelecionado(processo);
+    setMostrandoAnalise(true);
+  };
+
   if (showEmissaoLicenca && processoSelecionado) {
     return (
       <EmissaoLicenca
@@ -74,6 +81,28 @@ export default function AssinaturaDigital() {
         numeroProcesso={processoSelecionado.numero}
         onVoltar={() => {
           setShowEmissaoLicenca(false);
+          setProcessoSelecionado(null);
+        }}
+      />
+    );
+  }
+
+  if (mostrandoAnalise && processoSelecionado) {
+    const processoParaAnalise: MeuProcessoItem = {
+      id: processoSelecionado.id,
+      numero: processoSelecionado.numero,
+      requerente: processoSelecionado.requerente,
+      tipo: processoSelecionado.tipo,
+      status: processoSelecionado.status,
+      dataRecebimento: processoSelecionado.dataAnalise,
+      prazo: '30 dias'
+    };
+
+    return (
+      <AnaliseView
+        processo={processoParaAnalise}
+        onVoltar={() => {
+          setMostrandoAnalise(false);
           setProcessoSelecionado(null);
         }}
       />
@@ -185,8 +214,16 @@ export default function AssinaturaDigital() {
                               Tramitar
                             </button>
                             <button
+                              onClick={() => handleAnalise(processo)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                              title="Analisar processo"
+                            >
+                              <FileCheck className="w-4 h-4" />
+                              Análise
+                            </button>
+                            <button
                               onClick={() => handleAssinarDigitalmente(processo)}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
                               title="Assinar Digitalmente e Emitir Licença"
                             >
                               <Award className="w-4 h-4" />

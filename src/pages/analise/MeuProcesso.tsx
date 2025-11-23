@@ -7,6 +7,7 @@ import NotificacoesPendenciaModal from '../../components/analise/NotificacoesPen
 import TramitacoesModal from '../../components/analise/TramitacoesModal';
 import Pareceres from './Pareceres';
 import Condicionantes from './Condicionantes';
+import VisualizarRascunhoView from '../../components/analise/VisualizarRascunhoView';
 
 interface MeuProcessoItem {
   id: string;
@@ -28,7 +29,7 @@ interface MeuProcessoItem {
 const mockMeusProcessos: MeuProcessoItem[] = [
   {
     id: '1',
-    numero: 'PROC-2025-023',
+    numero: 'LP/001/2025',
     requerente: 'Curtume Industrial São João',
     atividade: 'Curtimento de Couros',
     situacao: 'Em Análise',
@@ -44,7 +45,7 @@ const mockMeusProcessos: MeuProcessoItem[] = [
   },
   {
     id: '2',
-    numero: 'PROC-2025-031',
+    numero: 'LI/001/2025',
     requerente: 'Madeireira Florestal Ltda',
     atividade: 'Beneficiamento de Madeira',
     situacao: 'Pendente',
@@ -60,7 +61,7 @@ const mockMeusProcessos: MeuProcessoItem[] = [
   },
   {
     id: '3',
-    numero: 'PROC-2025-038',
+    numero: 'LO/001/2025',
     requerente: 'Granja Avícola Delta',
     atividade: 'Criação de Aves',
     situacao: 'Em Análise',
@@ -307,6 +308,7 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
   const [showOpcoes, setShowOpcoes] = useState(false);
   const [showPareceres, setShowPareceres] = useState(false);
   const [showCondicionantes, setShowCondicionantes] = useState(false);
+  const [showVisualizarRascunho, setShowVisualizarRascunho] = useState(false);
   const [etapasConcluidas, setEtapasConcluidas] = useState<Set<Etapa>>(new Set());
 
   const etapaIndex = etapas.findIndex(e => e.id === etapaAtual);
@@ -354,6 +356,15 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
         processoId={processo.id}
         numeroProcesso={processo.numero}
         onVoltar={() => setShowCondicionantes(false)}
+      />
+    );
+  }
+
+  if (showVisualizarRascunho) {
+    return (
+      <VisualizarRascunhoView
+        numeroProcesso={processo.numero}
+        onVoltar={() => setShowVisualizarRascunho(false)}
       />
     );
   }
@@ -521,6 +532,15 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
                     className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-200"
                   >
                     Condicionantes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowVisualizarRascunho(true);
+                      setShowOpcoes(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    Visualizar Rascunho
                   </button>
                 </div>
               )}
@@ -1252,3 +1272,6 @@ function MeuProcessoDetalhes({ processo, onVoltar }: MeuProcessoDetalhesProps) {
     </div>
   );
 }
+
+export { AnaliseView };
+export type { MeuProcessoItem };

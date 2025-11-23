@@ -21,7 +21,7 @@ interface ProcessoPauta {
 const mockProcessosPauta: ProcessoPauta[] = [
   {
     id: '1',
-    numero: 'PROC-2025-045',
+    numero: 'LP/001/2025',
     requerente: 'Indústria Metalúrgica Beta',
     atividade: 'Fabricação de Peças Metálicas',
     situacao: 'Aguardando Distribuição',
@@ -36,7 +36,7 @@ const mockProcessosPauta: ProcessoPauta[] = [
   },
   {
     id: '2',
-    numero: 'PROC-2025-046',
+    numero: 'LI/001/2025',
     requerente: 'Mineradora Gamma Ltda',
     atividade: 'Extração de Minérios',
     situacao: 'Aguardando Distribuição',
@@ -51,7 +51,7 @@ const mockProcessosPauta: ProcessoPauta[] = [
   },
   {
     id: '3',
-    numero: 'PROC-2025-047',
+    numero: 'LO/001/2025',
     requerente: 'Frigorífico Omega',
     atividade: 'Abate de Bovinos',
     situacao: 'Aguardando Distribuição',
@@ -66,7 +66,7 @@ const mockProcessosPauta: ProcessoPauta[] = [
   },
   {
     id: '4',
-    numero: 'PROC-2025-048',
+    numero: 'LP/002/2025',
     requerente: 'Posto Combustível Sigma',
     atividade: 'Comércio de Combustíveis',
     situacao: 'Aguardando Distribuição',
