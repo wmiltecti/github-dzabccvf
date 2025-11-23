@@ -8,9 +8,9 @@ interface BlockchainTabProps {
 
 export default function BlockchainTab({ process }: BlockchainTabProps) {
   const mockBlockchainData = {
-    dataRegistro: '11/11/2025',
+    dataRegistro: '24/11/2025',
     usuario: process?.analyst_name || '111.111.111-11',
-    hashBlockchain: '000b0949159157062566d6d4bf8964f670c2955a7cf727324d537cf6997e6795f'
+    hashBlockchain: '0000ed3df1ea0d3bb06d14baf91f43d5f600cba2d7d89d1790ff30e71519de55'
   };
 
   const blockchainUrl = `${BLOCKCHAIN_PARAMS.blockchainExplorerUrl}${mockBlockchainData.hashBlockchain}`;
