@@ -556,7 +556,7 @@ export default function ActivityForm({
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ex: Frigorífico - abate de bovinos"
               />
-              <p className="text-xs text-gray-500 mt-1">Descrição da atividade econômica segundo CNAE</p>
+              <p className="text-xs text-gray-500 mt-1">Descrição da atividade econômica</p>
             </div>
           </div>
 

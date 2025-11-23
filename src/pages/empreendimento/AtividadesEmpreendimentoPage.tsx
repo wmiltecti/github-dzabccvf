@@ -58,7 +58,7 @@ export default function AtividadesEmpreendimentoPage({
   const [expandedActivityIndex, setExpandedActivityIndex] = useState<number | null>(null);
   const [uploadedAcoesFiles, setUploadedAcoesFiles] = useState<UploadedFile[]>([]);
   const [showMapForActivity, setShowMapForActivity] = useState<{[key: number]: boolean}>({});
-  const [editingActivityIndex, setEditingActivityIndex] = useState<number | null>(null);
+  const [hasChanges, setHasChanges] = useState<{[key: number]: boolean}>({});
 
   const [consultasData, setConsultasData] = useState({
     unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
@@ -172,7 +172,7 @@ export default function AtividadesEmpreendimentoPage({
       code: activity.code,
       name: activity.name,
       description: activity.description,
-      enterpriseSize: activity.enterprise_size?.name,
+      enterpriseSize: undefined, // Iniciar vazio, será calculado quando digitar quantidade
       pollutionPotential: activity.pollution_potential?.name,
       quantidade: '',
       unidade: activity.measurement_unit || '',
@@ -265,11 +265,10 @@ export default function AtividadesEmpreendimentoPage({
       }
     }
 
+    // Marcar que houve mudanças
+    setHasChanges(prev => ({ ...prev, [index]: true }));
+    
     setSelectedActivities(updated);
-  };
-
-  const handleEditActivity = (index: number) => {
-    setEditingActivityIndex(index);
   };
 
   const handleSaveActivityData = async (index: number) => {
@@ -294,7 +293,9 @@ export default function AtividadesEmpreendimentoPage({
       // Exemplo: await saveActivityQuantitativeData(activity);
       
       toast.success('Dados quantitativos salvos com sucesso!');
-      setEditingActivityIndex(null);
+      
+      // Limpar flag de mudanças
+      setHasChanges(prev => ({ ...prev, [index]: false }));
     } catch (error) {
       console.error('Erro ao salvar dados quantitativos:', error);
       toast.error('Erro ao salvar os dados. Tente novamente.');
@@ -529,30 +530,14 @@ export default function AtividadesEmpreendimentoPage({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold bg-gray-700 text-white px-3 py-1 rounded-full">
-                        #{index + 1}
-                      </span>
-                      <span className="text-xs font-mono bg-white border border-gray-300 px-2 py-1 rounded">
-                        Cód. {activity.code}
-                      </span>
-                      {activity.isPrincipal && (
+                      <h4 className="font-bold text-xl text-gray-900">{activity.name}</h4>
+                      {activity.isPrincipal && selectedActivities.length === 1 && (
                         <span className="flex items-center gap-1 text-xs font-bold bg-amber-500 text-white px-3 py-1 rounded-full shadow-md">
                           <Star className="w-3 h-3 fill-current" />
                           PRINCIPAL
                         </span>
                       )}
-                      {!activity.isPrincipal && selectedActivities.length > 1 && (
-                        <button
-                          onClick={() => handleSetPrincipal(index)}
-                          className="flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-amber-600 px-2 py-1 rounded border border-gray-300 hover:border-amber-500 transition-colors"
-                          title="Definir como atividade principal"
-                        >
-                          <Star className="w-3 h-3" />
-                          Definir como principal
-                        </button>
-                      )}
                     </div>
-                    <h4 className="font-bold text-lg text-gray-900">{activity.name}</h4>
                     {activity.description && (
                       <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
                     )}
@@ -584,9 +569,8 @@ export default function AtividadesEmpreendimentoPage({
                     </label>
                     <div className={`px-3 py-2 border-2 rounded-lg text-sm font-bold ${getPorteColor(activity.enterpriseSize)}`}>
                       {activity.enterpriseSize || (
-                        <span className="text-red-600 flex items-center gap-1">
-                          <span>⚠️</span>
-                          Não definido
+                        <span className="text-gray-400 italic">
+                          Digite a quantidade
                         </span>
                       )}
                     </div>
@@ -606,26 +590,7 @@ export default function AtividadesEmpreendimentoPage({
 
               {/* Dados Quantitativos */}
               <div className="px-6 py-4 bg-gray-50">
-                <div className="flex items-center justify-between mb-3">
-                  <h5 className="text-xs font-bold text-gray-700 uppercase">Dados Quantitativos</h5>
-                  {editingActivityIndex === index ? (
-                    <button
-                      onClick={() => handleSaveActivityData(index)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Salvar
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleEditActivity(index)}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      <Activity className="w-4 h-4" />
-                      Editar
-                    </button>
-                  )}
-                </div>
+                <h5 className="text-xs font-bold text-gray-700 uppercase mb-3">Dados Quantitativos</h5>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-2">
@@ -634,10 +599,7 @@ export default function AtividadesEmpreendimentoPage({
                     <select
                       value={activity.unidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'unidade', e.target.value)}
-                      disabled={editingActivityIndex !== index}
-                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                      }`}
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       title="Selecione a unidade de medida"
                     >
                       <option value="">Selecione a unidade...</option>
@@ -662,13 +624,22 @@ export default function AtividadesEmpreendimentoPage({
                       type="number"
                       value={activity.quantidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
-                      disabled={editingActivityIndex !== index}
-                      readOnly={editingActivityIndex !== index}
-                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                      }`}
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       placeholder="Ex: 100"
                     />
+                    {/* Botão Salvar abaixo da Quantidade */}
+                    <button
+                      onClick={() => handleSaveActivityData(index)}
+                      disabled={!hasChanges[index]}
+                      className={`mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        hasChanges[index] 
+                          ? 'bg-green-600 text-white hover:bg-green-700' 
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Salvar
+                    </button>
                   </div>
 
                   <div>
@@ -680,11 +651,7 @@ export default function AtividadesEmpreendimentoPage({
                       step="0.01"
                       value={activity.area_ocupada || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'area_ocupada', e.target.value)}
-                      disabled={editingActivityIndex !== index}
-                      readOnly={editingActivityIndex !== index}
-                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
-                      }`}
+                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       placeholder="Ex: 500.00"
                     />
                   </div>

@@ -176,6 +176,55 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     });
   };
 
+  const handleFillPropertyData = () => {
+    if (!newPropertyType) {
+      toast.warning('Selecione o tipo de imóvel primeiro');
+      return;
+    }
+
+    if (newPropertyType === 'RURAL') {
+      setNewRuralData({
+        nome: 'Fazenda Santa Clara',
+        car_codigo: 'MG-3106200-1234567890ABCDEF1234567890ABCDEF',
+        car_situacao: 'Ativo',
+        municipio: 'Belo Horizonte',
+        uf: 'MG',
+        area_total: '150.75',
+        sistema_referencia: 'SIRGAS 2000',
+        coordenadas_utm_lat: '7789123.45',
+        coordenadas_utm_long: '609876.54'
+      });
+    } else if (newPropertyType === 'URBANO') {
+      setNewUrbanoData({
+        nome: 'Lote Comercial Centro',
+        cep: '30140-071',
+        logradouro: 'Av. Afonso Pena',
+        numero: '1500',
+        bairro: 'Centro',
+        complemento: 'Sala 201',
+        municipio: 'Belo Horizonte',
+        uf: 'MG',
+        matricula: '12345',
+        area_total: '250.00',
+        sistema_referencia: 'SIRGAS 2000',
+        coordenadas_utm_lat: '7794123.45',
+        coordenadas_utm_long: '611234.56'
+      });
+    } else if (newPropertyType === 'LINEAR') {
+      setNewLinearData({
+        nome: 'Rodovia MG-010',
+        municipio_inicio: 'Belo Horizonte',
+        uf_inicio: 'MG',
+        municipio_final: 'Confins',
+        uf_final: 'MG',
+        extensao_km: '38.5',
+        sistema_referencia: 'SIRGAS 2000'
+      });
+    }
+
+    toast.success('Dados preenchidos automaticamente');
+  };
+
   const handleSaveNewProperty = () => {
     // Validações básicas
     if (!newPropertyType) {
@@ -554,7 +603,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
               </div>
               <div className="border border-gray-300 rounded-lg overflow-hidden">
                 <iframe 
-                  src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002"
+                  src="https://geofront-frontend.onrender.com/index-refactored-ro.html?processo=PROC-2024-002&context=imovel"
                   width="100%" 
                   height="800px" 
                   style={{ border: 'none' }}
@@ -570,6 +619,7 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
         isOpen={showNewPropertyModal}
         onClose={handleCloseNewPropertyModal}
         onSave={handleSaveNewProperty}
+        onFillData={handleFillPropertyData}
         propertyType={newPropertyType}
         onPropertyTypeChange={setNewPropertyType}
         ruralData={newRuralData}

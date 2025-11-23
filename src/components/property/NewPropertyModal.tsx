@@ -5,6 +5,7 @@ interface NewPropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  onFillData: () => void;
   propertyType: 'RURAL' | 'URBANO' | 'LINEAR' | '';
   onPropertyTypeChange: (type: 'RURAL' | 'URBANO' | 'LINEAR' | '') => void;
   ruralData: {
@@ -57,6 +58,7 @@ export default function NewPropertyModal({
   isOpen,
   onClose,
   onSave,
+  onFillData,
   propertyType,
   onPropertyTypeChange,
   ruralData,
@@ -76,12 +78,20 @@ export default function NewPropertyModal({
             <Plus className="w-5 h-5 text-green-600" />
             Cadastrar Novo Imóvel
           </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onFillData}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Preencher Dados
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
