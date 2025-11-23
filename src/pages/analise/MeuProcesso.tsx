@@ -7,7 +7,7 @@ import NotificacoesPendenciaModal from '../../components/analise/NotificacoesPen
 import TramitacoesModal from '../../components/analise/TramitacoesModal';
 import Pareceres from './Pareceres';
 import Condicionantes from './Condicionantes';
-import VisualizarRascunhoModal from '../../components/analise/VisualizarRascunhoModal';
+import VisualizarRascunhoView from '../../components/analise/VisualizarRascunhoView';
 
 interface MeuProcessoItem {
   id: string;
@@ -360,6 +360,15 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
     );
   }
 
+  if (showVisualizarRascunho) {
+    return (
+      <VisualizarRascunhoView
+        numeroProcesso={processo.numero}
+        onVoltar={() => setShowVisualizarRascunho(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -641,13 +650,6 @@ function AnaliseView({ processo, onVoltar }: AnaliseViewProps) {
           processoId={processo.id}
           numeroProcesso={processo.numero}
           onClose={() => setShowTramitacoes(false)}
-        />
-      )}
-
-      {showVisualizarRascunho && (
-        <VisualizarRascunhoModal
-          numeroProcesso={processo.numero}
-          onClose={() => setShowVisualizarRascunho(false)}
         />
       )}
     </div>
