@@ -14,6 +14,7 @@ interface AtividadesEmpreendimentoPageProps {
 interface SelectedActivity {
   activityId: string;
   code: number;
+  cnae_codigo?: string;
   name: string;
   description?: string;
   enterpriseSize?: string;
@@ -154,6 +155,7 @@ export default function AtividadesEmpreendimentoPage({
     const filtered = availableActivities.filter(activity =>
       activity.name.toLowerCase().includes(term) ||
       activity.code.toString().includes(term) ||
+      activity.cnae_codigo?.toLowerCase().includes(term) ||
       activity.description?.toLowerCase().includes(term)
     );
     setFilteredActivities(filtered);
@@ -170,6 +172,7 @@ export default function AtividadesEmpreendimentoPage({
     const newActivity: SelectedActivity = {
       activityId: activity.id,
       code: activity.code,
+      cnae_codigo: activity.cnae_codigo,
       name: activity.name,
       description: activity.description,
       enterpriseSize: undefined, // Iniciar vazio, será calculado quando digitar quantidade
@@ -468,7 +471,7 @@ export default function AtividadesEmpreendimentoPage({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded">
-                              Cód. {activity.code}
+                              Cód. {activity.cnae_codigo}
                             </span>
                             {isSelected && (
                               <CheckCircle className="w-4 h-4 text-green-600" />
