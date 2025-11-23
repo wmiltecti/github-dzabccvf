@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FileText, Search, Filter, Eye, Award, CheckCircle } from 'lucide-react';
+import { FileText, Search, Filter, Eye, Award, CheckCircle, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import EmissaoLicenca from './EmissaoLicenca';
+import TramitarModal from '../../components/analise/TramitarModal';
 
 interface Processo {
   id: string;
@@ -48,6 +49,7 @@ export default function AssinaturaDigital() {
   const [processos] = useState<Processo[]>(processosMock);
   const [processoSelecionado, setProcessoSelecionado] = useState<Processo | null>(null);
   const [showEmissaoLicenca, setShowEmissaoLicenca] = useState(false);
+  const [showTramitarModal, setShowTramitarModal] = useState(false);
 
   const processosFiltrados = processos.filter(processo =>
     processo.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -58,6 +60,11 @@ export default function AssinaturaDigital() {
   const handleAssinarDigitalmente = (processo: Processo) => {
     setProcessoSelecionado(processo);
     setShowEmissaoLicenca(true);
+  };
+
+  const handleTramitar = (processo: Processo) => {
+    setProcessoSelecionado(processo);
+    setShowTramitarModal(true);
   };
 
   if (showEmissaoLicenca && processoSelecionado) {
@@ -167,15 +174,25 @@ export default function AssinaturaDigital() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-gray-700">{processo.analista}</span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <button
-                            onClick={() => handleAssinarDigitalmente(processo)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                            title="Assinar Digitalmente e Emitir Licença"
-                          >
-                            <Award className="w-4 h-4" />
-                            Assinar Digitalmente
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleTramitar(processo)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-sm rounded-lg transition-colors"
+                              title="Tramitar processo"
+                            >
+                              <ArrowRightLeft className="w-4 h-4" />
+                              Tramitar
+                            </button>
+                            <button
+                              onClick={() => handleAssinarDigitalmente(processo)}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                              title="Assinar Digitalmente e Emitir Licença"
+                            >
+                              <Award className="w-4 h-4" />
+                              Assinar Digitalmente
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -196,6 +213,22 @@ export default function AssinaturaDigital() {
           </p>
         </div>
       </div>
+
+      {showTramitarModal && processoSelecionado && (
+        <TramitarModal
+          processo={processoSelecionado}
+          onClose={() => {
+            setShowTramitarModal(false);
+            setProcessoSelecionado(null);
+          }}
+          onTramitar={(dados) => {
+            console.log('Tramitando processo:', dados);
+            toast.success('Processo tramitado com sucesso!');
+            setShowTramitarModal(false);
+            setProcessoSelecionado(null);
+          }}
+        />
+      )}
     </div>
   );
 }
