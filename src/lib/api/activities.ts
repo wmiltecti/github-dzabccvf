@@ -6,6 +6,8 @@ import http from './http';
 export interface ActivityResponse {
   id: string;
   code: number;
+  cnae_codigo?: string;
+  cnae_descricao?: string;
   name: string;
   description?: string;
   measurement_unit?: string;
