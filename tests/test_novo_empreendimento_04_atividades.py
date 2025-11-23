@@ -30,7 +30,7 @@ TIMEOUT = 20
 
 # Dados mockados de atividade para teste
 DADOS_ATIVIDADE = {
-    'busca': 'Pesquisa mineral',  # Termo de busca no modal
+    'busca': 'Extração',  # Termo de busca no modal (busca por "Extração Mineral")
     'quantidade': '150',
     'area_ocupada': '2500.50'
 }

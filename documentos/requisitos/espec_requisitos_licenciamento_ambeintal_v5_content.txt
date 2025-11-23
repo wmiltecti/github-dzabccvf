@@ -1,0 +1,348 @@
+================================================================================
+ARQUIVO: espec_requisitos_licenciamento_ambeintal_v5.pdf
+Total de páginas: 9
+================================================================================
+
+
+================================================================================
+PÁGINA 1
+================================================================================
+
+SISAMA – SISTEMA INTEGRADO DE SANIDADE AGROPECUÁRIA 
+E MEIO AMBIENTE 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ESPECIFICAÇÃO PARCIAL DE REQUISITOS 
+ 
+MÓDULO: 
+LICENCIAMENTO AMBIENTAL 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+NOVEMBRO DE 2025
+
+
+
+================================================================================
+PÁGINA 2
+================================================================================
+
+SUMÁRIO 
+ 
+ 
+Requisitos Funcionais ....................................................................................................... 4  
+RF01 - Criar campos novos ........................................................................................ 4  
+RF02  - Incluir Imagens de Satélite na Ferramenta de Mapa ..................................... 4  
+RF03 - Criar Situações para os Processos .................................................................. 4  
+RF04 - Criar Pautas de um Processo .......................................................................... 5  
+1. Pauta Pré-processos .......................................................................................... 5  
+2. Pauta Geral ....................................................................................................... 6  
+3. Minha Pauta ...................................................................................................... 6  
+3.1 Botão/Tela Tramitar ...................................................................................... 6  
+3.2 Botão/Tela de Análise ................................................................................... 7  
+ 
+ 
+ 
+
+
+================================================================================
+PÁGINA 3
+================================================================================
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+REQUISITOS FUNCIONAIS E REGRAS 
+DE NEGÓCIO  
+ 
+ 
+Analista responsável:  
+Évelyn Camila Casadias Pinheiro 
+ 
+  
+
+
+================================================================================
+PÁGINA 4
+================================================================================
+
+Requisitos Funcionais 
+ 
+RF01 - Criar campos novos  
+ 
+1. No cadastro de Parametrizações, no cadastro de tipo de licença, criar um campo 
+chamado ‘Pré-Requisito’ para definir quais licenças são pré-requisitos para um 
+determinado tipo de licença. 
+ 
+2. No cadastro de pessoa jurídica, criar um campo para informar se aquele CPNJ é 
+órgão público. 
+ 
+RF02  - Incluir Imagens de Satélite na Ferramenta de Mapa 
+ 
+Incluir Imagens de Satélite do Geoportal como opções de camadas base para o mapa. A 
+princípio incluir as camadas PLANET (NICFI) 2025 e SPOT 2008 (ambas estão no item 
+Mosaico por Satélite do Geoportal). O cliente pode vir a solicitar mais camadas e pode 
+ser necessário que sejam atualizadas periodicamente. 
+ 
+RF03 - Criar Situações para os Processos 
+ 
+Definir as seguintes situações para o processo: 
+ Incompleto – quando o processo começa a ser preenchido, é salvo ao avançar as 
+abas, mas ainda não foi concluído ; 
+ Criado – quando o processo já foi concluído, mas a taxa ainda não foi paga ; 
+ Aguardando Análise – quando o processo já teve a taxa paga, mas ainda não foi 
+assumido para análise;  
+ Em Análise – quando o processo foi assumido e está na pauta de algum técnico ; 
+ Pendente – quando enviada alguma notificação e está aguardando que o 
+requerente atenda as pendências ; 
+ Concluído – quando a licença foi emitida e o processo finalizado;  
+ Arquivado – quando o processo é arquivado por solicitação do próprio requerente 
+ou pelo técnico que está analisando (ainda será construída uma tela para este 
+arquivamento);  
+ Cancelado – quando o processo é cancelado por motivos técnicos ou jurídicos (as 
+regras para isso ainda serão definidas com o órgão);  
+ Em retificação – quando, após ter recebido uma notificação de pendência na 
+análise, foi retificado/editado pelo requerente, mas ainda não foi concluído para 
+reenvio à análise;  
+
+
+================================================================================
+PÁGINA 5
+================================================================================
+
+ Retificado – ao iniciar uma retificação, o sistema deve salvar uma cópia do 
+processo no momento em que o usuário clica em ‘retificar’, essa cópia é um ‘raio-
+x’ do processo antes que ele seja alterado. Esse processo copiado tem a situação 
+Retificado. 
+ 
+RF04 - Criar Pautas de um Processo 
+ 
+1. Pauta Pré-processos 
+ 
+Listagem onde deverão ficar listados os processos que estão prontos para ir para a análise 
+e ainda não foram formalizados. Deve ter as colunas Número, Requerente, Atividade 
+(principal), Situação (aqui serão todos ‘Aguardando Análise’) e Data da Solicitação (aqui 
+deve ser a data em que foi identificado o pagamento da taxa). 
+ 
+Criar tela de formalização de Pré-Processo 
+1. Criar o botão “Formalizar”. Ao selecionar um processo na listagem e clicar no 
+botão, abrir a tela de formalização onde deverá ter os seguintes campos: 
+ Número 
+ Requerente 
+ Data da Solicitação (data que foi identificado o pagamento da taxa) 
+ Responsável Técnico 
+ Empreendimento – contendo o número, nome e as atividades 
+ 
+2. Criar listagem de documentos anexados para o processo e listagem de documento 
+de pessoas separadamente;  
+ 
+3. Criar botão de visualizar documento;  
+ 
+4. Criar os botões de Aceitar e Recusar para cada documento, se clicado em recusar, 
+abrir uma caixa de texto para preenchimento do motivo. Esse texto deve ser salvo para 
+mostrar em relatório posteriormente. Criar também botão de aceitar todos e recusar todos. 
+ 
+5. Criar Botões Recusar e Formalizar no topo da tela para encerrar o procedimento: 
+ Ao clicar em recusar, validar que pelo menos um documento tenha sido 
+recusado e que o motivo tenha sido preenchido e enviar e-mail e notificação 
+aos partícipes (as validações, e-mails e notificações podem ser construídos no 
+próximo MVP);  
+ Ao clicar em Formalizar, validar que todos os documentos estejam como 
+aceitos. Em caso positivo, mostrar pop-up com os setores pré-configurados 
+para o usuário selecionar para qual pauta geral vai o processo ;  
+ 
+6. Criar o Botão Detalhes, onde será possível visualizar os detalhes do processo. 
+
+
+================================================================================
+PÁGINA 6
+================================================================================
+
+ 
+7. Criar o Botão Fechar, que apenas sai da tela sem fazer nenhuma ação. 
+ 
+2. Pauta Geral  
+ 
+Após ser formalizado, um processo deve ir para a Pauta Geral, onde devem ficar todos os 
+processos antes de um técnico assumir para a análise. Deve ter as colunas Número, 
+Requerente, Atividade (principal), Situação e Etapa. 
+Criar o botão Assumir. Ao selecionar um processo e clicar em Assumir, mostrar os 
+seguintes campos referentes ao processo: 
+ Número 
+ Requerente 
+ Data da Solicitação 
+ Responsável Técnico 
+ Empreendimento – contendo o número, nome e as atividades 
+Ao confirmar, o processo sai da pauta geral e vai para a visão “Minha Pauta” (pauta do 
+técnico que está assumindo) e muda para a situação “Em Análise”. Nessa tela também 
+mostrar o botão de Detalhes do processo. 
+ 
+3. Minha Pauta 
+ 
+Listagem onde o técnico visualiza os processos que foram assumidos por ele ou 
+tramitados para ele, com as colunas Número, Requerente, Atividade (principal), Situação 
+e Etapa. 
+ 
+3.1 Botão/Tela Tramitar 
+ 
+O sistema deve mapear todas as tramitações realizadas a partir da formalização do 
+processo, registrando a pessoa que fez a tramitação, o setor a que ela pertence, a data e a 
+hora e o texto de tramitação. 
+ 
+1. Criar um cabeçalho com os campos Número do Processo, Etapa Atual, Setor Atual 
+e Responsável Atual. 
+ 
+2. Criar uma seção chamada Dados da Tramitação, com os campos de seleção para 
+definir Próxima Etapa, Próximo Setor e Próximo Responsável. Os dados desses 
+campos deverão obedecer ao que estiver configurado no fluxo do processo. 
+ 
+
+
+================================================================================
+PÁGINA 7
+================================================================================
+
+3. Criar uma seção chamada Parecer da Tramitação, contendo um campo do tipo 
+texto e a pergunta “Deseja exibir seu parecer para os partícipes do processo?”, 
+com radio de Sim ou Não. Em caso positivo mostrar esse texto na tela de Detalhes 
+do Processo (aba Tramitações – que será construída futuramente). 
+ 
+4. Criar o botão Tramitar para finalizar a ação, que deverá mover o processo para a 
+pauta do técnico ou setor informado no campo “Próximo Responsável” ou 
+“Próximo Setor”. Registrar essa tramitação para que seja mostrado nas telas de 
+Detalhes e na tela Tramitações (menu opções descrito abaixo no item 5). 
+ 
+ 
+3.2 Botão/Tela de Análise 
+ 
+Botão Analisar: 
+1. Ao clicar em analisar, mostrar a seguinte tela: 
+Criar um cabeçalho com os dados principais do processo:  
+ Número 
+ Tipo de Processo 
+ Situação 
+ Etapa 
+ Requerente 
+ Data da Solicitação 
+ Empreendimento – contendo o número, nome e as atividades 
+ 
+2. Criar a seção Fluxo de Análise: 
+Deverá ser criado uma sequência de botões de telas de análise: Imóvel, Empreendimento, 
+Caracterização e Documentação. 
+ Imóvel: Trazer todos os campos do cadastro de imóvel. 
+ Empreendimento: trazer os Dados Gerais e informações das Atividades, 
+shapes, mapas e consultas espaciais. 
+ Caracterização: informações dos formulários. 
+ Documentação: Mostrar todos os documentos desse processo e uma listagem 
+dos partícipes com seus respectivos documentos. 
+ 
+3. Ao entrar em cada etapa do fluxo, crias os seguintes botões: 
+ Concluir: botão para concluir uma etapa, ou seja, aprová-la. Ao clicar, o 
+sistema deve verificar se não há nenhuma pendência para a etapa, se não 
+houver, ela deve ser concluída. Caso haja alguma pendência, mostrar 
+mensagem de validação;  
+ Próxima: avança para a próxima etapa do fluxo;  
+ Anterior: volta para a etapa anterior do fluxo;  
+
+
+================================================================================
+PÁGINA 8
+================================================================================
+
+ Fechar: fecha a tela sem nenhuma ação;  
+ Registro de Pendência: criar três botões a partir desse menu: 
+o Modelo de Pendência: abre um pop-up com esse mesmo título, com 
+pendências pré-cadastradas, contendo caixas de seleção para 
+selecionar uma ou mais pendências;  
+o Redigir Nova: abre um pop-up com o nome Nova Pendência, com 
+campo de texto para digitar e botão para salvar uma nova pendência;  
+o Ver Pendência: abre um pop-up com o título “Pendências da Etapa”, 
+contendo uma listagem com pendências já criadas e com opções de 
+editar ou excluir;  
+o Após uma pendência ser redigida ou salva a partir do modelo, o 
+sistema deve verificar se existe uma notificação de pendência já 
+aberta, caso não exista, criar neste momento. 
+ 
+Criar o menu Opções: 
+Contendo as seguintes opções: 
+5. Tramitações:  
+Mostrar a sequência de tramitações, em ordem cronológica, desde a formalização 
+do processo, mostrando a pessoa que fez a tramitação, o setor a que ela pertence 
+e a data e hora. Quando preenchido um texto de tramitação, deve ser exibido 
+também nessa tela. 
+ 
+6. Notificações de Pendência (Ofício): 
+Criar uma tela onde poderá ser redigido uma nova notificação de pendência e onde 
+serão listadas as notificações daquele processo. 
+ A listagem das notificações deverá conter as colunas: Número, Autor, Data de 
+Criação, Situação e um botão de visualização. 
+ Ao clicar em Novo: Abrir tela com os campos Prazo (pré configurado na 
+parametrização) e um campo do tipo texto para preenchimento da pendência 
+e os botões Adicionar e Cancelar. Criar o botão Salvar, que criará uma nova 
+notificação a partir das pendências criadas nessa tela. A Notificação é criada 
+com a situação Aberta. 
+ Ao clicar em Editar, abrir a mesma tela de Novo ; 
+ Ao clicar em Detalhes: mostrar o cabeçalho (Número da Notificação, Data de 
+Criação, Prazo de Cumprimento, Técnico Responsável pela Criação, 
+Situação) e a listagem de pendências ; 
+ Ao clicar em Enviar:  
+o Disparar e-mail e notificação a todos os partícipes do processo ; 
+o Alterar a situação do processo para Pendente e a situação da 
+Notificação para Enviada ; 
+o O processo deve sair da pauta do técnico que está analisando ; 
+o Neste momento, com a situação do processo Pendente, deve ser 
+possível retificar o processo ; 
+ Ao clicar em Canelar: Só deve ser possível para uma notificação com a 
+situação Aberta. Mostrar mensagem de validação “Deseja realmente cancelar 
+
+
+================================================================================
+PÁGINA 9
+================================================================================
+
+a notificação selecionada?”. Caso confirmado, alterar a situação da notificação 
+para Cancelada ; 
+ Ao clicar em Encerrar:  
+o Mostrar duas opções: Atendido e Não Atendido ; 
+o Caso seja selecionado “Não Atendido”, mostrar campo do tipo texto 
+para que o técnico escreva o motivo. Mostar o botão Encerrar para 
+finalizar a ação. Ao encerrar alterar a situação da notificação para Não 
+Atendida; 
+o Caso seja selecionado “Atendida”, ao clicar em Encerrar, alterar a 
+situação da notificação para Resolvida ; 
+ 
+ Situações de uma notificação: 
+o Aberta: quando criada e ainda não enviada ;  
+o Enviada: quando enviada para o requerente e aguardando alteração do 
+processo;   
+o Respondida: quando o requerente conclui o processo (verificar aqui se 
+vai ser na conclusão ou se coloca um botão de resolver notificação ); 
+o Resolvida: quando o técnico analisa o processo após retorno do 
+requerente e informa que as pendências foram atendidas;  
+o Não Atendida: quando o técnico analisa o processo após retorno do 
+requerente e informa que as pendências não foram atendidas;  
+o Cancelada: quando a notificação é aberta e o técnico desiste de enviar, 
+então pode optar por cancelar. 
+
