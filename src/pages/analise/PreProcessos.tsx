@@ -29,7 +29,7 @@ interface PreProcesso {
 const mockPreProcessos: PreProcesso[] = [
   {
     id: '1',
-    numero: 'PRE-2025-001',
+    numero: 'LP/001/2025',
     requerente: 'Empresa ABC Ltda',
     atividadePrimaria: 'Indústria de Alimentos',
     dataSolicitacao: '2025-11-15',
@@ -49,7 +49,7 @@ const mockPreProcessos: PreProcesso[] = [
   },
   {
     id: '2',
-    numero: 'PRE-2025-002',
+    numero: 'LI/001/2025',
     requerente: 'Construtora XYZ S/A',
     atividadePrimaria: 'Construção Civil',
     dataSolicitacao: '2025-11-18',
@@ -68,7 +68,7 @@ const mockPreProcessos: PreProcesso[] = [
   },
   {
     id: '3',
-    numero: 'PRE-2025-003',
+    numero: 'LO/001/2025',
     requerente: 'Agropecuária Delta',
     atividadePrimaria: 'Criação de Suínos',
     dataSolicitacao: '2025-11-20',

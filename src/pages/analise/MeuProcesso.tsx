@@ -28,7 +28,7 @@ interface MeuProcessoItem {
 const mockMeusProcessos: MeuProcessoItem[] = [
   {
     id: '1',
-    numero: 'PROC-2025-023',
+    numero: 'LP/001/2025',
     requerente: 'Curtume Industrial São João',
     atividade: 'Curtimento de Couros',
     situacao: 'Em Análise',
@@ -44,7 +44,7 @@ const mockMeusProcessos: MeuProcessoItem[] = [
   },
   {
     id: '2',
-    numero: 'PROC-2025-031',
+    numero: 'LI/001/2025',
     requerente: 'Madeireira Florestal Ltda',
     atividade: 'Beneficiamento de Madeira',
     situacao: 'Pendente',
@@ -60,7 +60,7 @@ const mockMeusProcessos: MeuProcessoItem[] = [
   },
   {
     id: '3',
-    numero: 'PROC-2025-038',
+    numero: 'LO/001/2025',
     requerente: 'Granja Avícola Delta',
     atividade: 'Criação de Aves',
     situacao: 'Em Análise',
