@@ -23,6 +23,16 @@ interface SelectedActivity {
   area_ocupada?: string;
   geoFiles?: string[];
   isPrincipal?: boolean;
+  enterprise_size_ranges?: Array<{
+    id: string;
+    range_name: string;
+    range_start: number;
+    range_end: number;
+    enterprise_size: {
+      id: string;
+      name: string;
+    };
+  }>;
 }
 
 interface UploadedFile {
@@ -48,6 +58,7 @@ export default function AtividadesEmpreendimentoPage({
   const [expandedActivityIndex, setExpandedActivityIndex] = useState<number | null>(null);
   const [uploadedAcoesFiles, setUploadedAcoesFiles] = useState<UploadedFile[]>([]);
   const [showMapForActivity, setShowMapForActivity] = useState<{[key: number]: boolean}>({});
+  const [editingActivityIndex, setEditingActivityIndex] = useState<number | null>(null);
 
   const [consultasData, setConsultasData] = useState({
     unidades_conservacao_icmbio: [] as Array<{ nome: string; grupo: string; area_sobreposicao: string }>,
@@ -166,7 +177,8 @@ export default function AtividadesEmpreendimentoPage({
       quantidade: '',
       unidade: activity.measurement_unit || '',
       area_ocupada: '',
-      isPrincipal: selectedActivities.length === 0 // Primeira atividade é principal por padrão
+      isPrincipal: selectedActivities.length === 0, // Primeira atividade é principal por padrão
+      enterprise_size_ranges: activity.enterprise_size_ranges || [] // Armazenar faixas de porte
     };
 
     setSelectedActivities([...selectedActivities, newActivity]);
@@ -197,10 +209,96 @@ export default function AtividadesEmpreendimentoPage({
     toast.success(`"${updated[index].name}" definida como atividade principal`);
   };
 
+  // Calcular o porte automaticamente baseado na quantidade e nas faixas configuradas
+  const calculateEnterpriseSize = (quantidade: string, ranges?: Array<any>): string | undefined => {
+    if (!quantidade || !ranges || ranges.length === 0) {
+      return undefined;
+    }
+
+    const quantidadeNum = parseFloat(quantidade);
+    if (isNaN(quantidadeNum)) {
+      return undefined;
+    }
+
+    // Buscar a faixa que corresponde à quantidade
+    for (const range of ranges) {
+      const start = range.range_start;
+      const end = range.range_end;
+
+      // Faixa sem limite superior (>= start)
+      if (start !== null && end === null) {
+        if (quantidadeNum >= start) {
+          return range.enterprise_size?.name;
+        }
+      }
+      // Faixa sem limite inferior (<= end)
+      else if (start === null && end !== null) {
+        if (quantidadeNum <= end) {
+          return range.enterprise_size?.name;
+        }
+      }
+      // Faixa com ambos os limites (start <= valor <= end)
+      else if (start !== null && end !== null) {
+        if (quantidadeNum >= start && quantidadeNum <= end) {
+          return range.enterprise_size?.name;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
   const handleUpdateActivityData = (index: number, field: string, value: string) => {
     const updated = [...selectedActivities];
     updated[index] = { ...updated[index], [field]: value };
+
+    // Se o campo alterado for 'quantidade', recalcular o porte automaticamente
+    if (field === 'quantidade') {
+      const activity = updated[index];
+      const newEnterpriseSize = calculateEnterpriseSize(value, activity.enterprise_size_ranges);
+      
+      if (newEnterpriseSize) {
+        updated[index].enterpriseSize = newEnterpriseSize;
+      } else if (value === '' || value === null) {
+        // Se quantidade foi limpa, resetar o porte
+        updated[index].enterpriseSize = undefined;
+      }
+    }
+
     setSelectedActivities(updated);
+  };
+
+  const handleEditActivity = (index: number) => {
+    setEditingActivityIndex(index);
+  };
+
+  const handleSaveActivityData = async (index: number) => {
+    const activity = selectedActivities[index];
+    
+    // Validações
+    if (!activity.unidade) {
+      toast.error('Selecione a unidade de medida');
+      return;
+    }
+    if (!activity.quantidade) {
+      toast.error('Informe a quantidade');
+      return;
+    }
+    if (!activity.enterpriseSize) {
+      toast.error('Não foi possível calcular o porte. Verifique a quantidade informada.');
+      return;
+    }
+
+    try {
+      // TODO: Implementar chamada à API para salvar os dados quantitativos
+      // Exemplo: await saveActivityQuantitativeData(activity);
+      
+      toast.success('Dados quantitativos salvos com sucesso!');
+      setEditingActivityIndex(null);
+    } catch (error) {
+      console.error('Erro ao salvar dados quantitativos:', error);
+      toast.error('Erro ao salvar os dados. Tente novamente.');
+    }
   };
 
   const handleGeoUpload = (activityIndex: number, data: any[], fileName: string) => {
@@ -508,7 +606,26 @@ export default function AtividadesEmpreendimentoPage({
 
               {/* Dados Quantitativos */}
               <div className="px-6 py-4 bg-gray-50">
-                <h5 className="text-xs font-bold text-gray-700 uppercase mb-3">Dados Quantitativos</h5>
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="text-xs font-bold text-gray-700 uppercase">Dados Quantitativos</h5>
+                  {editingActivityIndex === index ? (
+                    <button
+                      onClick={() => handleSaveActivityData(index)}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Salvar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleEditActivity(index)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      <Activity className="w-4 h-4" />
+                      Editar
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-2">
@@ -517,7 +634,10 @@ export default function AtividadesEmpreendimentoPage({
                     <select
                       value={activity.unidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'unidade', e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      disabled={editingActivityIndex !== index}
+                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                      }`}
                       title="Selecione a unidade de medida"
                     >
                       <option value="">Selecione a unidade...</option>
@@ -542,7 +662,11 @@ export default function AtividadesEmpreendimentoPage({
                       type="number"
                       value={activity.quantidade || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'quantidade', e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      disabled={editingActivityIndex !== index}
+                      readOnly={editingActivityIndex !== index}
+                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                      }`}
                       placeholder="Ex: 100"
                     />
                   </div>
@@ -556,7 +680,11 @@ export default function AtividadesEmpreendimentoPage({
                       step="0.01"
                       value={activity.area_ocupada || ''}
                       onChange={(e) => handleUpdateActivityData(index, 'area_ocupada', e.target.value)}
-                      className="w-full px-4 py-2.5 text-sm bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      disabled={editingActivityIndex !== index}
+                      readOnly={editingActivityIndex !== index}
+                      className={`w-full px-4 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                        editingActivityIndex !== index ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'
+                      }`}
                       placeholder="Ex: 500.00"
                     />
                   </div>
