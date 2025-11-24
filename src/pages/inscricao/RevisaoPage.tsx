@@ -39,6 +39,12 @@ const MOCK_REVISAO_DATA = {
     abbreviation: 'LP',
     description: 'Licença prévia para avaliação de viabilidade ambiental do empreendimento'
   },
+  empreendimento: {
+    nome: 'Complexo Industrial XYZ',
+    tipo: 'Industrial',
+    endereco: 'Rodovia BR-101, Km 50 - São Paulo/SP',
+    status: 'ativo'
+  },
   imovel: {
     nome: 'Fazenda São José',
     municipio: 'São Paulo',
@@ -272,6 +278,7 @@ export default function RevisaoPage() {
   const displayProcessoId = processoId || MOCK_REVISAO_DATA.processoId;
   const displayParticipants = participants.length > 0 ? participants : MOCK_REVISAO_DATA.participantes;
   const displayLicenseType = selectedLicenseType || MOCK_REVISAO_DATA.licenseType;
+  const displayEmpreendimento = MOCK_REVISAO_DATA.empreendimento;
   const displayProperty = empreendimentoProperty || (property && propertyId ? property : MOCK_REVISAO_DATA.imovel);
   const displayAtividades = empreendimentoAtividades.length > 0 ? empreendimentoAtividades : MOCK_REVISAO_DATA.atividades;
   const displayTitles = titles.length > 0 ? titles : MOCK_REVISAO_DATA.titulos;
@@ -393,6 +400,42 @@ export default function RevisaoPage() {
               <p className="text-red-600">Tipo de licenciamento não selecionado</p>
             </div>
           )}
+        </div>
+
+        {/* Empreendimento Selecionado */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+            <Building className="w-5 h-5" />
+            Empreendimento Selecionado
+          </h3>
+
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="font-medium text-gray-900">{displayEmpreendimento.nome}</span>
+                <p className="text-sm text-gray-600">{displayEmpreendimento.tipo}</p>
+              </div>
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">Nome:</span>
+                <p className="text-gray-600">{displayEmpreendimento.nome}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Tipo:</span>
+                <p className="text-gray-600">{displayEmpreendimento.tipo}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Endereço:</span>
+                <p className="text-gray-600">{displayEmpreendimento.endereco}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Status:</span>
+                <p className="text-gray-600">{displayEmpreendimento.status}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Imóvel */}
