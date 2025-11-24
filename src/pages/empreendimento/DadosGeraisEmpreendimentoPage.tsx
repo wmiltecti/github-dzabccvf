@@ -263,63 +263,6 @@ export default function DadosGeraisEmpreendimentoPage({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Identificação</h3>
 
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Pessoa <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.tipo_pessoa}
-                  onChange={(e) => handleChange('tipo_pessoa', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  <option value="juridica">Pessoa Jurídica</option>
-                  <option value="fisica">Pessoa Física</option>
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {formData.tipo_pessoa === 'juridica' ? 'CNPJ' : 'CPF'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.cnpj_cpf}
-                  onChange={(e) => handleChange('cnpj_cpf', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder={formData.tipo_pessoa === 'juridica' ? 'Ex: 12.345.678/0001-90' : 'Ex: 123.456.789-00'}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {formData.tipo_pessoa === 'juridica' ? 'Razão Social' : 'Nome Completo'} <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.razao_social}
-                  onChange={(e) => handleChange('razao_social', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder={formData.tipo_pessoa === 'juridica' ? 'Ex: Empresa ABC Ltda' : 'Ex: João Silva'}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {formData.tipo_pessoa === 'juridica' ? 'Nome Fantasia' : 'Nome Social'}
-                </label>
-                <input
-                  type="text"
-                  value={formData.nome_fantasia}
-                  onChange={(e) => handleChange('nome_fantasia', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder={formData.tipo_pessoa === 'juridica' ? 'Ex: ABC Indústria' : ''}
-                />
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nome do Empreendimento <span className="text-red-500">*</span>
