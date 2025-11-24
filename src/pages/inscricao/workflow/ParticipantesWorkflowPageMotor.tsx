@@ -393,7 +393,7 @@ export default function ParticipantesWorkflowPageMotor() {
           disabled={!isStepComplete(1)}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
-          Próximo: Imóvel
+          Próximo
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

@@ -11,7 +11,6 @@ const INSCRICAO_STEPS = [
 
 interface InscricaoStepperSimpleProps {
   currentStep: number;  // 1-based (1 = Empreendimento, 2 = Partícipes, etc)
-  completedSteps?: number[];  // Array de steps completados
   onStepClick?: (step: number) => void;
 }
 
@@ -21,15 +20,10 @@ interface InscricaoStepperSimpleProps {
  */
 export default function InscricaoStepperSimple({
   currentStep,
-  completedSteps = [],
   onStepClick
 }: InscricaoStepperSimpleProps) {
 
   const getStepStatus = (stepNumber: number) => {
-    if (completedSteps.includes(stepNumber)) {
-      return 'completed';
-    }
-
     if (stepNumber === currentStep) {
       return 'current';
     }

@@ -100,6 +100,17 @@ export default function InscricaoLayout() {
     }
   }, [location.pathname, navigate]);
 
+  // Reset wizard state when leaving Nova Solicitação de Processo
+  useEffect(() => {
+    return () => {
+      // Cleanup ao desmontar o componente
+      if (!location.pathname.includes('/inscricao')) {
+        console.log('🧹 [InscricaoLayout] Saindo do wizard, resetando estado...');
+        reset();
+      }
+    };
+  }, [location.pathname, reset]);
+
   const handleStepClick = (step: number) => {
     const route = STEP_TO_ROUTE[step];
     if (route) {

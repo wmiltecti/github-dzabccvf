@@ -5,17 +5,20 @@ import type { InscricaoState, Participant, Property, PropertyTitle } from '../..
 interface InscricaoStore extends InscricaoState {
   // User info (para auditoria)
   userId: string | null;
-  
+
   // Workflow Engine
   workflowInstanceId: string | null;
   currentStepId: string | null;
   currentStepKey: string | null;
-  
+
   // Subprocesso (Subfluxo)
   subprocessInstanceId: string | null;
   subprocessCurrentStepId: string | null;
   subprocessCurrentStepKey: string | null;
-  
+
+  // Step completion tracking
+  completedSteps: number[];
+
   // Actions
   setProcessId: (id: string) => void;
   setUserId: (id: string) => void;
@@ -31,6 +34,7 @@ interface InscricaoStore extends InscricaoState {
   setAtividadeId: (id: number) => void;
   setSelectedLicenseTypeId: (id: string | null) => void;
   setCurrentStep: (step: number) => void;
+  markStepCompleted: (step: number) => void;
   setProcessInitializing: (initializing: boolean) => void;
   reset: () => void;
   startNewInscricao: () => void; // Limpa tudo para nova solicitação
@@ -65,6 +69,7 @@ const initialStoreState = {
   ...initialState,
   userId: null,
   isProcessInitializing: false,
+  completedSteps: [] as number[],
   // Workflow Engine
   workflowInstanceId: null,
   currentStepId: null,
@@ -125,6 +130,14 @@ export const useInscricaoStore = create<InscricaoStore>()(
       setSelectedLicenseTypeId: (id: string | null) => set({ selectedLicenseTypeId: id }),
 
       setCurrentStep: (step: number) => set({ currentStep: step }),
+
+      markStepCompleted: (step: number) => {
+        const state = get();
+        if (!state.completedSteps.includes(step)) {
+          console.log('✅ [Store] Marking step as completed:', step);
+          set({ completedSteps: [...state.completedSteps, step] });
+        }
+      },
 
       setProcessInitializing: (initializing: boolean) => set({ isProcessInitializing: initializing }),
 
@@ -248,6 +261,7 @@ export const useInscricaoStore = create<InscricaoStore>()(
         atividadeId: state.atividadeId,
         selectedLicenseTypeId: state.selectedLicenseTypeId,
         currentStep: state.currentStep,
+        completedSteps: state.completedSteps,
         // Workflow Engine
         workflowInstanceId: state.workflowInstanceId,
         currentStepId: state.currentStepId,

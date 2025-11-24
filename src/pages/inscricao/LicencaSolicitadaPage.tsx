@@ -39,6 +39,13 @@ interface PreviousLicenseData {
   orgao_emissor: string;
 }
 
+const MOCK_REQUIRED_DOCUMENTS = [
+  'Cronograma de elaboração dos planos, programas e projetos',
+  'Publicação em jornal do Pedido de Licença Prévia',
+  'Requerimento Padrão',
+  'Certidão da Prefeitura Municipal declarando que o local e o tipo de empreendimento ou atividade estão em conformidade com legislação aplicável ao uso e ocupação do solo, código de posturas e as leis municipais',
+];
+
 export default function LicencaSolicitadaPage() {
   const navigate = useNavigate();
   const {
@@ -46,13 +53,14 @@ export default function LicencaSolicitadaPage() {
     currentStepId,
     currentStepKey
   } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine, setSelectedLicenseTypeId: setStoreSelectedLicenseTypeId } = useInscricaoStore();
+  const { setCurrentStep, setCurrentStepFromEngine, setSelectedLicenseTypeId: setStoreSelectedLicenseTypeId, markStepCompleted } = useInscricaoStore();
 
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
   const [selectedLicenseTypeId, setSelectedLicenseTypeId] = useState<string>('');
   const [requiredDocuments, setRequiredDocuments] = useState<LicenseTypeDocument[]>([]);
   const [optionalDocuments, setOptionalDocuments] = useState<LicenseTypeDocument[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedDocument[]>([]);
+  const [mockUploadedFiles, setMockUploadedFiles] = useState<Record<string, File>>({});
   const [previousLicense, setPreviousLicense] = useState<PreviousLicenseData>({
     possui_licenca_anterior: 'nao',
     numero_licenca_anterior: '',
@@ -142,6 +150,21 @@ export default function LicencaSolicitadaPage() {
     return uploadedFiles.find(f => f.template_id === templateId);
   };
 
+  const handleMockFileSelect = (documentName: string, file: File) => {
+    setMockUploadedFiles(prev => ({
+      ...prev,
+      [documentName]: file
+    }));
+  };
+
+  const handleMockRemoveFile = (documentName: string) => {
+    setMockUploadedFiles(prev => {
+      const updated = { ...prev };
+      delete updated[documentName];
+      return updated;
+    });
+  };
+
   const handlePreviousLicenseChange = (field: keyof PreviousLicenseData, value: string) => {
     setPreviousLicense(prev => ({ ...prev, [field]: value }));
   };
@@ -184,6 +207,9 @@ export default function LicencaSolicitadaPage() {
       // Salva o tipo de licença selecionado no store
       setStoreSelectedLicenseTypeId(selectedLicenseTypeId);
 
+      // Marcar step 3 (Licença Solicitada) como completo
+      markStepCompleted(3);
+
       if (workflowInstanceId && currentStepId) {
         await completeStep(workflowInstanceId, currentStepId, {
           licenseTypeId: selectedLicenseTypeId,
@@ -199,6 +225,7 @@ export default function LicencaSolicitadaPage() {
     } catch (error: any) {
       console.error('Erro ao salvar licença:', error);
       console.warn('⚠️ Workflow engine não disponível, usando modo manual');
+      markStepCompleted(3);
       setCurrentStep(4);
       toast.success('Licença solicitada salva!');
     } finally {
@@ -271,6 +298,69 @@ export default function LicencaSolicitadaPage() {
                 const file = e.target.files?.[0];
                 if (file) {
                   handleFileSelect(doc.documentation_template_id, file);
+                }
+              }}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            />
+          </label>
+        )}
+      </div>
+    );
+  };
+
+  const renderMockDocumentUpload = (documentName: string, index: number) => {
+    const uploadedFile = mockUploadedFiles[documentName];
+    const hasFile = !!uploadedFile;
+
+    return (
+      <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="text-sm font-semibold text-gray-900">
+                {documentName}
+              </h4>
+              <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
+                Obrigatório
+              </span>
+            </div>
+          </div>
+
+          {hasFile && (
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 ml-2" />
+          )}
+        </div>
+
+        {hasFile ? (
+          <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <span className="text-sm text-green-700 truncate">
+                {uploadedFile.name}
+              </span>
+              <span className="text-xs text-green-600 flex-shrink-0">
+                ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </span>
+            </div>
+            <button
+              onClick={() => handleMockRemoveFile(documentName)}
+              className="ml-2 p-1 text-red-600 hover:bg-red-100 rounded transition-colors flex-shrink-0"
+              title="Remover arquivo"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+            <Upload className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-600">Selecionar arquivo</span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleMockFileSelect(documentName, file);
                 }
               }}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
@@ -402,38 +492,14 @@ export default function LicencaSolicitadaPage() {
         </div>
 
         {selectedLicenseTypeId && (
-          <>
-            {requiredDocuments.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Documentos Obrigatórios
-                </h3>
-                <div className="space-y-3">
-                  {requiredDocuments.map(doc => renderDocumentUpload(doc, true))}
-                </div>
-              </div>
-            )}
-
-            {optionalDocuments.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Documentos Opcionais
-                </h3>
-                <div className="space-y-3">
-                  {optionalDocuments.map(doc => renderDocumentUpload(doc, false))}
-                </div>
-              </div>
-            )}
-
-            {requiredDocuments.length === 0 && optionalDocuments.length === 0 && (
-              <div className="bg-gray-50 rounded-lg p-6 text-center border border-gray-200">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">
-                  Nenhum documento vinculado a este tipo de licença
-                </p>
-              </div>
-            )}
-          </>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Documentos Obrigatórios
+            </h3>
+            <div className="space-y-3">
+              {MOCK_REQUIRED_DOCUMENTS.map((docName, index) => renderMockDocumentUpload(docName, index))}
+            </div>
+          </div>
         )}
       </div>
 
@@ -451,7 +517,7 @@ export default function LicencaSolicitadaPage() {
           disabled={isSubmitting || !selectedLicenseTypeId}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? 'Salvando...' : 'Próximo: Documentação'}
+          {isSubmitting ? 'Salvando...' : 'Próximo'}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
