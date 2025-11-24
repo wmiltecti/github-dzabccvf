@@ -58,16 +58,13 @@ const MOCK_REVISAO_DATA = {
   },
   atividades: [
     {
-      nome: 'Fabricação de produtos químicos',
-      tipo: 'Industrial',
-      descricao: 'Produção de fertilizantes e produtos para agricultura',
-      codigo: 'CNAE 20.13-4'
-    },
-    {
-      nome: 'Armazenamento e depósito de produtos químicos',
-      tipo: 'Logística',
-      descricao: 'Armazenamento de matérias-primas e produtos acabados',
-      codigo: 'CNAE 52.11-7'
+      nome: 'Extração e/ou beneficiamento de carvão mineral',
+      tipo: 'Mineração',
+      unidade_medida: 'Concessão do Ministério de Minas e Energia em hectares (ha)',
+      porte: 'Grande',
+      potencial_poluidor: 'Alto',
+      descricao: 'Atividade de extração, lavra e beneficiamento de carvão mineral',
+      codigo: 'CNAE 05.00-3'
     }
   ],
   dadosGerais: {
@@ -524,7 +521,7 @@ export default function RevisaoPage() {
             <div className="space-y-3">
               {displayAtividades.map((atividade, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="font-medium text-gray-900">{atividade.nome}</span>
@@ -535,11 +532,41 @@ export default function RevisaoPage() {
                         )}
                       </div>
                       {atividade.descricao && (
-                        <p className="text-sm text-gray-600">{atividade.descricao}</p>
+                        <p className="text-sm text-gray-600 mb-2">{atividade.descricao}</p>
                       )}
                     </div>
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                   </div>
+
+                  {/* Grid com campos adicionais */}
+                  {(atividade.unidade_medida || atividade.porte || atividade.potencial_poluidor || atividade.codigo) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm border-t border-gray-100 pt-3">
+                      {atividade.unidade_medida && (
+                        <div>
+                          <span className="font-medium text-gray-700">Unidade de medida:</span>
+                          <p className="text-gray-600">{atividade.unidade_medida}</p>
+                        </div>
+                      )}
+                      {atividade.porte && (
+                        <div>
+                          <span className="font-medium text-gray-700">Porte:</span>
+                          <p className="text-gray-600">{atividade.porte}</p>
+                        </div>
+                      )}
+                      {atividade.potencial_poluidor && (
+                        <div>
+                          <span className="font-medium text-gray-700">Potencial Poluidor:</span>
+                          <p className="text-gray-600">{atividade.potencial_poluidor}</p>
+                        </div>
+                      )}
+                      {atividade.codigo && (
+                        <div>
+                          <span className="font-medium text-gray-700">Código:</span>
+                          <p className="text-gray-600">{atividade.codigo}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
