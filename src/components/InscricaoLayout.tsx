@@ -30,7 +30,7 @@ const STEP_TO_ROUTE: Record<number, string> = {
 export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentStep, setCurrentStep, completedSteps, reset, startNewInscricao } = useInscricaoStore();
+  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
 
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
@@ -227,7 +227,6 @@ export default function InscricaoLayout() {
       {/* Stepper Simples */}
       <InscricaoStepperSimple
         currentStep={currentStep}
-        completedSteps={completedSteps}
         onStepClick={handleStepClick}
       />
 
