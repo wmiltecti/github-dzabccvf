@@ -15,6 +15,85 @@ import { linkProperty, getParticipants, linkActivity } from '../../lib/api/proce
 // Blockchain
 import { sendToBlockchain } from '../../lib/utils/BlockchainUtils';
 
+const MOCK_REVISAO_DATA = {
+  processoId: '12345',
+  status: 'Rascunho',
+  participantes: [
+    {
+      type: 'PF',
+      nome: 'João Silva Santos',
+      cpf: '123.456.789-00',
+      email: 'joao.silva@exemplo.com.br',
+      role: 'REQUERENTE'
+    },
+    {
+      type: 'PJ',
+      razao_social: 'Empresa Exemplo Indústria e Comércio Ltda',
+      cnpj: '12.345.678/0001-90',
+      email: 'contato@empresaexemplo.com.br',
+      role: 'RESP_TECNICO'
+    }
+  ],
+  licenseType: {
+    name: 'Licença Prévia',
+    abbreviation: 'LP',
+    description: 'Licença prévia para avaliação de viabilidade ambiental do empreendimento'
+  },
+  imovel: {
+    nome: 'Fazenda São José',
+    municipio: 'São Paulo',
+    uf: 'SP',
+    endereco: 'Rodovia Exemplo, Km 45',
+    bairro: 'Zona Rural',
+    area: '15000',
+    matricula: '12345',
+    car_codigo: 'SP-1234567-ABCD1234EFGH5678',
+    coordenadas: 'UTM: -23.5505° S, -46.6333° W'
+  },
+  atividades: [
+    {
+      nome: 'Fabricação de produtos químicos',
+      tipo: 'Industrial',
+      descricao: 'Produção de fertilizantes e produtos para agricultura',
+      codigo: 'CNAE 20.13-4'
+    },
+    {
+      nome: 'Armazenamento e depósito de produtos químicos',
+      tipo: 'Logística',
+      descricao: 'Armazenamento de matérias-primas e produtos acabados',
+      codigo: 'CNAE 52.11-7'
+    }
+  ],
+  dadosGerais: {
+    nomeEmpreendimento: 'Indústria Química Exemplo S/A',
+    razaoSocial: 'Exemplo Química Industrial Ltda',
+    cnpj: '12.345.678/0001-90',
+    inscricaoEstadual: '123.456.789.012',
+    telefone: '(11) 3456-7890',
+    email: 'contato@exemploquimica.com.br'
+  },
+  caracterizacao: {
+    descricao: 'Empreendimento industrial destinado à fabricação de fertilizantes agrícolas',
+    area_construida: '5000 m²',
+    area_total: '15000 m²',
+    numero_funcionarios: '150',
+    horario_funcionamento: '24 horas (3 turnos)',
+    consumo_agua: '500 m³/mês',
+    geracao_efluentes: '400 m³/mês',
+    geracao_residuos: '50 ton/mês'
+  },
+  titulos: [
+    {
+      matricula: '12345',
+      nome_cartorio: 'Cartório de Registro de Imóveis de São Paulo'
+    },
+    {
+      matricula: '67890',
+      nome_cartorio: '2º Ofício de Registro de Imóveis'
+    }
+  ]
+};
+
 export default function RevisaoPage() {
   const navigate = useNavigate();
   const { processoId } = useInscricaoContext();
@@ -190,6 +269,13 @@ export default function RevisaoPage() {
   const empreendimentoAtividades = empreendimentoStore.atividades || [];
   const empreendimentoDadosGerais = empreendimentoStore.dadosGerais;
 
+  const displayProcessoId = processoId || MOCK_REVISAO_DATA.processoId;
+  const displayParticipants = participants.length > 0 ? participants : MOCK_REVISAO_DATA.participantes;
+  const displayLicenseType = selectedLicenseType || MOCK_REVISAO_DATA.licenseType;
+  const displayProperty = empreendimentoProperty || (property && propertyId ? property : MOCK_REVISAO_DATA.imovel);
+  const displayAtividades = empreendimentoAtividades.length > 0 ? empreendimentoAtividades : MOCK_REVISAO_DATA.atividades;
+  const displayTitles = titles.length > 0 ? titles : MOCK_REVISAO_DATA.titulos;
+
   const getRoleText = (role: string) => {
     switch (role) {
       case 'REQUERENTE':
@@ -204,10 +290,10 @@ export default function RevisaoPage() {
   };
 
   const allStepsComplete =
-    participants.length > 0 &&
-    participants.some((p) => p.role === 'REQUERENTE') &&
-    (!!propertyId || !!empreendimentoProperty) &&
-    (!!atividadeId || empreendimentoAtividades.length > 0);
+    displayParticipants.length > 0 &&
+    displayParticipants.some((p) => p.role === 'REQUERENTE') &&
+    !!displayProperty &&
+    displayAtividades.length > 0;
 
   return (
     <div className="p-6">
@@ -226,11 +312,11 @@ export default function RevisaoPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-blue-800">Processo ID:</span>
-              <span className="ml-2 text-blue-700">#{processoId}</span>
+              <span className="ml-2 text-blue-700">#{displayProcessoId}</span>
             </div>
             <div>
               <span className="font-medium text-blue-800">Status:</span>
-              <span className="ml-2 text-blue-700">Rascunho</span>
+              <span className="ml-2 text-blue-700">{MOCK_REVISAO_DATA.status}</span>
             </div>
           </div>
         </div>
@@ -239,12 +325,12 @@ export default function RevisaoPage() {
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Users className="w-5 h-5" />
-            Participantes ({participants.length})
+            Participantes ({displayParticipants.length})
           </h3>
 
-          {participants.length > 0 ? (
+          {displayParticipants.length > 0 ? (
             <div className="space-y-3">
-              {participants.map((participant, index) => (
+              {displayParticipants.map((participant, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -284,18 +370,18 @@ export default function RevisaoPage() {
             Tipo de Licenciamento
           </h3>
 
-          {selectedLicenseType ? (
+          {displayLicenseType ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-gray-900">{selectedLicenseType.name}</span>
+                    <span className="font-medium text-gray-900">{displayLicenseType.name}</span>
                     <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                      {selectedLicenseType.abbreviation}
+                      {displayLicenseType.abbreviation}
                     </span>
                   </div>
-                  {selectedLicenseType.description && (
-                    <p className="text-sm text-gray-600">{selectedLicenseType.description}</p>
+                  {displayLicenseType.description && (
+                    <p className="text-sm text-gray-600">{displayLicenseType.description}</p>
                   )}
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-500" />
@@ -316,90 +402,58 @@ export default function RevisaoPage() {
             Imóvel
           </h3>
 
-          {empreendimentoProperty || (property && propertyId) ? (
+          {displayProperty ? (
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  {empreendimentoProperty ? (
-                    <>
-                      <span className="font-medium text-gray-900">{empreendimentoProperty.nome || 'Imóvel'}</span>
-                      <p className="text-sm text-gray-600">
-                        {empreendimentoProperty.municipio}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <span className="font-medium text-gray-900">Tipo: {property?.kind}</span>
-                      <p className="text-sm text-gray-600">
-                        {property?.address?.municipio}/{property?.address?.uf}
-                      </p>
-                    </>
-                  )}
+                  <span className="font-medium text-gray-900">{displayProperty.nome || 'Imóvel'}</span>
+                  <p className="text-sm text-gray-600">
+                    {displayProperty.municipio}/{displayProperty.uf}
+                  </p>
                 </div>
                 <CheckCircle className="w-5 h-5 text-green-500" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                {empreendimentoProperty ? (
-                  <>
-                    <div>
-                      <span className="font-medium text-gray-700">Endereço:</span>
-                      <p className="text-gray-600">
-                        {empreendimentoProperty.endereco}
-                        <br />
-                        {empreendimentoProperty.bairro && `${empreendimentoProperty.bairro}, `}
-                        {empreendimentoProperty.municipio}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Área:</span>
-                      <p className="text-gray-600">
-                        {empreendimentoProperty.area ? `${empreendimentoProperty.area} m²` : 'Não informada'}
-                      </p>
-                    </div>
-                    {empreendimentoProperty.matricula && (
-                      <div>
-                        <span className="font-medium text-gray-700">Matrícula:</span>
-                        <p className="text-gray-600">{empreendimentoProperty.matricula}</p>
-                      </div>
-                    )}
-                    {empreendimentoProperty.car_codigo && (
-                      <div>
-                        <span className="font-medium text-gray-700">CAR:</span>
-                        <p className="text-gray-600">{empreendimentoProperty.car_codigo}</p>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <span className="font-medium text-gray-700">Endereço:</span>
-                      <p className="text-gray-600">
-                        {property?.address?.logradouro}, {property?.address?.numero}
-                        <br />
-                        {property?.address?.municipio}/{property?.address?.uf}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-700">Coordenadas:</span>
-                      <p className="text-gray-600">
-                        {property?.utm_lat && property?.utm_long ? (
-                          <>UTM: {property.utm_lat}, {property.utm_long}</>
-                        ) : property?.dms_lat && property?.dms_long ? (
-                          <>DMS: {property.dms_lat}, {property.dms_long}</>
-                        ) : (
-                          'Não informadas'
-                        )}
-                      </p>
-                    </div>
-                  </>
+                <div>
+                  <span className="font-medium text-gray-700">Endereço:</span>
+                  <p className="text-gray-600">
+                    {displayProperty.endereco}
+                    <br />
+                    {displayProperty.bairro && `${displayProperty.bairro}, `}
+                    {displayProperty.municipio}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Área:</span>
+                  <p className="text-gray-600">
+                    {displayProperty.area ? `${displayProperty.area} m²` : 'Não informada'}
+                  </p>
+                </div>
+                {displayProperty.matricula && (
+                  <div>
+                    <span className="font-medium text-gray-700">Matrícula:</span>
+                    <p className="text-gray-600">{displayProperty.matricula}</p>
+                  </div>
+                )}
+                {displayProperty.car_codigo && (
+                  <div>
+                    <span className="font-medium text-gray-700">CAR:</span>
+                    <p className="text-gray-600">{displayProperty.car_codigo}</p>
+                  </div>
+                )}
+                {displayProperty.coordenadas && (
+                  <div>
+                    <span className="font-medium text-gray-700">Coordenadas:</span>
+                    <p className="text-gray-600">{displayProperty.coordenadas}</p>
+                  </div>
                 )}
               </div>
 
-              {titles.length > 0 && (
+              {displayTitles.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <span className="font-medium text-gray-700">Títulos de Propriedade:</span>
                   <div className="mt-2 space-y-1">
-                    {titles.map((title, index) => (
+                    {displayTitles.map((title, index) => (
                       <p key={index} className="text-sm text-gray-600">
                         Matrícula {title.matricula} - {title.nome_cartorio}
                       </p>
@@ -420,12 +474,12 @@ export default function RevisaoPage() {
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
             <Building className="w-5 h-5" />
-            Atividades ({empreendimentoAtividades.length})
+            Atividades ({displayAtividades.length})
           </h3>
 
-          {empreendimentoAtividades.length > 0 ? (
+          {displayAtividades.length > 0 ? (
             <div className="space-y-3">
-              {empreendimentoAtividades.map((atividade, index) => (
+              {displayAtividades.map((atividade, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -445,15 +499,6 @@ export default function RevisaoPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          ) : atividadeId ? (
-            <div className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-medium text-gray-900">Atividade ID: {atividadeId}</span>
-                </div>
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              </div>
             </div>
           ) : (
             <div className="text-center py-6 border border-gray-200 rounded-lg">
