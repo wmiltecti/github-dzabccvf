@@ -30,7 +30,7 @@ const STEP_TO_ROUTE: Record<number, string> = {
 export default function InscricaoLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentStep, setCurrentStep, reset, startNewInscricao } = useInscricaoStore();
+  const { currentStep, setCurrentStep, completedSteps, reset, startNewInscricao } = useInscricaoStore();
 
   // State LOCAL (como no FormWizard) - não usa Zustand para processoId
   const [processoId, setProcessoId] = useState<string | null>(null);
@@ -99,6 +99,17 @@ export default function InscricaoLayout() {
       navigate('/inscricao/empreendimento', { replace: true });
     }
   }, [location.pathname, navigate]);
+
+  // Reset wizard state when leaving Nova Solicitação de Processo
+  useEffect(() => {
+    return () => {
+      // Cleanup ao desmontar o componente
+      if (!location.pathname.includes('/inscricao')) {
+        console.log('🧹 [InscricaoLayout] Saindo do wizard, resetando estado...');
+        reset();
+      }
+    };
+  }, [location.pathname, reset]);
 
   const handleStepClick = (step: number) => {
     const route = STEP_TO_ROUTE[step];
@@ -216,6 +227,7 @@ export default function InscricaoLayout() {
       {/* Stepper Simples */}
       <InscricaoStepperSimple
         currentStep={currentStep}
+        completedSteps={completedSteps}
         onStepClick={handleStepClick}
       />
 

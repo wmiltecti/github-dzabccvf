@@ -12,12 +12,12 @@ import { completeStep } from '../../services/workflowApi';
 
 export default function EmpreendimentoPage() {
   const navigate = useNavigate();
-  const { 
+  const {
     workflowInstanceId,
     currentStepId,
     currentStepKey
   } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine } = useInscricaoStore();
+  const { setCurrentStep, setCurrentStepFromEngine, markStepCompleted } = useInscricaoStore();
   
   // Contexto e configurações
   const { selectedEnterprise, isNewEnterprise, searchPerformed, setNewEnterprise } = useEnterprise();
@@ -158,20 +158,23 @@ export default function EmpreendimentoPage() {
 
       console.log('✅ Step completado:', response);
 
-      // 4. Verificar se workflow finalizou
+      // 4. Marcar step 1 (Empreendimento) como completo
+      markStepCompleted(1);
+
+      // 5. Verificar se workflow finalizou
       if (response.status === 'FINISHED' || !response.nextStep) {
         toast.success('Processo finalizado!');
         navigate('/inscricao/revisao');
         return;
       }
 
-      // 5. Atualizar contexto com próximo step
+      // 6. Atualizar contexto com próximo step
       setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
 
-      // 6. Navegar para próxima rota definida pelo backend
+      // 7. Navegar para próxima rota definida pelo backend
       console.log('🧭 Navegando para:', response.nextStep.path);
       navigate(response.nextStep.path);
-      
+
       toast.success(`Avançando para: ${response.nextStep.label}`);
     } catch (error: any) {
       console.error('❌ Erro ao completar step:', error);

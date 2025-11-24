@@ -53,7 +53,7 @@ export default function LicencaSolicitadaPage() {
     currentStepId,
     currentStepKey
   } = useInscricaoContext();
-  const { setCurrentStep, setCurrentStepFromEngine, setSelectedLicenseTypeId: setStoreSelectedLicenseTypeId } = useInscricaoStore();
+  const { setCurrentStep, setCurrentStepFromEngine, setSelectedLicenseTypeId: setStoreSelectedLicenseTypeId, markStepCompleted } = useInscricaoStore();
 
   const [licenseTypes, setLicenseTypes] = useState<LicenseType[]>([]);
   const [selectedLicenseTypeId, setSelectedLicenseTypeId] = useState<string>('');
@@ -207,6 +207,9 @@ export default function LicencaSolicitadaPage() {
       // Salva o tipo de licença selecionado no store
       setStoreSelectedLicenseTypeId(selectedLicenseTypeId);
 
+      // Marcar step 3 (Licença Solicitada) como completo
+      markStepCompleted(3);
+
       if (workflowInstanceId && currentStepId) {
         await completeStep(workflowInstanceId, currentStepId, {
           licenseTypeId: selectedLicenseTypeId,
@@ -222,6 +225,7 @@ export default function LicencaSolicitadaPage() {
     } catch (error: any) {
       console.error('Erro ao salvar licença:', error);
       console.warn('⚠️ Workflow engine não disponível, usando modo manual');
+      markStepCompleted(3);
       setCurrentStep(4);
       toast.success('Licença solicitada salva!');
     } finally {

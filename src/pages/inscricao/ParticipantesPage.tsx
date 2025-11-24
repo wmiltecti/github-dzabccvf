@@ -25,11 +25,12 @@ export default function ParticipantesPage() {
     currentStepId, 
     currentStepKey 
   } = useInscricaoContext();
-  const { 
-    isStepComplete, 
-    setParticipants, 
+  const {
+    isStepComplete,
+    setParticipants,
     setCurrentStep,
-    setCurrentStepFromEngine 
+    setCurrentStepFromEngine,
+    markStepCompleted
   } = useInscricaoStore();
 
   const [participantes, setParticipantes] = useState<ParticipanteProcessoResponse[]>([]);
@@ -260,7 +261,8 @@ export default function ParticipantesPage() {
     // 2. Verificar se workflow está inicializado
     if (!workflowInstanceId || !currentStepId) {
       console.warn('⚠️ Workflow não inicializado, usando modo manual');
-      // Modo manual: avançar para step 3 (Licença Solicitada)
+      // Modo manual: marcar step 2 como completo e avançar para step 3
+      markStepCompleted(2);
       setCurrentStep(3);
       toast.success('Avançando para Licença Solicitada');
       return;
@@ -281,17 +283,20 @@ export default function ParticipantesPage() {
 
       console.log('✅ Step completado:', response);
 
-      // 4. Verificar se workflow finalizou
+      // 4. Marcar step 2 (Partícipes) como completo
+      markStepCompleted(2);
+
+      // 5. Verificar se workflow finalizou
       if (response.status === 'FINISHED' || !response.nextStep) {
         toast.success('Processo finalizado!');
         navigate('/inscricao/revisao');
         return;
       }
 
-      // 5. Atualizar contexto com próximo step
+      // 6. Atualizar contexto com próximo step
       setCurrentStepFromEngine(response.nextStep.id, response.nextStep.key);
 
-      // 6. Navegar para próxima rota definida pelo backend
+      // 7. Navegar para próxima rota definida pelo backend
       console.log('🧭 Navegando para:', response.nextStep.path);
       navigate(response.nextStep.path);
 
@@ -300,6 +305,7 @@ export default function ParticipantesPage() {
       console.error('❌ Erro ao completar step:', error);
       console.warn('⚠️ Workflow engine não disponível, usando modo manual');
       // Fallback: modo manual
+      markStepCompleted(2);
       setCurrentStep(3);
       toast.success('Avançando para Licença Solicitada');
     }
