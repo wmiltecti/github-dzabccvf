@@ -513,7 +513,7 @@ export default function LicencaSolicitadaPage() {
           disabled={isSubmitting || !selectedLicenseTypeId}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {isSubmitting ? 'Salvando...' : 'Próximo: Documentação'}
+          {isSubmitting ? 'Salvando...' : 'Próximo'}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

@@ -280,7 +280,7 @@ export default function DocumentacaoPage() {
           onClick={handleNext}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
         >
-          Próximo: Revisão
+          Próximo
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
