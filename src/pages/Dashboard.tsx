@@ -1449,6 +1449,10 @@ export default function Dashboard() {
                     onClick={() => {
                       setActiveTab(item.id);
                       setSidebarOpen(false);
+                      // Reset wizard state when clicking "Solicitação de Processo" to always show list
+                      if (item.id === 'inscricoes') {
+                        setShowWizardInInscricoes(false);
+                      }
                     }}
                     className={`w-full flex items-center px-3 py-3 rounded-lg text-sm font-medium nav-item ${
                       activeTab === item.id
