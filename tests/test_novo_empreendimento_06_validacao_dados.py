@@ -3,17 +3,44 @@
 TESTE 06 - VALIDAÇÃO DE DADOS NO BANCO (NOVO EMPREENDIMENTO)
 =======================================================================
 
-Este teste final valida se os dados de todas as abas foram gravados 
-corretamente nas tabelas do Supabase.
+⚠️  ATENÇÃO: ESTE TESTE ESTÁ TEMPORARIAMENTE DESATIVADO
+============================================================
 
-Validações por aba:
+Motivo: O teste atual acessa o Supabase diretamente, mas a arquitetura
+        foi definida para usar APENAS APIs (sem acesso direto ao banco).
+
+Status: AGUARDANDO REFATORAÇÃO
+------------------------------
+
+Este teste será completamente refatorado para:
+1. Usar chamadas HTTP às APIs do backend ao invés de acessar Supabase
+2. Validar dados através dos endpoints de consulta
+3. Seguir o padrão de arquitetura: Frontend -> API -> Backend -> Supabase
+
+APIs necessárias para reativar este teste:
+-------------------------------------------
+- GET /api/v1/properties/{property_id}
+- GET /api/v1/enterprises/{enterprise_id}
+- GET /api/v1/enterprises/{enterprise_id}/activities
+- GET /api/v1/enterprises/{enterprise_id}/characterization
+- GET /api/v1/enterprises/{enterprise_id}/complete (opcional - retorna tudo)
+
+Após backend implementar essas APIs:
+-------------------------------------
+1. Substituir imports do Supabase por biblioteca HTTP (requests)
+2. Trocar supabase.table().select() por http.get('/api/...')
+3. Reativar o teste no orchestrator_novo_empreendimento.py
+
+Validações originais (serão mantidas):
+---------------------------------------
 1. Imóvel (test_02) -> Tabela: properties
 2. Dados Gerais (test_03) -> Tabela: enterprises
 3. Atividades (test_04) -> Tabela: enterprise_activities
-4. Caracterização (test_05) -> Tabelas: enterprise_characterization, enterprise_energy_resources, etc.
+4. Caracterização (test_05) -> Tabelas: enterprise_characterization, etc.
 
 Autor: Sistema de Testes Automatizados
 Data: 23/11/2025
+Última Atualização: 24/11/2025 - Desativado para refatoração
 """
 
 import os

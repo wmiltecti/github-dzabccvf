@@ -6,7 +6,9 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = '/api/v1/enterprises';
+// Usa a URL configurada no .env (backend em produção ou local)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = `${API_BASE}/enterprises`;
 
 /**
  * Interface para estrutura de empreendimento
@@ -90,16 +92,67 @@ export async function searchEnterprises(query: string): Promise<Enterprise[]> {
 }
 
 /**
- * Busca empreendimento por ID
+ * Busca empreendimento por ID (com suporte a mockup)
+ * 
+ * Formato esperado do backend:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "property": { kind, nome, car_codigo, municipio, uf, area_total, ... },
+ *     "basic_info": { tipo_pessoa, cnpj_cpf, razao_social, nome_fantasia, ... },
+ *     "participants": [{ pessoa_nome, pessoa_cpf_cnpj, papel, ... }],
+ *     "activities": [{ activity_id, cnae_codigo, quantidade, ... }],
+ *     "characterization": { recursos_energia, uso_agua, residuos, ... }
+ *   }
+ * }
+ * 
  * @param id - ID do empreendimento
- * @returns Promise com o empreendimento encontrado
- * @throws Error em caso de falha ou não encontrado
+ * @returns Promise com objeto contendo { property, basic_info, participants, activities, characterization }
  */
-export async function getEnterpriseById(id: string): Promise<Enterprise> {
+export async function getEnterpriseById(id: string | number): Promise<any> {
+  try {
+    console.log(`[enterpriseService] Buscando empreendimento ${id} no backend...`);
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.get(
+      `${API_BASE_URL}/${id}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
+    );
+
+    if (response.data.success) {
+      console.log(`[enterpriseService] ✅ Dados recebidos do backend para ${id}`);
+      return response.data.data;
+    }
+
+    throw new Error(response.data.message || 'Empreendimento não encontrado');
+  } catch (error: any) {
+    console.error(`[enterpriseService] ❌ Erro ao buscar empreendimento ${id}:`, error);
+    
+    // Se for erro 404 ou 500, retorna null para permitir uso de mockup
+    if (error.response?.status === 404 || error.response?.status === 500) {
+      console.log(`[enterpriseService] Backend retornou ${error.response?.status}, retornando null para mockup`);
+      return null;
+    }
+    
+    throw new Error(
+      error.response?.data?.message || 
+      error.message || 
+      'Erro ao buscar empreendimento'
+    );
+  }
+}
+
+/**
+ * Lista todos os empreendimentos do usuário logado
+ * @returns Promise com array de todos os empreendimentos
+ * @throws Error em caso de falha na requisição
+ */
+export async function listEnterprises(): Promise<Enterprise[]> {
   try {
     const token = localStorage.getItem('auth_token');
-    const response = await axios.get<EnterpriseResponse>(
-      `${API_BASE_URL}/${id}`,
+    const response = await axios.get<EnterpriseSearchResponse>(
+      `${API_BASE_URL}`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }
@@ -109,16 +162,24 @@ export async function getEnterpriseById(id: string): Promise<Enterprise> {
       return response.data.data;
     }
 
-    throw new Error(response.data.message || 'Empreendimento não encontrado');
+    throw new Error(response.data.message || 'Erro ao listar empreendimentos');
   } catch (error: any) {
-    console.error(`[enterpriseService] Erro ao buscar empreendimento ${id}:`, error);
+    console.error('[enterpriseService] Erro ao listar empreendimentos:', error);
+    
+    // Se for erro 404, retorna array vazio (nenhum resultado)
+    if (error.response?.status === 404) {
+      return [];
+    }
+    
     throw new Error(
       error.response?.data?.message || 
       error.message || 
-      'Erro ao buscar empreendimento'
+      'Erro ao listar empreendimentos'
     );
   }
 }
+
+
 
 /**
  * Cria um novo empreendimento no backend

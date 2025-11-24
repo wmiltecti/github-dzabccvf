@@ -68,13 +68,64 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     sistema_referencia: 'SIRGAS 2000'
   });
 
-  // Abrir modal automaticamente se não houver imóvel selecionado (novo empreendimento)
+  // ✨ Carrega dados do imóvel quando em modo edição
   useEffect(() => {
-    if (!property) {
+    if (property && property.nome) {
+      console.log('🏠 [IMÓVEL] Carregando dados do store:', property);
+      // Property já está no store, formulários devem exibir os dados
+      // Se for RURAL, preenche newRuralData
+      if (property.kind === 'RURAL') {
+        setNewRuralData({
+          nome: property.nome || '',
+          car_codigo: property.car_codigo || '',
+          car_situacao: property.situacao_car || 'Ativo',
+          municipio: property.municipio || '',
+          uf: property.uf || '',
+          area_total: property.area_total?.toString() || '',
+          sistema_referencia: property.coordenadas?.sistema_referencia || 'SIRGAS 2000',
+          coordenadas_utm_lat: property.coordenadas?.latitude?.toString() || '',
+          coordenadas_utm_long: property.coordenadas?.longitude?.toString() || ''
+        });
+        setNewPropertyType('RURAL');
+      }
+      // Se for URBANO
+      else if (property.kind === 'URBANO') {
+        setNewUrbanoData({
+          nome: property.nome || '',
+          cep: property.cep || '',
+          logradouro: property.endereco_completo || '',
+          numero: '',
+          bairro: property.bairro || '',
+          complemento: '',
+          municipio: property.municipio || '',
+          uf: property.uf || '',
+          matricula: property.matricula || '',
+          area_total: property.area_total?.toString() || '',
+          sistema_referencia: property.coordenadas?.sistema_referencia || 'SIRGAS 2000',
+          coordenadas_utm_lat: property.coordenadas?.latitude?.toString() || '',
+          coordenadas_utm_long: property.coordenadas?.longitude?.toString() || ''
+        });
+        setNewPropertyType('URBANO');
+      }
+      // Se for LINEAR
+      else if (property.kind === 'LINEAR') {
+        setNewLinearData({
+          nome: property.nome || '',
+          municipio_inicio: property.municipio || '',
+          uf_inicio: property.uf || '',
+          municipio_final: '',
+          uf_final: '',
+          extensao_km: property.area_total?.toString() || '',
+          sistema_referencia: property.coordenadas?.sistema_referencia || 'SIRGAS 2000'
+        });
+        setNewPropertyType('LINEAR');
+      }
+    } else {
+      // Modo criação: abre modal automaticamente
       console.log('🏠 Nenhum imóvel selecionado, abrindo modal de cadastro...');
       setShowNewPropertyModal(true);
     }
-  }, []); // Executa apenas na montagem do componente
+  }, [property]); // Reage a mudanças no property
 
   const getSearchPlaceholder = () => {
     return 'Digite o CPF ou CNPJ do proprietário...';

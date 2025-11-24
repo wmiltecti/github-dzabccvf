@@ -115,21 +115,26 @@ const initialStoreState = {
 };
 
 export const useEmpreendimentoStore = create<EmpreendimentoStore>()(
-  persist(
-    (set, get) => ({
-      ...initialStoreState,
+  // ✅ REMOVIDO persist() - Agora só usa memória, não localStorage
+  // Os dados são salvos apenas quando usuário clica em "Salvar Rascunho"
+  // Isso evita conflito com mockup_enterprises
+  (set, get) => ({
+    ...initialStoreState,
 
-      // Actions
-      setEmpreendimentoId: (id: string) => {
-        console.log('📝 [Empreendimento Store] Setting empreendimentoId:', id);
-        set({ empreendimentoId: id, isEmpreendimentoInitializing: false });
-      },
+    // Actions
+    setEmpreendimentoId: (id: string) => {
+      console.log('📝 [Empreendimento Store] Setting empreendimentoId:', id);
+      set({ empreendimentoId: id, isEmpreendimentoInitializing: false });
+    },
 
       setPropertyId: (id: number) => set({ propertyId: id }),
 
       setProperty: (property: EmpreendimentoProperty) => set({ property }),
 
-      setDadosGerais: (dados: EmpreendimentoDadosGerais) => set({ dadosGerais: dados }),
+      setDadosGerais: (dados: EmpreendimentoDadosGerais) => {
+        console.log('🔄 [Empreendimento Store] setDadosGerais chamado:', dados);
+        set({ dadosGerais: dados });
+      },
 
       setParticipes: (participes: EmpreendimentoParticipe[]) => set({ participes }),
 
@@ -197,22 +202,5 @@ export const useEmpreendimentoStore = create<EmpreendimentoStore>()(
           isEmpreendimentoInitializing: true
         });
       }
-    }),
-    {
-      name: 'empreendimento-storage',
-      partialize: (state) => ({
-        empreendimentoId: state.empreendimentoId,
-        propertyId: state.propertyId,
-        property: state.property,
-        dadosGerais: state.dadosGerais,
-        participes: state.participes,
-        atividades: state.atividades,
-        caracterizacao: state.caracterizacao,
-        currentStep: state.currentStep,
-        workflowInstanceId: state.workflowInstanceId,
-        currentStepId: state.currentStepId,
-        currentStepKey: state.currentStepKey
-      })
-    }
-  )
+    })
 );

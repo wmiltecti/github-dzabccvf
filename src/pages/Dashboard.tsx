@@ -40,6 +40,7 @@ import EmpreendimentoWizardMotor from '../components/EmpreendimentoWizardMotor';
 import PessoasFisicas from './PessoasFisicas';
 import PessoasJuridicas from './PessoasJuridicas';
 import Notificacoes from './Notificacoes';
+import { listEnterprises, Enterprise, getEnterpriseName } from '../services/enterpriseService';
 import PreProcessos from './analise/PreProcessos';
 import PautaGeral from './analise/PautaGeral';
 import MeuProcesso from './analise/MeuProcesso';
@@ -48,6 +49,8 @@ import treeIcon from '/src/assets/tree_icon_menu.svg';
 import arrowIcon from '/src/assets/arrow.svg';
 import submenuIcon from '/src/assets/files_7281182-1759864502693-files_7281182-1759864312235-tree_icon_menu.svg';
 import homeIcon from '/src/assets/icon_home.svg';
+import { shouldUseMockup, logMockup, MOCKUP_CONFIG } from '../config/mockup';
+import { getMockEnterpriseList } from '../services/mockupService';
 
 export default function Dashboard() {
   // Limpa resultados da pesquisa ao clicar em filtro
@@ -114,6 +117,9 @@ export default function Dashboard() {
   const [showWizardMotor, setShowWizardMotor] = useState(false); // Wizard do motor BPMN (botão verde no header)
   const [showWizardInProcessesMotor, setShowWizardInProcessesMotor] = useState(false); // Controla wizard na aba Processos Motor
   const [showWizardEmpreendimento, setShowWizardEmpreendimento] = useState(false); // Controla wizard na aba Empreendimento
+  const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<string | number | null>(null); // ID do empreendimento selecionado para edição
+  const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
+  const [loadingEnterprises, setLoadingEnterprises] = useState(false);
 
   React.useEffect(() => {
     const loadExternalUserData = () => {
@@ -213,6 +219,14 @@ export default function Dashboard() {
     }
   }, [user, isConfigured, isSupabaseReady, filterStatus, page, limit, loadProcesses]);
 
+  // Carregar empreendimentos quando a aba Empreendimento é aberta
+  React.useEffect(() => {
+    if (activeTab === 'empreendimento') {
+      console.log('[Dashboard] Aba Empreendimento aberta, carregando lista...');
+      loadEnterprises();
+    }
+  }, [activeTab]);
+
   const handleNewProcess = async (processData: any) => {
     try {
       // Aqui seria chamada de criação de processo, se existir
@@ -255,6 +269,35 @@ export default function Dashboard() {
     }
   };
 
+  const loadEnterprises = async () => {
+    try {
+      setLoadingEnterprises(true);
+      console.log('[Dashboard] Carregando empreendimentos...');
+      const result = await listEnterprises();
+      console.log('[Dashboard] Empreendimentos carregados:', result.length);
+      
+      // 🎭 MOCKUP: Se lista vazia E mockup habilitado, carrega 5 registros mockados
+      if (result.length === 0 && shouldUseMockup('enterpriseList')) {
+        logMockup('Lista vazia - carregando 5 empreendimentos mockados');
+        const mockData = getMockEnterpriseList();
+        setEnterprises(mockData);
+      } else {
+        setEnterprises(result);
+      }
+    } catch (error: any) {
+      console.error('[Dashboard] Erro ao carregar empreendimentos:', error);
+      toast.error('Erro ao carregar empreendimentos: ' + (error?.message || 'Erro desconhecido'));
+    } finally {
+      setLoadingEnterprises(false);
+    }
+  };
+
+  const handleEnterpriseClick = (enterprise: Enterprise) => {
+    console.log('[Dashboard] Abrindo empreendimento para edição:', enterprise.id);
+    setSelectedEnterpriseId(enterprise.id);
+    setShowWizardEmpreendimento(true);
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -272,26 +315,6 @@ export default function Dashboard() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando sistema...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isConfigured || !isSupabaseReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-        <div className="relative text-center max-w-2xl mx-4 glass-effect p-8 rounded-lg">
-          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sistema Não Configurado</h1>
-          <p className="text-gray-600 mb-4">
-            {!isConfigured
-              ? "As variáveis de ambiente do Supabase não estão configuradas corretamente."
-              : "Não foi possível conectar ao Supabase. Verifique se as credenciais estão corretas."
-            }
-          </p>
         </div>
       </div>
     );
@@ -959,10 +982,15 @@ export default function Dashboard() {
       return (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Novo Empreendimento</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              {selectedEnterpriseId ? 'Editar Empreendimento' : 'Novo Empreendimento'}
+            </h1>
             <button
               className="bg-gray-600 hover:bg-gray-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-              onClick={() => setShowWizardEmpreendimento(false)}
+              onClick={() => {
+                setShowWizardEmpreendimento(false);
+                setSelectedEnterpriseId(null);
+              }}
               title="Voltar para lista de empreendimentos"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -971,8 +999,11 @@ export default function Dashboard() {
           </div>
           <EmpreendimentoWizardMotor
             asModal={false}
+            empreendimentoId={selectedEnterpriseId ? String(selectedEnterpriseId) : undefined}
             onClose={() => {
               setShowWizardEmpreendimento(false);
+              setSelectedEnterpriseId(null);
+              loadEnterprises(); // Recarregar lista de empreendimentos
               loadProcesses();
               loadStats();
             }}
@@ -989,7 +1020,10 @@ export default function Dashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Empreendimentos</h1>
           <button
             className="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors text-sm sm:text-base shadow-md hover:shadow-lg"
-            onClick={() => setShowWizardEmpreendimento(true)}
+            onClick={() => {
+              setSelectedEnterpriseId(null);
+              setShowWizardEmpreendimento(true);
+            }}
             title="Criar novo empreendimento"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1052,16 +1086,52 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {/* Mensagem de lista vazia */}
-                <tr>
-                  <td colSpan={4} className="px-4 sm:px-6 py-8 text-center">
-                    <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-600 mb-2">Nenhum empreendimento cadastrado</p>
-                    <p className="text-sm text-gray-500">
-                      Clique em "Novo Empreendimento" para começar
-                    </p>
-                  </td>
-                </tr>
+                {loadingEnterprises ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 sm:px-6 py-8 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                        <p className="text-gray-600">Carregando empreendimentos...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : enterprises.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 sm:px-6 py-8 text-center">
+                      <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 mb-2">Nenhum empreendimento cadastrado</p>
+                      <p className="text-sm text-gray-500">
+                        Clique em "Novo Empreendimento" para começar
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  enterprises.map((enterprise) => (
+                    <tr 
+                      key={`${enterprise.source || 'default'}-${enterprise.id}`} 
+                      className="hover:bg-green-50 cursor-pointer transition-colors"
+                      onClick={() => handleEnterpriseClick(enterprise)}
+                      title="Clique para editar"
+                    >
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {getEnterpriseName(enterprise)}
+                        </div>
+                        <div className="text-sm text-gray-500">{enterprise.cnpj_cpf}</div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-sm text-gray-900">{enterprise.nome_fantasia || enterprise.razao_social || '-'}</div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-sm text-gray-900">{enterprise.id}</div>
+                        <div className="text-sm text-gray-500">{enterprise.cidade || 'Não informado'}</div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-sm text-gray-500">-</div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
