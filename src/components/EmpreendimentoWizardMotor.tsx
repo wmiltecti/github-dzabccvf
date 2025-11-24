@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Building, Save, AlertTriangle, Plus, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../lib/store/empreendimento';
-import { createEnterprise } from '../services/enterpriseService';
+import { createEnterprise, getEnterpriseById } from '../services/enterpriseService';
+import { shouldUseMockup, logMockup } from '../config/mockup';
+import { getMockEnterpriseById, buildEnterpriseJSON, saveMockEnterprise } from '../services/mockupService';
+import { useAutoSaveEnterprise } from '../hooks/useAutoSaveEnterprise';
 import EmpreendimentoStepper from './EmpreendimentoStepper';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -49,6 +52,9 @@ export default function EmpreendimentoWizardMotor({
   // Proteção contra execução dupla (React Strict Mode)
   const initRef = useRef(false);
   
+  // 💾 Auto-save: DESATIVADO - Usuário salva manualmente com "Salvar Rascunho"
+  // useAutoSaveEnterprise();
+  
   // Estado da UI
   const [isInitializing, setIsInitializing] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -79,21 +85,100 @@ export default function EmpreendimentoWizardMotor({
     setError(null);
 
     try {
-      console.log('🔧 Iniciando workflow de empreendimento...');
-      
-      // IMPORTANTE: Limpar todos os dados anteriores ao criar novo empreendimento
-      console.log('🧹 Limpando dados anteriores...');
-      reset();
-      
-      // TODO: Implementar chamada ao backend para criar empreendimento
-      // Por enquanto, apenas inicializa localmente
-      
-      // Gera ID temporário
-      const newEmpreendimentoId = `emp_${Date.now()}`;
-      console.log('✅ Empreendimento criado:', newEmpreendimentoId);
+      // Se houver empreendimentoId, está em modo EDIÇÃO
+      if (empreendimentoId) {
+        console.log('📝 Modo EDIÇÃO - Carregando dados do empreendimento:', empreendimentoId);
+        setEmpreendimentoId(empreendimentoId);
+        
+        // Tenta carregar do backend
+        let enterpriseData = null;
+        try {
+          enterpriseData = await getEnterpriseById(empreendimentoId);
+        } catch (err) {
+          console.warn('Erro ao carregar do backend, tentando mockup...', err);
+        }
+        
+        // Se backend não retornou dados e mockup está ativo, usa mockup
+        if (!enterpriseData && shouldUseMockup()) {
+          logMockup('Backend não retornou dados, carregando dados mockados para edição');
+          enterpriseData = getMockEnterpriseById(empreendimentoId);
+          
+          if (!enterpriseData) {
+            console.error('❌ [MOCKUP] Empreendimento não encontrado no mockup:', empreendimentoId);
+            toast.error(`Empreendimento ${empreendimentoId} não encontrado`);
+            setError(`Empreendimento ${empreendimentoId} não encontrado`);
+            setIsInitializing(false);
+            return;
+          }
+        }
+        
+        // Preenche o store com os dados carregados
+        if (enterpriseData) {
+          console.log('📦 Dados do empreendimento recebidos:', enterpriseData);
+          console.log('📦 Tipo:', typeof enterpriseData);
+          console.log('📦 Keys:', Object.keys(enterpriseData));
+          
+          const { setProperty, setDadosGerais, setParticipes, setAtividades, setCaracterizacao } = useEmpreendimentoStore.getState();
+          
+          // Limpa dados anteriores primeiro
+          reset();
+          
+          if (enterpriseData.property) {
+            console.log('🏠 Preenchendo property:', enterpriseData.property);
+            setProperty(enterpriseData.property);
+          }
+          
+          if (enterpriseData.basic_info) {
+            console.log('📋 Preenchendo dados gerais:', enterpriseData.basic_info);
+            setDadosGerais(enterpriseData.basic_info);
+          }
+          
+          if (enterpriseData.participants) {
+            console.log('👥 Preenchendo partícipes:', enterpriseData.participants);
+            setParticipes(enterpriseData.participants);
+          }
+          
+          if (enterpriseData.activities) {
+            console.log('🏭 Preenchendo atividades:', enterpriseData.activities);
+            setAtividades(enterpriseData.activities);
+          }
+          
+          if (enterpriseData.characterization) {
+            console.log('📊 Preenchendo caracterização:', enterpriseData.characterization);
+            setCaracterizacao(enterpriseData.characterization);
+          }
+          
+          // Aguarda um pouco para garantir que o store foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          console.log('✅ Todos os dados foram preenchidos no store');
+          const finalState = useEmpreendimentoStore.getState();
+          console.log('🔍 [DEBUG] Store após carregar:');
+          console.log('  - property:', finalState.property);
+          console.log('  - dadosGerais:', finalState.dadosGerais);
+          console.log('  - participes:', finalState.participes);
+          console.log('  - atividades:', finalState.atividades);
+          console.log('  - caracterizacao:', finalState.caracterizacao);
+          toast.success('Empreendimento carregado para edição');
+        } else {
+          console.warn('⚠️ Nenhum dado foi retornado');
+          toast.warning('Não foi possível carregar os dados do empreendimento');
+        }
+      } else {
+        // Modo CRIAÇÃO
+        console.log('🔧 Modo CRIAÇÃO - Iniciando novo empreendimento...');
+        
+        // Limpar todos os dados anteriores
+        console.log('🧹 Limpando dados anteriores...');
+        reset();
+        
+        // Gera ID temporário
+        const newEmpreendimentoId = `emp_${Date.now()}`;
+        console.log('✅ Empreendimento criado:', newEmpreendimentoId);
 
-      setEmpreendimentoId(newEmpreendimentoId);
-      toast.success('Novo empreendimento iniciado!');
+        setEmpreendimentoId(newEmpreendimentoId);
+        toast.success('Novo empreendimento iniciado!');
+      }
     } catch (error: any) {
       console.error('❌ Erro ao inicializar empreendimento:', error);
       const errorMessage = error?.response?.data?.message || error?.message || 'Erro ao iniciar empreendimento';
@@ -250,7 +335,81 @@ export default function EmpreendimentoWizardMotor({
   };
 
   const handleSaveDraft = () => {
-    toast.success('Rascunho salvo com sucesso!');
+    try {
+      console.log('💾 [WIZARD] ============================================');
+      console.log('💾 [WIZARD] Botão Salvar Rascunho clicado!');
+      console.log('💾 [WIZARD] ============================================');
+      
+      // Pega o estado atual do store
+      const currentState = useEmpreendimentoStore.getState();
+      console.log('💾 [WIZARD] Estado atual do store:');
+      console.log('  - empreendimentoId:', currentState.empreendimentoId);
+      console.log('  - property:', currentState.property);
+      console.log('  - dadosGerais:', currentState.dadosGerais);
+      console.log('  - participes:', currentState.participes);
+      console.log('  - atividades:', currentState.atividades);
+      console.log('  - caracterizacao:', currentState.caracterizacao);
+      
+      // Monta JSON completo
+      const completeStoreData = {
+        property: currentState.property,
+        basic_info: currentState.dadosGerais,
+        participants: currentState.participes,
+        activities: currentState.atividades,
+        characterization: currentState.caracterizacao
+      };
+      
+      console.log('📦 [WIZARD] Dados completos preparados para buildEnterpriseJSON:');
+      console.log('  - property:', completeStoreData.property);
+      console.log('  - basic_info:', completeStoreData.basic_info);
+      console.log('  - participants:', completeStoreData.participants);
+      console.log('  - activities:', completeStoreData.activities);
+      console.log('  - characterization:', completeStoreData.characterization);
+      
+      // Constrói JSON para API
+      const enterpriseJSON = buildEnterpriseJSON(completeStoreData);
+      console.log('📦 [WIZARD] JSON construído:', enterpriseJSON);
+      
+      // Detecta se é edição ou criação
+      const currentId = currentState.empreendimentoId;
+      const isCreating = !currentId || String(currentId).startsWith('emp_');
+      const existingId = isCreating ? null : currentId;
+      
+      console.log('🔍 [WIZARD] Detecção de modo:');
+      console.log('  - currentId:', currentId);
+      console.log('  - Tipo de currentId:', typeof currentId);
+      console.log('  - Começa com emp_?', String(currentId).startsWith('emp_'));
+      console.log('  - isCreating:', isCreating);
+      console.log('  - existingId:', existingId);
+      
+      // Salva no mockup
+      console.log('💾 [WIZARD] Chamando saveMockEnterprise...');
+      const savedId = saveMockEnterprise(enterpriseJSON, true, existingId);
+      
+      console.log('✅ [WIZARD] saveMockEnterprise retornou ID:', savedId, 'Tipo:', typeof savedId);
+      
+      toast.success(`Rascunho ${isCreating ? 'salvo' : 'atualizado'} com sucesso! ID: ${savedId}`);
+      
+      // Se estava criando um novo (ID temporário), atualiza o ID no store
+      if (isCreating) {
+        console.log('💾 [WIZARD] Atualizando store com novo ID:', savedId);
+        currentState.setEmpreendimentoId(savedId);
+        
+        // Verifica se foi atualizado
+        const updatedState = useEmpreendimentoStore.getState();
+        console.log('💾 [WIZARD] Store atualizado. Novo empreendimentoId:', updatedState.empreendimentoId);
+      }
+      
+      console.log('💾 [WIZARD] ============================================');
+      console.log('💾 [WIZARD] Salvamento concluído com sucesso!');
+      console.log('💾 [WIZARD] ============================================');
+    } catch (error: any) {
+      console.error('❌ [WIZARD] ============================================');
+      console.error('❌ [WIZARD] Erro ao salvar rascunho:', error);
+      console.error('❌ [WIZARD] Stack:', error.stack);
+      console.error('❌ [WIZARD] ============================================');
+      toast.error(`Erro ao salvar: ${error.message}`);
+    }
   };
 
   const handleReset = () => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, ArrowRight, ArrowLeft, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { BarChart3, ArrowRight, ArrowLeft, ChevronDown, ChevronUp, CheckCircle, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore } from '../../lib/store/empreendimento';
 import Step2RecursosEnergia from '../../components/Step2RecursosEnergia';
@@ -7,6 +7,14 @@ import Step2Combustiveis from '../../components/Step2Combustiveis';
 import Step3UsoAgua from '../../components/Step3UsoAgua';
 import Step4Residuos from '../../components/Step4Residuos';
 import Step5OutrasInfo from '../../components/Step5OutrasInfo';
+import { shouldUseMockup, logMockup, MOCKUP_CONFIG } from '../../config/mockup';
+import { 
+  getMockCharacterizationData, 
+  generateMockId, 
+  mockDelay,
+  buildEnterpriseJSON,
+  saveMockEnterprise
+} from '../../services/mockupService';
 
 interface CaracterizacaoEmpreendimentoPageProps {
   onNext: (data?: any) => void;
@@ -17,7 +25,8 @@ export default function CaracterizacaoEmpreendimentoPage({
   onNext,
   onPrevious
 }: CaracterizacaoEmpreendimentoPageProps) {
-  const { caracterizacao, setCaracterizacao } = useEmpreendimentoStore();
+  const store = useEmpreendimentoStore();
+  const { caracterizacao, setCaracterizacao } = store;
 
   const [formData, setFormData] = useState({
     uso_agua: false,
@@ -50,6 +59,33 @@ export default function CaracterizacaoEmpreendimentoPage({
     outrasInfo: true
   });
 
+  // ✨ Carrega dados da caracterização quando em modo edição
+  useEffect(() => {
+    if (caracterizacao && Object.keys(caracterizacao).length > 0) {
+      console.log('📊 [CARACTERIZAÇÃO] Carregando dados do store:', caracterizacao);
+      
+      if (caracterizacao.recursos_energia) {
+        setRecursosEnergiaData(caracterizacao.recursos_energia);
+      }
+      if (caracterizacao.combustiveis) {
+        setCombustiveisData(caracterizacao.combustiveis);
+      }
+      if (caracterizacao.uso_agua) {
+        setUsoAguaData(caracterizacao.uso_agua);
+      }
+      if (caracterizacao.residuos) {
+        setResiduosData(caracterizacao.residuos);
+      }
+      if (caracterizacao.outras_informacoes) {
+        setOutrasInfoData(caracterizacao.outras_informacoes);
+      }
+    }
+  }, [caracterizacao]);
+
+  // ✅ Atualiza o store sempre que os dados dos sub-formulários mudarem
+  // REMOVIDO: Pode causar loop infinito
+  // Solução: Atualizar o store apenas no handleSave
+
   const toggleSection = (section: string) => {
     setSectionsExpanded(prev => ({
       ...prev,
@@ -61,18 +97,108 @@ export default function CaracterizacaoEmpreendimentoPage({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleNext = () => {
-    const allData = {
-      ...formData,
-      recursosEnergia: recursosEnergiaData,
-      combustiveis: combustiveisData,
-      usoAgua: usoAguaData,
-      residuos: residuosData,
-      outrasInfo: outrasInfoData
-    };
+  const handleSaveDraft = async () => {
+    console.log('💾 [CARACTERIZAÇÃO] Salvando rascunho...');
+    await handleSave(true);
+  };
 
-    setCaracterizacao(allData);
-    onNext({ caracterizacao: allData });
+  const handleNext = async () => {
+    console.log('✅ [CARACTERIZAÇÃO] Finalizando cadastro...');
+    await handleSave(false);
+  };
+
+  const handleSave = async (isDraft: boolean) => {
+    try {
+      // 🎭 MOCKUP: Se habilitado, usa dados mockados com variação aleatória
+      let dataToSave;
+      
+      if (shouldUseMockup('characterization')) {
+        logMockup('Salvando caracterização com dados mockados (randomizados)');
+        
+        // Gera dados mockados com variação aleatória
+        const mockData = getMockCharacterizationData();
+        
+        dataToSave = {
+          ...formData,
+          ...mockData,
+          // Preserva dados do formulário se usuário preencheu algo
+          recursos_energia: Object.keys(recursosEnergiaData).length > 0 ? recursosEnergiaData : mockData.recursos_energia,
+          combustiveis: Object.keys(combustiveisData).length > 0 ? combustiveisData : mockData.combustiveis,
+          uso_agua: Object.keys(usoAguaData).length > 0 ? usoAguaData : mockData.uso_agua,
+          residuos: Object.keys(residuosData).length > 0 ? residuosData : mockData.residuos,
+          outras_informacoes: Object.keys(outrasInfoData).length > 0 ? outrasInfoData : mockData.outras_informacoes,
+          _mockup: true,
+          _mockup_id: generateMockId()
+        };
+        
+        // Simula delay de API
+        await mockDelay(800);
+      } else {
+        // Modo normal: usa dados do formulário
+        dataToSave = {
+          ...formData,
+          recursos_energia: recursosEnergiaData,
+          combustiveis: combustiveisData,
+          uso_agua: usoAguaData,
+          residuos: residuosData,
+          outras_informacoes: outrasInfoData
+        };
+      }
+
+      // Atualiza caracterização no store
+      setCaracterizacao(dataToSave);
+
+      // 📦 Monta JSON completo do empreendimento
+      const completeStoreData = {
+        property: store.property,
+        basic_info: store.dadosGerais,
+        participants: store.participes,
+        activities: store.atividades,
+        characterization: dataToSave
+      };
+
+      console.log('📦 [CARACTERIZAÇÃO] Dados completos do store:', completeStoreData);
+
+      // Constrói JSON no formato da API
+      const enterpriseJSON = buildEnterpriseJSON(completeStoreData);
+      
+      console.log('📝 [CARACTERIZAÇÃO] JSON montado para API:', enterpriseJSON);
+
+      // Detecta se é EDIÇÃO ou CRIAÇÃO
+      // Se empreendimentoId no store começa com "emp_", é criação (ID temporário)
+      // Se é número ou não começa com "emp_", é edição (ID real)
+      const currentId = store.empreendimentoId;
+      const isCreating = !currentId || String(currentId).startsWith('emp_');
+      const existingId = isCreating ? null : currentId;
+
+      console.log(`🔍 [CARACTERIZAÇÃO] Modo: ${isCreating ? 'CRIAÇÃO' : 'EDIÇÃO'} - ID: ${existingId || 'novo'}`);
+
+      // 💾 Salva no mockup (atualiza se já existe, cria se novo)
+      const savedId = saveMockEnterprise(enterpriseJSON, isDraft, existingId);
+      
+      toast.success(
+        isDraft 
+          ? `Rascunho ${isCreating ? 'salvo' : 'atualizado'} com sucesso! ID: ${savedId}` 
+          : `Empreendimento ${isCreating ? 'cadastrado' : 'atualizado'} com sucesso! ID: ${savedId}`,
+        { autoClose: 3000 }
+      );
+
+      console.log(`✅ [CARACTERIZAÇÃO] Empreendimento ${isCreating ? 'criado' : 'atualizado'} no mockup:`, savedId);
+      console.log('📋 [CARACTERIZAÇÃO] JSON pronto para enviar à API quando disponível');
+
+      // Prossegue apenas se não for rascunho
+      if (!isDraft) {
+        onNext({ 
+          caracterizacao: dataToSave,
+          savedId,
+          enterpriseJSON,
+          isCreating
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ [CARACTERIZAÇÃO] Erro ao salvar:', error);
+      toast.error(`Erro ao salvar: ${error.message}`);
+    }
   };
 
   return (
@@ -218,13 +344,22 @@ export default function CaracterizacaoEmpreendimentoPage({
           <ArrowLeft className="w-4 h-4" />
           Voltar
         </button>
-        <button
-          onClick={handleNext}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium shadow-sm"
-        >
-          Finalizar
-          <CheckCircle className="w-4 h-4" />
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleSaveDraft}
+            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 flex items-center gap-2 font-medium shadow-sm"
+          >
+            <Save className="w-4 h-4" />
+            Salvar Rascunho
+          </button>
+          <button
+            onClick={handleNext}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium shadow-sm"
+          >
+            Finalizar
+            <CheckCircle className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

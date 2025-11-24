@@ -79,9 +79,22 @@ export default function AtividadesEmpreendimentoPage({
     loadSavedActivities();
   }, []);
 
+  // ✨ Recarrega atividades quando o store mudar (modo edição)
+  useEffect(() => {
+    if (atividades && atividades.length > 0) {
+      console.log('🏭 [ATIVIDADES] Carregando dados do store:', atividades);
+      loadSavedActivities();
+    }
+  }, [atividades]);
+
   useEffect(() => {
     filterActivities();
   }, [searchTerm, availableActivities]);
+
+  // ✅ Atualiza o store sempre que selectedActivities mudar
+  // REMOVIDO: Estava causando loop infinito porque setAtividades dispara o useEffect acima
+  // que recarrega selectedActivities, que dispara este useEffect novamente
+  // Solução: Atualizar o store apenas no handleNext
 
   const loadReferenceUnits = async () => {
     try {

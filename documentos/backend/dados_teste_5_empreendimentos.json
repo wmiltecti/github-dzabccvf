@@ -1,0 +1,446 @@
+{
+  "metadata": {
+    "descricao": "5 registros completos de empreendimentos para testes",
+    "proposito": "Inserir no banco de dados para testar listagem e visualização",
+    "data_geracao": "2025-11-24",
+    "observacao": "Use estes dados para popular o banco e testar as APIs"
+  },
+  
+  "empreendimentos": [
+    {
+      "id": 1,
+      "imovel": {
+        "kind": "RURAL",
+        "nome": "Fazenda Santa Clara",
+        "car_codigo": "SC-412789-56234178",
+        "situacao_car": "Ativo",
+        "municipio": "Florianópolis",
+        "uf": "SC",
+        "area_total": 2850.75,
+        "unidade_area": "ha",
+        "coordenadas": {
+          "latitude": -27.595378,
+          "longitude": -48.548050,
+          "sistema_referencia": "SIRGAS 2000"
+        }
+      },
+      "empreendimento": {
+        "tipo_pessoa": "juridica",
+        "cnpj_cpf": "12345678000190",
+        "razao_social": "Agropecuária Santa Clara S.A.",
+        "nome_fantasia": "Santa Clara Agro",
+        "nome_empreendimento": "Complexo Agropecuário Santa Clara",
+        "numero_empregados": 85,
+        "descricao": "Produção de grãos e pecuária de corte integrada",
+        "cidade": "Florianópolis",
+        "estado": "SC",
+        "telefone": "48999001234",
+        "email": "contato@santaclaraagro.com.br",
+        "created_at": "2025-11-01T08:30:00Z"
+      },
+      "participes": [
+        {
+          "pessoa_nome": "Agropecuária Santa Clara S.A.",
+          "pessoa_cpf_cnpj": "12345678000190",
+          "tipo_pessoa": "juridica",
+          "papel": "Requerente",
+          "telefone": "48999001234",
+          "email": "contato@santaclaraagro.com.br"
+        },
+        {
+          "pessoa_nome": "Carlos Alberto Souza",
+          "pessoa_cpf_cnpj": "12345678901",
+          "tipo_pessoa": "fisica",
+          "papel": "Responsável Técnico",
+          "telefone": "48988001234",
+          "email": "carlos.souza@santaclaraagro.com.br",
+          "crea": "SC-089456"
+        }
+      ],
+      "atividades": [
+        {
+          "activity_id": 25,
+          "activity_code": "08.01",
+          "activity_name": "Criação de gado bovino de corte",
+          "cnae_codigo": "8.1",
+          "quantidade": 500.0,
+          "unidade_nome": "Cabeças",
+          "area_ocupada": 15000.0,
+          "porte": "Médio"
+        },
+        {
+          "activity_id": 18,
+          "activity_code": "06.02",
+          "activity_name": "Cultivo de soja",
+          "cnae_codigo": "6.2",
+          "quantidade": 800.0,
+          "unidade_nome": "Hectares",
+          "area_ocupada": 80000.0,
+          "porte": "Grande"
+        }
+      ],
+      "caracterizacao": {
+        "recursos_energia": {
+          "usa_lenha": false,
+          "possui_caldeira": false,
+          "possui_fornos": false
+        },
+        "uso_agua": {
+          "origens_agua": ["Poço Artesiano", "Rio/Córrego"],
+          "consumo_humano": 8.5,
+          "consumo_outros_usos": 45.2,
+          "volume_despejo_diario": 42.0,
+          "destino_efluente": "Fossa Séptica"
+        }
+      }
+    },
+    
+    {
+      "id": 2,
+      "imovel": {
+        "kind": "URBANO",
+        "nome": "Galpão Industrial Zona Norte",
+        "matricula": "45678",
+        "municipio": "São José",
+        "uf": "SC",
+        "area_total": 3500.0,
+        "unidade_area": "m²",
+        "endereco": "Rua das Indústrias, 1250",
+        "bairro": "Campinas",
+        "cep": "88101-500",
+        "coordenadas": {
+          "latitude": -27.610342,
+          "longitude": -48.632865,
+          "sistema_referencia": "SIRGAS 2000"
+        }
+      },
+      "empreendimento": {
+        "tipo_pessoa": "juridica",
+        "cnpj_cpf": "23456789000145",
+        "razao_social": "Metalúrgica Industrial do Sul Ltda",
+        "nome_fantasia": "Metal Sul",
+        "nome_empreendimento": "Unidade Industrial Metal Sul",
+        "numero_empregados": 120,
+        "descricao": "Fabricação de estruturas metálicas e componentes industriais",
+        "cidade": "São José",
+        "estado": "SC",
+        "telefone": "48998002345",
+        "email": "contato@metalsul.ind.br",
+        "created_at": "2025-11-05T14:20:00Z"
+      },
+      "participes": [
+        {
+          "pessoa_nome": "Metalúrgica Industrial do Sul Ltda",
+          "pessoa_cpf_cnpj": "23456789000145",
+          "tipo_pessoa": "juridica",
+          "papel": "Requerente",
+          "telefone": "48998002345",
+          "email": "contato@metalsul.ind.br"
+        },
+        {
+          "pessoa_nome": "Ana Paula Rodrigues",
+          "pessoa_cpf_cnpj": "98765432109",
+          "tipo_pessoa": "fisica",
+          "papel": "Responsável Técnico",
+          "telefone": "48987002345",
+          "email": "ana.rodrigues@metalsul.ind.br",
+          "crea": "SC-145678"
+        }
+      ],
+      "atividades": [
+        {
+          "activity_id": 42,
+          "activity_code": "15.03",
+          "activity_name": "Fabricação de estruturas metálicas",
+          "cnae_codigo": "15.3",
+          "quantidade": 250.0,
+          "unidade_nome": "Toneladas/mês",
+          "area_ocupada": 2800.0,
+          "porte": "Grande"
+        }
+      ],
+      "caracterizacao": {
+        "recursos_energia": {
+          "usa_lenha": false,
+          "possui_caldeira": true,
+          "possui_fornos": true
+        },
+        "combustiveis": [
+          {
+            "tipo_fonte": "GLP",
+            "equipamento": "Forno industrial 800°C",
+            "quantidade": 3500.0,
+            "unidade": "kg/mês"
+          }
+        ],
+        "uso_agua": {
+          "origens_agua": ["Rede Pública"],
+          "consumo_humano": 12.0,
+          "consumo_outros_usos": 35.5,
+          "volume_despejo_diario": 38.0,
+          "destino_efluente": "Rede Pública de Esgoto"
+        }
+      }
+    },
+    
+    {
+      "id": 3,
+      "imovel": {
+        "kind": "LINEAR",
+        "nome": "Linha de Transmissão 230kV Tijucas-Brusque",
+        "municipio_inicio": "Tijucas",
+        "uf_inicio": "SC",
+        "municipio_final": "Brusque",
+        "uf_final": "SC",
+        "extensao_km": 45.8,
+        "sistema_referencia": "SIRGAS 2000"
+      },
+      "empreendimento": {
+        "tipo_pessoa": "juridica",
+        "cnpj_cpf": "34567890000112",
+        "razao_social": "Energia do Sul Transmissora S.A.",
+        "nome_fantasia": "Energia Sul",
+        "nome_empreendimento": "LT 230kV Tijucas-Brusque",
+        "numero_empregados": 45,
+        "descricao": "Linha de transmissão de energia elétrica 230kV",
+        "cidade": "Tijucas",
+        "estado": "SC",
+        "telefone": "48997003456",
+        "email": "contato@energiasul.com.br",
+        "created_at": "2025-11-10T09:15:00Z"
+      },
+      "participes": [
+        {
+          "pessoa_nome": "Energia do Sul Transmissora S.A.",
+          "pessoa_cpf_cnpj": "34567890000112",
+          "tipo_pessoa": "juridica",
+          "papel": "Requerente",
+          "telefone": "48997003456",
+          "email": "contato@energiasul.com.br"
+        },
+        {
+          "pessoa_nome": "Roberto Machado Lima",
+          "pessoa_cpf_cnpj": "11122233344",
+          "tipo_pessoa": "fisica",
+          "papel": "Responsável Técnico",
+          "telefone": "48986003456",
+          "email": "roberto.lima@energiasul.com.br",
+          "crea": "SC-234567"
+        }
+      ],
+      "atividades": [
+        {
+          "activity_id": 58,
+          "activity_code": "22.05",
+          "activity_name": "Linhas de transmissão de energia elétrica",
+          "cnae_codigo": "22.5",
+          "quantidade": 45.8,
+          "unidade_nome": "Quilômetros",
+          "area_ocupada": 458000.0,
+          "porte": "Grande"
+        }
+      ],
+      "caracterizacao": {
+        "recursos_energia": {
+          "usa_lenha": false,
+          "possui_caldeira": false,
+          "possui_fornos": false
+        },
+        "uso_agua": {
+          "origens_agua": ["Não utiliza"],
+          "consumo_humano": 0.5,
+          "consumo_outros_usos": 0.0,
+          "volume_despejo_diario": 0.4,
+          "destino_efluente": "Fossa Séptica"
+        }
+      }
+    },
+    
+    {
+      "id": 4,
+      "imovel": {
+        "kind": "RURAL",
+        "nome": "Sítio Vale Verde",
+        "car_codigo": "SC-789456-12378945",
+        "situacao_car": "Ativo",
+        "municipio": "Palhoça",
+        "uf": "SC",
+        "area_total": 125.50,
+        "unidade_area": "ha",
+        "coordenadas": {
+          "latitude": -27.645123,
+          "longitude": -48.670234,
+          "sistema_referencia": "SIRGAS 2000"
+        }
+      },
+      "empreendimento": {
+        "tipo_pessoa": "fisica",
+        "cnpj_cpf": "55566677788",
+        "nome_completo": "José Maria da Silva",
+        "nome_empreendimento": "Granja Avícola Vale Verde",
+        "numero_empregados": 15,
+        "descricao": "Criação de aves para produção de ovos caipiras",
+        "cidade": "Palhoça",
+        "estado": "SC",
+        "telefone": "48996004567",
+        "email": "jose.silva@valeverde.agr.br",
+        "created_at": "2025-11-12T11:40:00Z"
+      },
+      "participes": [
+        {
+          "pessoa_nome": "José Maria da Silva",
+          "pessoa_cpf_cnpj": "55566677788",
+          "tipo_pessoa": "fisica",
+          "papel": "Requerente",
+          "telefone": "48996004567",
+          "email": "jose.silva@valeverde.agr.br"
+        },
+        {
+          "pessoa_nome": "Márcia Santos Silva",
+          "pessoa_cpf_cnpj": "44455566677",
+          "tipo_pessoa": "fisica",
+          "papel": "Procurador",
+          "telefone": "48985004567",
+          "email": "marcia.silva@valeverde.agr.br"
+        }
+      ],
+      "atividades": [
+        {
+          "activity_id": 28,
+          "activity_code": "08.12",
+          "activity_name": "Avicultura - postura",
+          "cnae_codigo": "8.12",
+          "quantidade": 8000.0,
+          "unidade_nome": "Aves",
+          "area_ocupada": 1200.0,
+          "porte": "Médio"
+        }
+      ],
+      "caracterizacao": {
+        "recursos_energia": {
+          "usa_lenha": false,
+          "possui_caldeira": false,
+          "possui_fornos": false
+        },
+        "uso_agua": {
+          "origens_agua": ["Poço Artesiano"],
+          "consumo_humano": 2.5,
+          "consumo_outros_usos": 18.0,
+          "volume_despejo_diario": 16.5,
+          "destino_efluente": "Fossa Séptica"
+        }
+      }
+    },
+    
+    {
+      "id": 5,
+      "imovel": {
+        "kind": "URBANO",
+        "nome": "Edifício Comercial Centro",
+        "matricula": "78945",
+        "municipio": "Florianópolis",
+        "uf": "SC",
+        "area_total": 8500.0,
+        "unidade_area": "m²",
+        "endereco": "Avenida Mauro Ramos, 850",
+        "bairro": "Centro",
+        "cep": "88020-300",
+        "coordenadas": {
+          "latitude": -27.595890,
+          "longitude": -48.548920,
+          "sistema_referencia": "SIRGAS 2000"
+        }
+      },
+      "empreendimento": {
+        "tipo_pessoa": "juridica",
+        "cnpj_cpf": "45678901000198",
+        "razao_social": "Hospital e Clínica São Lucas Ltda",
+        "nome_fantasia": "Hospital São Lucas",
+        "nome_empreendimento": "Hospital São Lucas - Unidade Centro",
+        "numero_empregados": 280,
+        "descricao": "Serviços hospitalares com centro cirúrgico e UTI",
+        "cidade": "Florianópolis",
+        "estado": "SC",
+        "telefone": "48995005678",
+        "email": "contato@hospitalsaolucas.com.br",
+        "created_at": "2025-11-18T16:25:00Z"
+      },
+      "participes": [
+        {
+          "pessoa_nome": "Hospital e Clínica São Lucas Ltda",
+          "pessoa_cpf_cnpj": "45678901000198",
+          "tipo_pessoa": "juridica",
+          "papel": "Requerente",
+          "telefone": "48995005678",
+          "email": "contato@hospitalsaolucas.com.br"
+        },
+        {
+          "pessoa_nome": "Dra. Fernanda Costa Oliveira",
+          "pessoa_cpf_cnpj": "22233344455",
+          "tipo_pessoa": "fisica",
+          "papel": "Responsável Técnico",
+          "telefone": "48984005678",
+          "email": "fernanda.oliveira@hospitalsaolucas.com.br",
+          "crm": "SC-12345"
+        }
+      ],
+      "atividades": [
+        {
+          "activity_id": 65,
+          "activity_code": "28.01",
+          "activity_name": "Serviços de saúde - hospital",
+          "cnae_codigo": "28.1",
+          "quantidade": 150.0,
+          "unidade_nome": "Leitos",
+          "area_ocupada": 7500.0,
+          "porte": "Grande"
+        }
+      ],
+      "caracterizacao": {
+        "recursos_energia": {
+          "usa_lenha": false,
+          "possui_caldeira": true,
+          "possui_fornos": false
+        },
+        "combustiveis": [
+          {
+            "tipo_fonte": "Diesel",
+            "equipamento": "Gerador de emergência 800 kVA",
+            "quantidade": 2500.0,
+            "unidade": "Litros/mês"
+          }
+        ],
+        "uso_agua": {
+          "origens_agua": ["Rede Pública"],
+          "consumo_humano": 45.0,
+          "consumo_outros_usos": 85.5,
+          "volume_despejo_diario": 115.0,
+          "destino_efluente": "Rede Pública de Esgoto"
+        },
+        "residuos": {
+          "gera_residuos": true,
+          "tipos_residuos": ["Resíduo de Serviço de Saúde - Grupo A", "Resíduo de Serviço de Saúde - Grupo B"],
+          "possui_plano_gerenciamento": true
+        }
+      }
+    }
+  ],
+  
+  "script_sql_insercao": {
+    "descricao": "Exemplo de scripts SQL para inserção direta no banco",
+    "observacao": "Adapte conforme estrutura real das tabelas",
+    "exemplos": [
+      "-- Inserir imóvel",
+      "INSERT INTO properties (kind, nome, car_codigo, municipio, uf, area_total, latitude, longitude) VALUES ('RURAL', 'Fazenda Santa Clara', 'SC-412789-56234178', 'Florianópolis', 'SC', 2850.75, -27.595378, -48.548050);",
+      "",
+      "-- Inserir empreendimento",
+      "INSERT INTO enterprises (property_id, tipo_pessoa, cnpj_cpf, razao_social, nome_fantasia, numero_empregados, cidade, estado) VALUES (1, 'juridica', '12345678000190', 'Agropecuária Santa Clara S.A.', 'Santa Clara Agro', 85, 'Florianópolis', 'SC');",
+      "",
+      "-- Inserir partícipe",
+      "INSERT INTO enterprise_participants (enterprise_id, pessoa_nome, pessoa_cpf_cnpj, papel, telefone, email) VALUES (1, 'Agropecuária Santa Clara S.A.', '12345678000190', 'Requerente', '48999001234', 'contato@santaclaraagro.com.br');",
+      "",
+      "-- Inserir atividade",
+      "INSERT INTO enterprise_activities (enterprise_id, activity_id, cnae_codigo, quantidade, unidade_nome, area_ocupada, porte) VALUES (1, 25, '8.1', 500.0, 'Cabeças', 15000.0, 'Médio');"
+    ]
+  }
+}
