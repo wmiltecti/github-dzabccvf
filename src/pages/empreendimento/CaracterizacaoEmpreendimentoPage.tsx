@@ -218,9 +218,9 @@ export default function CaracterizacaoEmpreendimentoPage({
         outorgas: dados.uso_agua?.outorgas || []
       },
       residuos: {
-        grupoA: dados.residuos?.grupoA || [],
-        grupoB: dados.residuos?.grupoB || [],
-        gerais: dados.residuos?.gerais || []
+        grupoA: dados.residuos?.residuosGrupoA || [],
+        grupoB: dados.residuos?.residuosGrupoB || [],
+        gerais: dados.residuos?.residuosGerais || []
       },
       outrasInformacoes: {
         respostas: dados.outras_informacoes?.respostas || {},
@@ -287,19 +287,19 @@ export default function CaracterizacaoEmpreendimentoPage({
         outorgas: []
       },
       residuos: {
-        grupoA: [{
+        residuosGrupoA: [{
           id: crypto.randomUUID(),
           tipo: 'Materiais Perfurocortantes',
           quantidade: '25',
           destino: 'Empresa Especializada'
         }],
-        grupoB: [{
+        residuosGrupoB: [{
           id: crypto.randomUUID(),
           tipo: 'Medicamentos Vencidos',
           quantidade: '10',
           destino: 'Incineração'
         }],
-        gerais: [{
+        residuosGerais: [{
           id: crypto.randomUUID(),
           categoria: 'Sólidos',
           tipo: 'Papel e Papelão',
