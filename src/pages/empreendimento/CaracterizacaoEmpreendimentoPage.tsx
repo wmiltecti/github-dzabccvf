@@ -313,14 +313,14 @@ export default function CaracterizacaoEmpreendimentoPage({
         respostas: {
           usaRecursosNaturais: false,
           geraEfluentesLiquidos: false,
-          geraEmissoesAtmosfericas: false,
+          geraEmissoesAtmosfericas: true,
           geraResiduosSolidos: false,
-          geraRuidosVibracao: false,
+          geraRuidosVibracao: true,
           localizadoAreaProtegida: false,
           necessitaSupressaoVegetacao: false,
-          interfereCursoAgua: false,
+          interfereCursoAgua: true,
           armazenaSubstanciaPerigosa: false,
-          possuiPlanoEmergencia: false
+          possuiPlanoEmergencia: true
         },
         observacoes: 'Empreendimento possui procedimentos de segurança ambiental e trabalhista em conformidade com a legislação vigente. São realizadas auditorias periódicas e treinamentos contínuos.'
       }
