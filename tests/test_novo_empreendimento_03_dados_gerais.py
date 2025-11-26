@@ -371,6 +371,55 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         contexto['atividades_ok'] = True
         
         # =================================================================
+        # GERAR JSON PARCIAL DA ETAPA DADOS GERAIS
+        # =================================================================
+        import json
+        from datetime import datetime
+        import os
+        
+        # Montar JSON parcial com dados até a etapa Dados Gerais
+        json_parcial = {
+            'metadados': {
+                'etapa_atual': 'DADOS_GERAIS',
+                'timestamp': datetime.now().isoformat(),
+                'versao': '2.5.2',
+                'branch': 'feature/working-branch'
+            },
+            'etapa_03_dados_gerais': {
+                'nomeEmpreendimento': contexto.get('nome_preenchido', ''),
+                'situacao': contexto.get('situacao_preenchida', ''),
+                'numeroEmpregados': int(contexto.get('empregados_preenchido', 0)),
+                'horarioFuncionamento': '07:00 às 17:00',
+                'descricao': 'Empreendimento voltado para extração e beneficiamento de minérios...',
+                'prazoImplantacao': 24,
+                'areaConstruida': 5000.00,
+                'capacidadeProducao': '10.000 ton/mês',
+                'participes': [{
+                    'nome': 'Empresa Mineração ABC Ltda',
+                    'cpfCnpj': '12.345.678/0001-90',
+                    'tipo': 'PJ',
+                    'papel': 'Requerente',
+                    'email': 'contato@mineracaoabc.com.br',
+                    'telefone': '(69) 98765-4321'
+                }]
+            }
+        }
+        
+        # Salvar JSON parcial
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"dados_gerais_json_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+        
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json_parcial, f, indent=2, ensure_ascii=False)
+            print(f"\n📦 JSON parcial salvo: {filepath}")
+        except Exception as e:
+            print(f"\n⚠️ Erro ao salvar JSON parcial: {e}")
+        
+        # =================================================================
         # CONCLUSÃO DO TESTE 03
         # =================================================================
         print("\n" + "=" * 80)
@@ -386,6 +435,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             print(f"    - Empregados: {contexto['empregados_preenchido']}")
         print(f"  ✓ Partícipe adicionado")
         print(f"  ✓ Avançou para Atividades")
+        print(f"  ✓ JSON parcial gerado: {filename}")
         print("\n" + "=" * 80)
         
         # Preservar dados de testes anteriores

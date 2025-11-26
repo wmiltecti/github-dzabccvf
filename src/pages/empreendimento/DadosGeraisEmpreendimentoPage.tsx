@@ -113,6 +113,60 @@ export default function DadosGeraisEmpreendimentoPage({
     toast.info(`Arquivo ${fileName} removido.`);
   };
 
+  const generateDadosGeraisJSON = (dados: any, participesData: EmpreendimentoParticipe[]) => {
+    const jsonData = {
+      nomeEmpreendimento: dados.nome_empreendimento,
+      situacao: dados.situacao,
+      numeroEmpregados: parseInt(dados.numero_empregados) || 0,
+      horarioFuncionamento: dados.horario_funcionamento,
+      descricao: dados.descricao,
+      prazoImplantacao: parseInt(dados.prazo_implantacao) || 0,
+      areaConstruida: parseFloat(dados.area_construida) || 0,
+      capacidadeProducao: dados.capacidade_producao,
+      participes: participesData.map(p => ({
+        nome: p.pessoa_nome,
+        cpfCnpj: p.pessoa_cpf_cnpj,
+        tipo: p.pessoa_tipo === 1 ? 'PJ' : 'PF',
+        papel: p.papel,
+        email: p.pessoa_email,
+        telefone: p.pessoa_telefone
+      }))
+    };
+
+    const jsonCompleto = {
+      metadados: {
+        timestamp: new Date().toISOString(),
+        versao: '2.5.2',
+        branch: 'feature/working-branch',
+        origem: 'botao_preencher_dados'
+      },
+      dadosGerais: jsonData
+    };
+
+    // Exibir no console para debug
+    console.log('📦 JSON Gerado - Dados Gerais:', JSON.stringify(jsonCompleto, null, 2));
+
+    // Download do arquivo JSON (desabilitado durante testes automatizados)
+    const isAutomatedTest = window.location.search.includes('automated=true') || 
+                           (window.navigator.webdriver === true);
+    
+    if (!isAutomatedTest) {
+      const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dados_gerais_${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('JSON dos Dados Gerais gerado e baixado!');
+    } else {
+      console.log('⚠️ Download de JSON desabilitado durante testes automatizados');
+    }
+  };
+
   const preencherDadosAutomaticamente = () => {
     // Dados de exemplo para preenchimento automático - RONDÔNIA (RO)
     const dadosExemplo = {
@@ -133,6 +187,7 @@ export default function DadosGeraisEmpreendimentoPage({
     setDadosGerais(dadosExemplo);
 
     // Adicionar participe de exemplo se não houver nenhum
+    let participesAtualizados = [...participes];
     if (participes.length === 0) {
       const participeExemplo: EmpreendimentoParticipe = {
         id: `temp-${Date.now()}`,
@@ -145,9 +200,15 @@ export default function DadosGeraisEmpreendimentoPage({
         pessoa_telefone: '(69) 98765-4321'
       };
       addParticipe(participeExemplo);
+      participesAtualizados = [participeExemplo];
     }
 
     toast.success('Dados preenchidos automaticamente! ✨');
+
+    // Gerar JSON após preencher
+    setTimeout(() => {
+      generateDadosGeraisJSON(dadosExemplo, participesAtualizados);
+    }, 500);
   };
 
   const validateForm = (): boolean => {

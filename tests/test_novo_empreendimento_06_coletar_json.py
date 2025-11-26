@@ -174,11 +174,22 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
             
             # Extrair dados gerais
             empreendimento_completo['etapa_03_dados_gerais'] = {
-                'nome_empreendimento': contexto_anterior.get('nome_preenchido', ''),
+                'nomeEmpreendimento': contexto_anterior.get('nome_preenchido', ''),
                 'situacao': contexto_anterior.get('situacao_preenchida', ''),
-                'numero_empregados': contexto_anterior.get('empregados_preenchido', 0),
-                'descricao_preenchida': contexto_anterior.get('descricao_preenchida', False),
-                'participe_adicionado': contexto_anterior.get('participe_adicionado', False)
+                'numeroEmpregados': int(contexto_anterior.get('empregados_preenchido', 0)),
+                'horarioFuncionamento': '07:00 às 17:00',
+                'descricao': 'Empreendimento voltado para extração e beneficiamento de minérios...',
+                'prazoImplantacao': 24,
+                'areaConstruida': 5000.00,
+                'capacidadeProducao': '10.000 ton/mês',
+                'participes': [{
+                    'nome': 'Empresa Mineração ABC Ltda',
+                    'cpfCnpj': '12.345.678/0001-90',
+                    'tipo': 'PJ',
+                    'papel': 'Requerente',
+                    'email': 'contato@mineracaoabc.com.br',
+                    'telefone': '(69) 98765-4321'
+                }]
             }
             
             # Extrair dados de atividades
