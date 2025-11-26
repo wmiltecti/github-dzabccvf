@@ -403,12 +403,121 @@ export default function AtividadesEmpreendimentoPage({
     onNext({ atividades: atividadesForStore });
   };
 
+  const generateAtividadesJSON = (atividades: SelectedActivity[]) => {
+    const jsonData = {
+      atividades: atividades.map(ativ => ({
+        codigo: ativ.code,
+        nome: ativ.name,
+        cnaeCodigo: ativ.cnae_codigo,
+        descricao: ativ.description,
+        quantidade: parseFloat(ativ.quantidade || '0'),
+        unidade: ativ.unidade,
+        areaOcupada: parseFloat(ativ.area_ocupada || '0'),
+        porteEmpreendimento: ativ.enterpriseSize,
+        potencialPoluidor: ativ.pollutionPotential,
+        isPrincipal: ativ.isPrincipal || false
+      }))
+    };
+
+    const jsonCompleto = {
+      metadados: {
+        timestamp: new Date().toISOString(),
+        versao: '2.5.2',
+        branch: 'feature/working-branch',
+        origem: 'botao_preencher_dados'
+      },
+      atividades: jsonData
+    };
+
+    // Exibir no console para debug
+    console.log('📦 JSON Gerado - Atividades:', JSON.stringify(jsonCompleto, null, 2));
+
+    // Download do arquivo JSON (desabilitado durante testes automatizados)
+    const isAutomatedTest = window.location.search.includes('automated=true') || 
+                           (window.navigator.webdriver === true);
+    
+    if (!isAutomatedTest) {
+      const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `atividades_${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('JSON das Atividades gerado e baixado!');
+    } else {
+      console.log('⚠️ Download de JSON desabilitado durante testes automatizados');
+    }
+  };
+
+  const preencherDadosAutomaticamente = async () => {
+    try {
+      // Buscar atividade "Extração" (mais comum em mineração)
+      const atividadeExtracao = availableActivities.find(a => 
+        a.name.toLowerCase().includes('extração') || 
+        a.code === 110101 || // Código comum de extração de minérios
+        a.name.toLowerCase().includes('mineração')
+      );
+
+      if (!atividadeExtracao) {
+        toast.error('Atividade de exemplo não encontrada. Adicione manualmente.');
+        return;
+      }
+
+      const atividadePreenchida: SelectedActivity = {
+        activityId: atividadeExtracao.id,
+        code: atividadeExtracao.code,
+        cnae_codigo: atividadeExtracao.cnae_codigo,
+        name: atividadeExtracao.name,
+        description: atividadeExtracao.description,
+        enterpriseSize: undefined,
+        pollutionPotential: atividadeExtracao.pollution_potential?.name,
+        quantidade: '150',
+        unidade: atividadeExtracao.measurement_unit || '',
+        area_ocupada: '2500.50',
+        isPrincipal: true,
+        enterprise_size_ranges: atividadeExtracao.enterprise_size_ranges || []
+      };
+
+      // Calcular porte automaticamente
+      const porteCalculado = calculateEnterpriseSize(
+        atividadePreenchida.quantidade,
+        atividadePreenchida.enterprise_size_ranges
+      );
+      atividadePreenchida.enterpriseSize = porteCalculado;
+
+      setSelectedActivities([atividadePreenchida]);
+      toast.success('Dados preenchidos automaticamente! ✨');
+
+      // Gerar JSON após preencher
+      setTimeout(() => {
+        generateAtividadesJSON([atividadePreenchida]);
+      }, 500);
+    } catch (error) {
+      console.error('Erro ao preencher dados:', error);
+      toast.error('Erro ao preencher dados automaticamente');
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Activity className="w-5 h-5 text-green-600" />
-          <h2 className="text-xl font-bold text-gray-800">Atividades do Empreendimento</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-green-600" />
+            <h2 className="text-xl font-bold text-gray-800">Atividades do Empreendimento</h2>
+          </div>
+          <button
+            onClick={preencherDadosAutomaticamente}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 text-sm"
+            title="Preencher dados de exemplo para teste"
+          >
+            <Star className="w-4 h-4" />
+            Preencher Dados
+          </button>
         </div>
         <p className="text-gray-600 text-sm">
           Selecione as atividades que serão desenvolvidas no empreendimento. O porte de cada atividade é definido automaticamente.

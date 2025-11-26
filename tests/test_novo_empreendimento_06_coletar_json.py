@@ -194,9 +194,15 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
             
             # Extrair dados de atividades
             empreendimento_completo['etapa_04_atividades'] = {
-                'atividade_adicionada': contexto_anterior.get('atividade_adicionada', False),
-                'quantidade': contexto_anterior.get('quantidade', 0),
-                'area_ocupada': contexto_anterior.get('area_ocupada', 0)
+                'atividades': [{
+                    'codigo': 110101,
+                    'nome': 'Extração de Minérios',
+                    'quantidade': float(contexto_anterior.get('quantidade', 0)),
+                    'unidade': 'ton/mês',
+                    'areaOcupada': float(contexto_anterior.get('area_ocupada', 0)),
+                    'porteEmpreendimento': 'Grande',
+                    'isPrincipal': True
+                }]
             }
             
             # Extrair dados de caracterização

@@ -380,6 +380,47 @@ def executar_teste_atividades(
             raise
         
         # ===============================================================
+        # GERAR JSON PARCIAL DA ETAPA ATIVIDADES
+        # ===============================================================
+        import json
+        import os
+        
+        # Montar JSON parcial com dados até a etapa Atividades
+        json_parcial = {
+            'metadados': {
+                'etapa_atual': 'ATIVIDADES',
+                'timestamp': datetime.now().isoformat(),
+                'versao': '2.5.2',
+                'branch': 'feature/working-branch'
+            },
+            'etapa_04_atividades': {
+                'atividades': [{
+                    'codigo': 110101,  # Código exemplo de extração
+                    'nome': 'Extração de Minérios',
+                    'quantidade': float(DADOS_ATIVIDADE['quantidade']),
+                    'unidade': 'ton/mês',
+                    'areaOcupada': float(DADOS_ATIVIDADE['area_ocupada']),
+                    'porteEmpreendimento': 'Grande',
+                    'isPrincipal': True
+                }]
+            }
+        }
+        
+        # Salvar JSON parcial
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"atividades_json_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+        
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json_parcial, f, indent=2, ensure_ascii=False)
+            print(f"\n📦 JSON parcial salvo: {filepath}")
+        except Exception as e:
+            print(f"\n⚠️ Erro ao salvar JSON parcial: {e}")
+        
+        # ===============================================================
         # SUCESSO
         # ===============================================================
         print("\n" + "=" * 71)
@@ -393,6 +434,7 @@ def executar_teste_atividades(
         print(f"  ✓ Quantidade: {DADOS_ATIVIDADE['quantidade']}")
         print(f"  ✓ Área Ocupada: {DADOS_ATIVIDADE['area_ocupada']} m²")
         print(f"  ✓ Avançou para Caracterização")
+        print(f"  ✓ JSON parcial gerado: {filename}")
         print("\n" + "=" * 71 + "\n")
         
         # Retornar contexto para próximo teste
