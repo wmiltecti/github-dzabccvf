@@ -96,11 +96,24 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
             
             # Método alternativo: extrair dados visíveis na tela
             print("✓ Coletando dados visíveis na interface...")
+            
+            # Limpar contexto anterior removendo objetos não serializáveis
+            contexto_limpo = {}
+            if contexto_anterior:
+                for key, value in contexto_anterior.items():
+                    # Ignorar driver e outros objetos não serializáveis
+                    if key != 'driver' and not callable(value):
+                        try:
+                            json.dumps(value)  # Testar se é serializável
+                            contexto_limpo[key] = value
+                        except:
+                            contexto_limpo[key] = str(value)
+            
             store_data = {
                 'metodo': 'coleta_interface',
                 'timestamp': datetime.now().isoformat(),
                 'mensagem': 'Dados coletados da interface por não ter acesso direto ao store',
-                'contexto_testes': contexto_anterior
+                'contexto_testes': contexto_limpo
             }
             contexto['store_json'] = store_data
         
