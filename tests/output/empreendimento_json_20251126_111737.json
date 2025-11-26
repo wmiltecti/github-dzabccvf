@@ -1,0 +1,43 @@
+{
+  "metadados": {
+    "metodo_coleta": "contexto_testes",
+    "timestamp": "2025-11-26T11:17:37.503988",
+    "versao": "2.5.2",
+    "branch": "feature/working-branch"
+  },
+  "etapa_01_navegacao": {
+    "status": "sucesso",
+    "login_ok": false,
+    "menu_acessado": false,
+    "wizard_aberto": false
+  },
+  "etapa_02_imovel": {
+    "tipoImovel": "RURAL",
+    "nomeImovel": "Fazenda Teste 4965",
+    "codigoCar": "RO-376315-52504584",
+    "areaTotalHa": 1376.0,
+    "municipio": "Porto Velho",
+    "uf": "RO",
+    "coordenadas": {
+      "latitude": -8.76194,
+      "longitude": -63.90385
+    }
+  },
+  "etapa_03_dados_gerais": {
+    "nome_empreendimento": "Complexo Industrial Mineração ABC",
+    "situacao": "Planejado",
+    "numero_empregados": "150",
+    "descricao_preenchida": true,
+    "participe_adicionado": true
+  },
+  "etapa_04_atividades": {
+    "atividade_adicionada": true,
+    "quantidade": "150",
+    "area_ocupada": "2500.50"
+  },
+  "etapa_05_caracterizacao": {
+    "caracterizacao_completa": true,
+    "perguntas_respondidas": 5,
+    "timestamp_finalizacao": "2025-11-26T11:17:35.485764"
+  }
+}
