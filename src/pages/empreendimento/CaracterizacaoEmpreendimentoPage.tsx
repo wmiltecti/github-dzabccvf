@@ -225,7 +225,7 @@ export default function CaracterizacaoEmpreendimentoPage({
       },
       outrasInformacoes: {
         respostas: dados.outras_informacoes?.respostas || {},
-        observacoes: dados.outras_informacoes?.observacoes || ''
+        outrasInformacoes: dados.outras_informacoes?.outrasInformacoes || ''
       }
     };
 
@@ -330,7 +330,7 @@ export default function CaracterizacaoEmpreendimentoPage({
           armazenaSubstanciaPerigosa: false,
           possuiPlanoEmergencia: true
         },
-        observacoes: 'Empreendimento possui procedimentos de segurança ambiental e trabalhista em conformidade com a legislação vigente. São realizadas auditorias periódicas e treinamentos contínuos.'
+        outrasInformacoes: 'Empreendimento possui procedimentos de segurança ambiental e trabalhista em conformidade com a legislação vigente. São realizadas auditorias periódicas e treinamentos contínuos. Medidas mitigadoras já implementadas incluem sistema de gestão de resíduos, tratamento de efluentes e controle de emissões atmosféricas.'
       }
     };
 
