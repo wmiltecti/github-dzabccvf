@@ -206,9 +206,9 @@ export default function CaracterizacaoEmpreendimentoPage({
       recursosEnergia: {
         utilizaLenha: dados.recursos_energia?.usaLenha === 'sim',
         possuiCaldeira: dados.recursos_energia?.possuiCaldeira === 'sim',
-        possuiFornos: dados.recursos_energia?.possuiFornos === 'sim'
+        possuiFornos: dados.recursos_energia?.possuiFornos === 'sim',
+        combustiveis: dados.recursos_energia?.combustiveis || []
       },
-      combustiveis: dados.combustiveis?.combustiveis || [],
       usoAgua: {
         origens: dados.uso_agua?.origens || ['Rede Pública'],
         consumoUsoHumano: dados.uso_agua?.consumoHumano || '5.5',
@@ -267,16 +267,17 @@ export default function CaracterizacaoEmpreendimentoPage({
       recursos_energia: {
         usaLenha: 'nao',
         possuiCaldeira: 'nao',
-        possuiFornos: 'nao'
-      },
-      combustiveis: {
+        possuiFornos: 'nao',
         combustiveis: [{
           id: crypto.randomUUID(),
-          tipoFonte: 'OLEO',
+          tipoFonte: 'Óleo',
           equipamento: 'Motor 500 MW',
-          quantidade: 100,
-          unidade: 'KWH'
+          quantidade: '100',
+          unidade: 'm³'
         }]
+      },
+      combustiveis: {
+        combustiveis: []
       },
       uso_agua: {
         origens: ['Rede Pública'],
