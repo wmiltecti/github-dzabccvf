@@ -37,38 +37,38 @@ CHROME_DRIVER_PATH = "C:\\chromedriver\\chromedriver.exe"
 BASE_URL = "http://localhost:5173"
 TIMEOUT = 20
 
-# Dados fictícios para imóveis
+# Dados fictícios para imóveis - RONDÔNIA (RO)
 DADOS_RURAL = {
     'nome': f'Fazenda Teste {random.randint(1000, 9999)}',
-    'car': f'SC-{random.randint(100000, 999999)}-{random.randint(10000000, 99999999)}',
-    'municipio': 'Florianópolis',
-    'uf': 'SC',
+    'car': f'RO-{random.randint(100000, 999999)}-{random.randint(10000000, 99999999)}',
+    'municipio': 'Porto Velho',
+    'uf': 'RO',
     'area': str(random.randint(100, 5000)),
-    'lat': '-27.595378',
-    'long': '-48.548050'
+    'lat': '-8.761940',
+    'long': '-63.903850'
 }
 
 DADOS_URBANO = {
     'nome': f'Lote Urbano Teste {random.randint(1000, 9999)}',
-    'cep': '88015-000',
-    'logradouro': 'Rua Felipe Schmidt',
+    'cep': '76801-000',
+    'logradouro': 'Avenida 7 de Setembro',
     'numero': str(random.randint(100, 999)),
     'bairro': 'Centro',
     'complemento': f'Sala {random.randint(100, 500)}',
-    'municipio': 'Florianópolis',
-    'uf': 'SC',
+    'municipio': 'Porto Velho',
+    'uf': 'RO',
     'matricula': str(random.randint(10000, 99999)),
     'area': str(random.randint(50, 500)),
-    'lat': '-27.595378',
-    'long': '-48.548050'
+    'lat': '-8.761940',
+    'long': '-63.903850'
 }
 
 DADOS_LINEAR = {
     'nome': f'Rodovia Teste {random.randint(1000, 9999)}',
-    'municipio_inicio': 'Florianópolis',
-    'uf_inicio': 'SC',
-    'municipio_final': 'São José',
-    'uf_final': 'SC',
+    'municipio_inicio': 'Porto Velho',
+    'uf_inicio': 'RO',
+    'municipio_final': 'Ariquemes',
+    'uf_final': 'RO',
     'extensao': str(random.randint(10, 100))
 }
 

@@ -236,38 +236,38 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     if (newPropertyType === 'RURAL') {
       setNewRuralData({
         nome: 'Fazenda Santa Clara',
-        car_codigo: 'MG-3106200-1234567890ABCDEF1234567890ABCDEF',
+        car_codigo: 'RO-1100205-1234567890ABCDEF1234567890ABCDEF',
         car_situacao: 'Ativo',
-        municipio: 'Belo Horizonte',
-        uf: 'MG',
+        municipio: 'Porto Velho',
+        uf: 'RO',
         area_total: '150.75',
         sistema_referencia: 'SIRGAS 2000',
-        coordenadas_utm_lat: '7789123.45',
-        coordenadas_utm_long: '609876.54'
+        coordenadas_utm_lat: '-8.761940',
+        coordenadas_utm_long: '-63.903850'
       });
     } else if (newPropertyType === 'URBANO') {
       setNewUrbanoData({
         nome: 'Lote Comercial Centro',
-        cep: '30140-071',
-        logradouro: 'Av. Afonso Pena',
+        cep: '76801-000',
+        logradouro: 'Av. 7 de Setembro',
         numero: '1500',
         bairro: 'Centro',
         complemento: 'Sala 201',
-        municipio: 'Belo Horizonte',
-        uf: 'MG',
+        municipio: 'Porto Velho',
+        uf: 'RO',
         matricula: '12345',
         area_total: '250.00',
         sistema_referencia: 'SIRGAS 2000',
-        coordenadas_utm_lat: '7794123.45',
-        coordenadas_utm_long: '611234.56'
+        coordenadas_utm_lat: '-8.761940',
+        coordenadas_utm_long: '-63.903850'
       });
     } else if (newPropertyType === 'LINEAR') {
       setNewLinearData({
-        nome: 'Rodovia MG-010',
-        municipio_inicio: 'Belo Horizonte',
-        uf_inicio: 'MG',
-        municipio_final: 'Confins',
-        uf_final: 'MG',
+        nome: 'Rodovia RO-010',
+        municipio_inicio: 'Porto Velho',
+        uf_inicio: 'RO',
+        municipio_final: 'Ariquemes',
+        uf_final: 'RO',
         extensao_km: '38.5',
         sistema_referencia: 'SIRGAS 2000'
       });

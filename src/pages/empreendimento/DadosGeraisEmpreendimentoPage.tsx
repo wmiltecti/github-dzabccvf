@@ -114,7 +114,7 @@ export default function DadosGeraisEmpreendimentoPage({
   };
 
   const preencherDadosAutomaticamente = () => {
-    // Dados de exemplo para preenchimento automático - apenas campos existentes
+    // Dados de exemplo para preenchimento automático - RONDÔNIA (RO)
     const dadosExemplo = {
       nome_empreendimento: 'Complexo Industrial Mineração ABC',
       situacao: 'Planejado' as SituacaoEmpreendimento,
@@ -142,7 +142,7 @@ export default function DadosGeraisEmpreendimentoPage({
         pessoa_tipo: 1,
         papel: 'Requerente',
         pessoa_email: 'contato@mineracaoabc.com.br',
-        pessoa_telefone: '(11) 98765-4321'
+        pessoa_telefone: '(69) 98765-4321'
       };
       addParticipe(participeExemplo);
     }
