@@ -209,6 +209,7 @@ export default function CaracterizacaoEmpreendimentoPage({
         possuiFornos: dados.recursos_energia?.possuiFornos === 'sim',
         combustiveis: dados.recursos_energia?.combustiveis || []
       },
+      combustiveis: dados.combustiveis?.combustiveis || [],
       usoAgua: {
         origens: dados.uso_agua?.origens || ['Rede Pública'],
         consumoUsoHumano: dados.uso_agua?.consumoHumano || '5.5',
@@ -277,7 +278,13 @@ export default function CaracterizacaoEmpreendimentoPage({
         }]
       },
       combustiveis: {
-        combustiveis: []
+        combustiveis: [{
+          id: crypto.randomUUID(),
+          tipoFonte: 'OLEO',
+          equipamento: 'Motor 500 MW',
+          quantidade: 100,
+          unidade: 'KWH'
+        }]
       },
       uso_agua: {
         origens: ['Rede Pública'],
