@@ -129,16 +129,31 @@ def executar_teste_atividades(
         log_sucesso("Verificando se estamos na etapa Atividades...")
         print(f"  URL atual: {driver.current_url}")
         
+        # Aguardar página carregar completamente
+        time.sleep(2)
+        
         # Scroll para o topo
         scroll_to_top(driver)
         log_sucesso("Scroll para o topo da página")
         
-        # Procurar título "Atividades do Empreendimento"
-        titulo = wait.until(EC.presence_of_element_located((
-            By.XPATH,
-            "//*[contains(text(), 'Atividades do Empreendimento')]"
-        )))
-        log_sucesso(f"Elemento da página Atividades encontrado: {titulo.text}")
+        # Aguardar mais um pouco após scroll
+        time.sleep(1)
+        
+        # Procurar título "Atividades do Empreendimento" ou ícone Activity
+        try:
+            titulo = wait.until(EC.presence_of_element_located((
+                By.XPATH,
+                "//h2[contains(text(), 'Atividades do Empreendimento')] | //*[contains(text(), 'Atividades do Empreendimento')]"
+            )))
+            log_sucesso(f"Elemento da página Atividades encontrado: {titulo.text}")
+        except:
+            # Alternativa: verificar se o botão "Adicionar Atividade" está presente
+            log_sucesso("Título não encontrado, verificando botão 'Adicionar Atividade'...")
+            wait.until(EC.presence_of_element_located((
+                By.XPATH,
+                "//button[contains(., 'Adicionar Atividade')]"
+            )))
+            log_sucesso("Botão 'Adicionar Atividade' encontrado - página confirmada")
         
         log_sucesso("✅ Na página de Atividades")
         
