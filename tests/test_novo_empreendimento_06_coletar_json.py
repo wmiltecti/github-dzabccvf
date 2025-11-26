@@ -140,20 +140,22 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"empreendimento_json_{timestamp}.json"
         
+        # Caminho relativo ao diretório do script (tests/)
+        import os
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        filepath = os.path.join(output_dir, filename)
+        
         try:
-            with open(f"tests/output/{filename}", "w", encoding="utf-8") as f:
+            # Garantir que diretório existe
+            os.makedirs(output_dir, exist_ok=True)
+            
+            with open(filepath, "w", encoding="utf-8") as f:
                 f.write(json_formatado)
-            print(f"✓ JSON salvo em: tests/output/{filename}")
-            contexto['json_arquivo'] = filename
+            print(f"✓ JSON salvo em: {filepath}")
+            contexto['json_arquivo'] = filepath
         except Exception as e:
             print(f"⚠️ Erro ao salvar arquivo: {e}")
-            print("⚠️ Criando diretório output...")
-            import os
-            os.makedirs("tests/output", exist_ok=True)
-            with open(f"tests/output/{filename}", "w", encoding="utf-8") as f:
-                f.write(json_formatado)
-            print(f"✓ JSON salvo em: tests/output/{filename}")
-            contexto['json_arquivo'] = filename
+            contexto['json_arquivo'] = None
         
         # =================================================================
         # ETAPA 4: ESTATÍSTICAS DO JSON
