@@ -149,7 +149,12 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
                         'complemento': dados_imovel.get('complemento', ''),
                         'municipio': dados_imovel.get('municipio', ''),
                         'uf': dados_imovel.get('uf', ''),
-                        'areaTotalM2': float(dados_imovel.get('area', 0))
+                        'areaTotalM2': float(dados_imovel.get('area', 0)),
+                        'sistemaReferencia': 'SIRGAS 2000',
+                        'coordenadas': {
+                            'latitude': float(dados_imovel.get('lat', 0)),
+                            'longitude': float(dados_imovel.get('long', 0))
+                        }
                     }
                 elif 'municipio_inicio' in dados_imovel:  # LINEAR
                     empreendimento_completo['etapa_02_imovel'] = {

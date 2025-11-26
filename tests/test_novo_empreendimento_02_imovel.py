@@ -469,7 +469,12 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
                 'complemento': dados.get('complemento', ''),
                 'municipio': dados.get('municipio', ''),
                 'uf': dados.get('uf', ''),
-                'areaTotalM2': float(dados.get('area', 0))
+                'areaTotalM2': float(dados.get('area', 0)),
+                'sistemaReferencia': 'SIRGAS 2000',
+                'coordenadas': {
+                    'latitude': float(dados.get('lat', 0)),
+                    'longitude': float(dados.get('long', 0))
+                }
             }
         elif 'municipio_inicio' in dados:  # LINEAR
             json_parcial['etapa_02_imovel'] = {
