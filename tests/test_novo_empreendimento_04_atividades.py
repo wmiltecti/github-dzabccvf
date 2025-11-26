@@ -129,14 +129,11 @@ def executar_teste_atividades(
         log_sucesso("Verificando se estamos na etapa Atividades...")
         print(f"  URL atual: {driver.current_url}")
         
-        # Aguardar React renderizar a transição de página
-        time.sleep(2)
-        
-        # Aumentar timeout para página de atividades
-        wait_atividades = WebDriverWait(driver, 30)
+        # Aumentar timeout para página de atividades (pode demorar bastante)
+        wait_atividades = WebDriverWait(driver, 60)
         
         # Aguardar botão "Adicionar Atividade" estar visível e clicável
-        log_sucesso("Procurando botão 'Adicionar Atividade'...")
+        log_sucesso("Aguardando página Atividades carregar (timeout: 60s)...")
         
         try:
             btn_adicionar = wait_atividades.until(

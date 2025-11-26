@@ -267,8 +267,12 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             )
             print(f"✓ Botão encontrado: {proximo_btn.text}")
             proximo_btn.click()
-            time.sleep(3)
             print("✓ Clicou em Próximo")
+            
+            # IMPORTANTE: Aguardar mais tempo para transição entre páginas
+            # O React pode demorar para renderizar a próxima etapa
+            print("✓ Aguardando transição para próxima página...")
+            time.sleep(5)
         except Exception as e:
             print(f"❌ Erro ao clicar em Próximo: {e}")
             raise Exception("Botão 'Próximo' não encontrado ou não clicável")
