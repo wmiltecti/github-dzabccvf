@@ -126,7 +126,11 @@ export default function DadosGeraisEmpreendimentoPage({
       capacidade_producao: '10.000 ton/mês'
     };
 
+    // Atualizar formData local
     setFormData(dadosExemplo);
+    
+    // Atualizar store imediatamente para evitar conflito com useEffect
+    setDadosGerais(dadosExemplo);
 
     // Adicionar participe de exemplo se não houver nenhum
     if (participes.length === 0) {
