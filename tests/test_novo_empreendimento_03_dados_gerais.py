@@ -156,14 +156,14 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Verificando se campos foram preenchidos...")
         
-        # Validar Nome do Empreendimento
+        # Validar Nome (campo simplificado)
         try:
             nome_input = driver.find_element(
                 By.XPATH,
-                "//input[@name='nome_empreendimento'] | //input[contains(@placeholder, 'Nome do empreendimento')]"
+                "//label[contains(text(), 'Nome')]//following::input[1] | //input[contains(@placeholder, 'Complexo Industrial')]"
             )
             nome_valor = nome_input.get_attribute('value')
-            print(f"✓ Nome do Empreendimento: {nome_valor}")
+            print(f"✓ Nome: {nome_valor}")
             
             if nome_valor and len(nome_valor) > 0:
                 print(f"  ✅ Campo preenchido com sucesso")
@@ -177,7 +177,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         try:
             empregados_input = driver.find_element(
                 By.XPATH,
-                "//input[@name='numero_empregados'] | //input[contains(@placeholder, 'empregados')]"
+                "//label[contains(text(), 'Nº de Empregados')]//following::input[1] | //input[contains(@placeholder, '0')][@type='number']"
             )
             empregados_valor = empregados_input.get_attribute('value')
             print(f"✓ Número de Empregados: {empregados_valor}")
@@ -192,7 +192,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         try:
             descricao_textarea = driver.find_element(
                 By.XPATH,
-                "//textarea[@name='descricao'] | //textarea[contains(@placeholder, 'Descrição')]"
+                "//label[contains(text(), 'Descrição')]//following::textarea[1] | //textarea[contains(@placeholder, 'Descreva')]"
             )
             descricao_valor = descricao_textarea.get_attribute('value')
             if descricao_valor and len(descricao_valor) > 10:
