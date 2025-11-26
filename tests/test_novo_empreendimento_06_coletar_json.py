@@ -120,11 +120,49 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
             # Extrair dados do imóvel
             if 'dados_imovel' in contexto_anterior:
                 dados_imovel = contexto_anterior['dados_imovel']
-                empreendimento_completo['etapa_02_imovel'] = {
-                    'tipo': dados_imovel.get('tipo', 'DESCONHECIDO'),
-                    'nome': dados_imovel.get('nome', ''),
-                    **dados_imovel  # Incluir todos os campos do imóvel
-                }
+                
+                # Estruturar JSON conforme tipo de imóvel
+                if 'car' in dados_imovel:  # RURAL
+                    empreendimento_completo['etapa_02_imovel'] = {
+                        'tipoImovel': 'RURAL',
+                        'nomeImovel': dados_imovel.get('nome', ''),
+                        'codigoCar': dados_imovel.get('car', ''),
+                        'areaTotalHa': float(dados_imovel.get('area', 0)),
+                        'municipio': dados_imovel.get('municipio', ''),
+                        'uf': dados_imovel.get('uf', ''),
+                        'coordenadas': {
+                            'latitude': float(dados_imovel.get('lat', 0)),
+                            'longitude': float(dados_imovel.get('long', 0))
+                        }
+                    }
+                elif 'cep' in dados_imovel:  # URBANO
+                    empreendimento_completo['etapa_02_imovel'] = {
+                        'tipoImovel': 'URBANO',
+                        'nomeImovel': dados_imovel.get('nome', ''),
+                        'cep': dados_imovel.get('cep', ''),
+                        'matricula': dados_imovel.get('matricula', ''),
+                        'logradouro': dados_imovel.get('logradouro', ''),
+                        'numero': dados_imovel.get('numero', ''),
+                        'bairro': dados_imovel.get('bairro', ''),
+                        'complemento': dados_imovel.get('complemento', ''),
+                        'municipio': dados_imovel.get('municipio', ''),
+                        'uf': dados_imovel.get('uf', ''),
+                        'areaTotalM2': float(dados_imovel.get('area', 0))
+                    }
+                elif 'municipio_inicio' in dados_imovel:  # LINEAR
+                    empreendimento_completo['etapa_02_imovel'] = {
+                        'tipoImovel': 'LINEAR',
+                        'nomeEmpreendimento': dados_imovel.get('nome', ''),
+                        'pontoInicio': {
+                            'municipio': dados_imovel.get('municipio_inicio', ''),
+                            'uf': dados_imovel.get('uf_inicio', '')
+                        },
+                        'pontoFinal': {
+                            'municipio': dados_imovel.get('municipio_final', ''),
+                            'uf': dados_imovel.get('uf_final', '')
+                        },
+                        'extensaoKm': float(dados_imovel.get('extensao', 0))
+                    }
             
             # Extrair dados gerais
             empreendimento_completo['etapa_03_dados_gerais'] = {
