@@ -217,7 +217,11 @@ export default function CaracterizacaoEmpreendimentoPage({
         destinoFinalEfluente: dados.uso_agua?.destinoFinal || 'Rede Pública de Esgoto',
         outorgas: dados.uso_agua?.outorgas || []
       },
-      residuos: dados.residuos || [],
+      residuos: {
+        grupoA: dados.residuos?.grupoA || [],
+        grupoB: dados.residuos?.grupoB || [],
+        gerais: dados.residuos?.gerais || []
+      },
       outrasInformacoes: {
         respostas: dados.outras_informacoes?.respostas || {},
         observacoes: dados.outras_informacoes?.observacoes || ''
@@ -282,7 +286,29 @@ export default function CaracterizacaoEmpreendimentoPage({
         destinoFinal: 'Rede Pública de Esgoto',
         outorgas: []
       },
-      residuos: [],
+      residuos: {
+        grupoA: [{
+          id: crypto.randomUUID(),
+          tipo: 'Materiais Perfurocortantes',
+          quantidade: '25',
+          destino: 'Empresa Especializada'
+        }],
+        grupoB: [{
+          id: crypto.randomUUID(),
+          tipo: 'Medicamentos Vencidos',
+          quantidade: '10',
+          destino: 'Incineração'
+        }],
+        gerais: [{
+          id: crypto.randomUUID(),
+          categoria: 'Sólidos',
+          tipo: 'Papel e Papelão',
+          origem: 'Área Administrativa',
+          tratamento: 'Não possui tratamento',
+          destino: 'Reciclagem',
+          quantidade: '150'
+        }]
+      },
       outras_informacoes: {
         respostas: {
           usaRecursosNaturais: false,
