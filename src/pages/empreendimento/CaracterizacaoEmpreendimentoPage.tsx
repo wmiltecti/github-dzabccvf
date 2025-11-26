@@ -225,7 +225,7 @@ export default function CaracterizacaoEmpreendimentoPage({
       },
       outrasInformacoes: {
         respostas: dados.outras_informacoes?.respostas || {},
-        outrasInformacoes: dados.outras_informacoes?.outrasInformacoes || ''
+        outrasInformacoesRelevantes: dados.outras_informacoes?.outrasInformacoes || ''
       }
     };
 
