@@ -396,12 +396,23 @@ def executar_teste_atividades(
         print("\n" + "=" * 71 + "\n")
         
         # Retornar contexto para próximo teste
-        return {
+        contexto_retorno = {
             'status': 'sucesso',
             'driver': driver,
             'atividade_adicionada': True,
+            'atividade_busca': DADOS_ATIVIDADE['busca'],
+            'quantidade': DADOS_ATIVIDADE['quantidade'],
+            'area_ocupada': DADOS_ATIVIDADE['area_ocupada'],
             'timestamp': datetime.now().isoformat()
         }
+        
+        # Preservar dados de testes anteriores
+        if contexto_anterior:
+            for key, value in contexto_anterior.items():
+                if key not in contexto_retorno and key != 'driver':
+                    contexto_retorno[key] = value
+        
+        return contexto_retorno
         
     except Exception as e:
         print("\n" + "=" * 71)

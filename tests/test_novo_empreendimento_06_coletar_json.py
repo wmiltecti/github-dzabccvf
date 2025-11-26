@@ -94,27 +94,62 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
         else:
             print("⚠️ Store não acessível via console - tentando método alternativo...")
             
-            # Método alternativo: extrair dados visíveis na tela
-            print("✓ Coletando dados visíveis na interface...")
+            # Método alternativo: coletar dados do contexto dos testes
+            print("✓ Coletando dados do contexto de todos os testes executados...")
             
-            # Limpar contexto anterior removendo objetos não serializáveis
-            contexto_limpo = {}
-            if contexto_anterior:
-                for key, value in contexto_anterior.items():
-                    # Ignorar driver e outros objetos não serializáveis
-                    if key != 'driver' and not callable(value):
-                        try:
-                            json.dumps(value)  # Testar se é serializável
-                            contexto_limpo[key] = value
-                        except:
-                            contexto_limpo[key] = str(value)
-            
-            store_data = {
-                'metodo': 'coleta_interface',
-                'timestamp': datetime.now().isoformat(),
-                'mensagem': 'Dados coletados da interface por não ter acesso direto ao store',
-                'contexto_testes': contexto_limpo
+            # Montar JSON completo do empreendimento
+            empreendimento_completo = {
+                'metadados': {
+                    'metodo_coleta': 'contexto_testes',
+                    'timestamp': datetime.now().isoformat(),
+                    'versao': '2.5.2',
+                    'branch': 'feature/working-branch'
+                },
+                'etapa_01_navegacao': {
+                    'status': contexto_anterior.get('status', 'desconhecido'),
+                    'login_ok': contexto_anterior.get('login_ok', False),
+                    'menu_acessado': contexto_anterior.get('menu_empreendimento_ok', False),
+                    'wizard_aberto': contexto_anterior.get('wizard_aberto', False)
+                },
+                'etapa_02_imovel': {},
+                'etapa_03_dados_gerais': {},
+                'etapa_04_atividades': {},
+                'etapa_05_caracterizacao': {}
             }
+            
+            # Extrair dados do imóvel
+            if 'dados_imovel' in contexto_anterior:
+                dados_imovel = contexto_anterior['dados_imovel']
+                empreendimento_completo['etapa_02_imovel'] = {
+                    'tipo': dados_imovel.get('tipo', 'DESCONHECIDO'),
+                    'nome': dados_imovel.get('nome', ''),
+                    **dados_imovel  # Incluir todos os campos do imóvel
+                }
+            
+            # Extrair dados gerais
+            empreendimento_completo['etapa_03_dados_gerais'] = {
+                'nome_empreendimento': contexto_anterior.get('nome_preenchido', ''),
+                'situacao': contexto_anterior.get('situacao_preenchida', ''),
+                'numero_empregados': contexto_anterior.get('empregados_preenchido', 0),
+                'descricao_preenchida': contexto_anterior.get('descricao_preenchida', False),
+                'participe_adicionado': contexto_anterior.get('participe_adicionado', False)
+            }
+            
+            # Extrair dados de atividades
+            empreendimento_completo['etapa_04_atividades'] = {
+                'atividade_adicionada': contexto_anterior.get('atividade_adicionada', False),
+                'quantidade': contexto_anterior.get('quantidade', 0),
+                'area_ocupada': contexto_anterior.get('area_ocupada', 0)
+            }
+            
+            # Extrair dados de caracterização
+            empreendimento_completo['etapa_05_caracterizacao'] = {
+                'caracterizacao_completa': contexto_anterior.get('caracterizacao_completa', False),
+                'perguntas_respondidas': contexto_anterior.get('perguntas_respondidas', 0),
+                'timestamp_finalizacao': contexto_anterior.get('timestamp', '')
+            }
+            
+            store_data = empreendimento_completo
             contexto['store_json'] = store_data
         
         # =================================================================

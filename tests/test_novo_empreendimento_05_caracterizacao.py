@@ -460,13 +460,21 @@ def executar_teste_caracterizacao(
         print("\n" + "=" * 71 + "\n")
         
         # Retornar contexto
-        return {
+        contexto_retorno = {
             'status': 'sucesso',
             'driver': driver,
             'caracterizacao_completa': True,
             'perguntas_respondidas': perguntas_respondidas,
             'timestamp': datetime.now().isoformat()
         }
+        
+        # Preservar dados de testes anteriores
+        if contexto_anterior:
+            for key, value in contexto_anterior.items():
+                if key not in contexto_retorno and key != 'driver':
+                    contexto_retorno[key] = value
+        
+        return contexto_retorno
         
     except Exception as e:
         print("\n" + "=" * 71)
