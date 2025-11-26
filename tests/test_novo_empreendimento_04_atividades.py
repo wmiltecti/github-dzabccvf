@@ -129,46 +129,35 @@ def executar_teste_atividades(
         log_sucesso("Verificando se estamos na etapa Atividades...")
         print(f"  URL atual: {driver.current_url}")
         
-        # Aguardar página carregar completamente - aumentando tempo
-        time.sleep(3)
-        
-        # Scroll para o topo
-        scroll_to_top(driver)
-        log_sucesso("Scroll para o topo da página")
-        
-        # Aguardar mais após scroll
+        # Aguardar React renderizar a transição de página
         time.sleep(2)
         
-        # Aumentar timeout para página de atividades (pode demorar a carregar)
+        # Aumentar timeout para página de atividades
         wait_atividades = WebDriverWait(driver, 30)
         
-        # Procurar título "Atividades do Empreendimento" ou ícone Activity
+        # Aguardar botão "Adicionar Atividade" estar visível e clicável
+        log_sucesso("Procurando botão 'Adicionar Atividade'...")
+        
         try:
-            titulo = wait_atividades.until(EC.presence_of_element_located((
-                By.XPATH,
-                "//h2[contains(text(), 'Atividades do Empreendimento')] | //*[contains(text(), 'Atividades do Empreendimento')]"
-            )))
-            log_sucesso(f"Elemento da página Atividades encontrado: {titulo.text}")
-        except Exception as e:
-            # Alternativa: verificar se o botão "Adicionar Atividade" está presente
-            log_sucesso(f"Título não encontrado ({str(e)[:50]}...), verificando botão...")
-            try:
-                btn = wait_atividades.until(EC.presence_of_element_located((
+            btn_adicionar = wait_atividades.until(
+                EC.element_to_be_clickable((
                     By.XPATH,
                     "//button[contains(., 'Adicionar Atividade')]"
-                )))
-                log_sucesso(f"Botão 'Adicionar Atividade' encontrado: {btn.text}")
-            except Exception as e2:
-                # Última tentativa: salvar screenshot e mostrar HTML
-                log_erro(f"Erro ao encontrar página Atividades: {str(e2)}")
-                salvar_screenshot_erro(driver, "teste_04_pagina_nao_encontrada")
-                # Mostrar elementos visíveis
-                try:
-                    body_text = driver.find_element(By.TAG_NAME, "body").text
-                    log_erro(f"Texto visível na página: {body_text[:200]}...")
-                except:
-                    pass
-                raise Exception(f"Página de Atividades não carregou corretamente")
+                ))
+            )
+            log_sucesso(f"✓ Botão 'Adicionar Atividade' encontrado e clicável")
+        except Exception as e:
+            log_erro(f"Erro ao encontrar página Atividades: {str(e)}")
+            salvar_screenshot_erro(driver, "teste_04_pagina_nao_encontrada")
+            
+            # Debug: mostrar o que está visível na página
+            try:
+                body_text = driver.find_element(By.TAG_NAME, "body").text
+                log_erro(f"Texto visível na página: {body_text[:200]}...")
+            except:
+                pass
+            
+            raise Exception(f"Página de Atividades não carregou - botão 'Adicionar Atividade' não encontrado")
         
         log_sucesso("✅ Na página de Atividades")
         

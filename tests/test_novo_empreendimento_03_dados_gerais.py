@@ -131,7 +131,6 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Clicando em 'Preencher Dados'...")
         preencher_btn.click()
-        time.sleep(2)
         
         # Aguardar toast de sucesso
         try:
@@ -145,6 +144,11 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         except:
             print("⚠️ Toast não detectado, mas continuando...")
         
+        # IMPORTANTE: Aguardar mais tempo para os campos serem preenchidos
+        # O botão "Preencher Dados" pode demorar a preencher todos os campos
+        print("✓ Aguardando campos serem preenchidos...")
+        time.sleep(3)
+        
         print("✅ Botão 'Preencher Dados' clicado")
         contexto['preencher_dados_ok'] = True
         
@@ -156,7 +160,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         print("✓ Verificando se campos foram preenchidos...")
         
-        # Validar Nome (campo simplificado)
+        # Validar Nome (campo simplificado) - OBRIGATÓRIO
         try:
             nome_input = driver.find_element(
                 By.XPATH,
@@ -169,9 +173,17 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
                 print(f"  ✅ Campo preenchido com sucesso")
                 contexto['nome_preenchido'] = nome_valor
             else:
-                print(f"  ⚠️ Campo vazio, mas continuando...")
+                print(f"  ⚠️ Campo vazio - PREENCHENDO MANUALMENTE (campo obrigatório)")
+                # Preencher manualmente pois o campo é obrigatório
+                nome_input.clear()
+                nome_input.send_keys("Empreendimento Teste Automatizado")
+                time.sleep(0.5)
+                nome_valor = nome_input.get_attribute('value')
+                print(f"  ✅ Nome preenchido manualmente: {nome_valor}")
+                contexto['nome_preenchido'] = nome_valor
         except Exception as e:
-            print(f"⚠️ Erro ao validar nome: {e}")
+            print(f"⚠️ Erro ao validar/preencher nome: {e}")
+            raise Exception("Campo Nome é obrigatório e não foi preenchido")
         
         # Validar Número de Empregados
         try:
