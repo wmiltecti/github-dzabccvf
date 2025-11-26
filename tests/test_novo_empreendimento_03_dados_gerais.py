@@ -185,6 +185,35 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             print(f"⚠️ Erro ao validar/preencher nome: {e}")
             raise Exception("Campo Nome é obrigatório e não foi preenchido")
         
+        # Validar Situação - OBRIGATÓRIO
+        try:
+            situacao_select = driver.find_element(
+                By.XPATH,
+                "//label[contains(text(), 'Situação')]//following::select[1]"
+            )
+            situacao_valor = situacao_select.get_attribute('value')
+            print(f"✓ Situação: {situacao_valor}")
+            
+            if not situacao_valor or situacao_valor == '':
+                print(f"  ⚠️ Campo vazio - PREENCHENDO MANUALMENTE (campo obrigatório)")
+                # Selecionar primeira opção válida (geralmente "Planejamento")
+                from selenium.webdriver.support.ui import Select
+                select = Select(situacao_select)
+                # Pular a primeira opção se for vazia
+                opcoes = [opt for opt in select.options if opt.get_attribute('value')]
+                if opcoes:
+                    select.select_by_value(opcoes[0].get_attribute('value'))
+                    time.sleep(0.5)
+                    situacao_valor = situacao_select.get_attribute('value')
+                    print(f"  ✅ Situação preenchida manualmente: {situacao_valor}")
+                    contexto['situacao_preenchida'] = situacao_valor
+            else:
+                print(f"  ✅ Campo preenchido com sucesso")
+                contexto['situacao_preenchida'] = situacao_valor
+        except Exception as e:
+            print(f"⚠️ Erro ao validar/preencher situação: {e}")
+            raise Exception("Campo Situação é obrigatório e não foi preenchido")
+        
         # Validar Número de Empregados
         try:
             empregados_input = driver.find_element(
