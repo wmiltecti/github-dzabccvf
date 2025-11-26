@@ -110,9 +110,16 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         submit_btn = driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
         submit_btn.click()
         
-        # Aguardar redirecionamento
+        # Aguardar redirecionamento - aumentando tempo
         print("✓ Aguardando redirecionamento...")
-        time.sleep(3)
+        time.sleep(5)
+        
+        # Tentar aguardar explicitamente a URL mudar de /login
+        try:
+            wait.until(lambda d: 'login' not in d.current_url.lower())
+            print("✓ URL mudou de /login")
+        except:
+            print("⚠️ URL ainda contém 'login' após timeout")
         
         current_url = driver.current_url
         
