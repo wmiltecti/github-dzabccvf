@@ -515,6 +515,21 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             except:
                 raise Exception("Não foi possível salvar o imóvel")
         
+        # Aguardar fechamento do modal
+        try:
+            print("✓ Aguardando fechamento do modal...")
+            wait.until(
+                EC.invisibility_of_element_located((
+                    By.XPATH,
+                    "//div[contains(., 'Cadastrar Novo Imóvel')]"
+                ))
+            )
+            time.sleep(2)
+            print("✓ Modal fechado confirmado")
+        except:
+            print("⚠️ Não conseguiu confirmar fechamento do modal, mas continuando...")
+            time.sleep(2)
+        
         contexto['imovel_salvo'] = True
         
         # =================================================================
@@ -526,18 +541,46 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         print("✓ Procurando botão 'Próximo'...")
         
         try:
-            proximo_btn = wait.until(
-                EC.element_to_be_clickable((
+            # Aguardar um pouco mais e tentar múltiplos seletores
+            time.sleep(2)
+            
+            # Tentativa 1: Botão com texto "Próximo"
+            try:
+                proximo_btn = driver.find_element(
                     By.XPATH,
                     "//button[contains(., 'Próximo') or contains(., 'Avançar')]"
-                ))
-            )
-            print(f"✓ Botão encontrado: {proximo_btn.text}")
-            proximo_btn.click()
-            time.sleep(3)
-            print("✓ Clicou em Próximo")
+                )
+                print(f"✓ Botão encontrado (método 1): {proximo_btn.text}")
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", proximo_btn)
+                time.sleep(0.5)
+                proximo_btn.click()
+                time.sleep(3)
+                print("✓ Clicou em Próximo")
+            except:
+                # Tentativa 2: Qualquer botão verde na parte inferior
+                print("⚠️ Tentando método alternativo...")
+                botoes = driver.find_elements(By.XPATH, "//button[contains(@class, 'bg-green') or contains(@class, 'bg-blue')]")
+                for btn in botoes:
+                    texto = btn.text.strip().lower()
+                    if 'próximo' in texto or 'avançar' in texto or 'continuar' in texto:
+                        print(f"✓ Botão encontrado (método 2): {btn.text}")
+                        driver.execute_script("arguments[0].click();", btn)
+                        time.sleep(3)
+                        print("✓ Clicou em Próximo via método alternativo")
+                        break
+                else:
+                    raise Exception("Botão 'Próximo' não encontrado")
         except Exception as e:
             print(f"❌ Erro ao clicar em Próximo: {e}")
+            # Debug: listar todos os botões visíveis
+            try:
+                todos_botoes = driver.find_elements(By.TAG_NAME, "button")
+                print(f"📋 Botões visíveis ({len(todos_botoes)}):")
+                for btn in todos_botoes[:10]:  # Listar apenas os 10 primeiros
+                    if btn.is_displayed():
+                        print(f"  - {btn.text[:50]}")
+            except:
+                pass
             raise Exception("Botão 'Próximo' não encontrado ou não clicável")
         
         contexto['avancar_ok'] = True
