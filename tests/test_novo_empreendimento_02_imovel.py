@@ -488,7 +488,8 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
                     'municipio': dados.get('municipio_final', ''),
                     'uf': dados.get('uf_final', '')
                 },
-                'extensaoKm': float(dados.get('extensao', 0))
+                'extensaoKm': float(dados.get('extensao', 0)),
+                'sistemaReferencia': 'SIRGAS 2000'
             }
         
         # Salvar JSON parcial

@@ -168,7 +168,8 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
                             'municipio': dados_imovel.get('municipio_final', ''),
                             'uf': dados_imovel.get('uf_final', '')
                         },
-                        'extensaoKm': float(dados_imovel.get('extensao', 0))
+                        'extensaoKm': float(dados_imovel.get('extensao', 0)),
+                        'sistemaReferencia': 'SIRGAS 2000'
                     }
             
             # Extrair dados gerais
