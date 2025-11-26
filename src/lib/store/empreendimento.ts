@@ -32,7 +32,6 @@ export interface EmpreendimentoDadosGerais {
   numero_empregados?: number;
   horario_funcionamento?: string;
   descricao?: string;
-  porte?: string;
   prazo_implantacao?: string;
   area_construida?: string;
   capacidade_producao?: string;
