@@ -388,6 +388,12 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         print(f"  ✓ Avançou para Atividades")
         print("\n" + "=" * 80)
         
+        # Preservar dados de testes anteriores
+        if contexto_anterior:
+            for key, value in contexto_anterior.items():
+                if key not in contexto and key != 'driver':
+                    contexto[key] = value
+        
         contexto['status'] = 'sucesso'
         return contexto
         
