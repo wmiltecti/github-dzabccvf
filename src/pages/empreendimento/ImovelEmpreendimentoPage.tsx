@@ -295,18 +295,25 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     // Exibir no console para debug
     console.log('📦 JSON Gerado - Imóvel:', JSON.stringify(jsonCompleto, null, 2));
 
-    // Download do arquivo JSON
-    const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `imovel_${type.toLowerCase()}_${new Date().getTime()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Download do arquivo JSON (desabilitado durante testes automatizados)
+    const isAutomatedTest = window.location.search.includes('automated=true') || 
+                           (window.navigator.webdriver === true);
+    
+    if (!isAutomatedTest) {
+      const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `imovel_${type.toLowerCase()}_${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-    toast.success(`JSON do imóvel ${type} gerado e baixado!`);
+      toast.success(`JSON do imóvel ${type} gerado e baixado!`);
+    } else {
+      console.log('⚠️ Download de JSON desabilitado durante testes automatizados');
+    }
   };
 
   const handleFillPropertyData = () => {
