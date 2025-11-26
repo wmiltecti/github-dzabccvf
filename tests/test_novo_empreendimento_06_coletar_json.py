@@ -127,9 +127,11 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
                         'tipoImovel': 'RURAL',
                         'nomeImovel': dados_imovel.get('nome', ''),
                         'codigoCar': dados_imovel.get('car', ''),
+                        'situacaoCar': 'ATIVO',  # Valor padrão do botão "Preencher Dados"
                         'areaTotalHa': float(dados_imovel.get('area', 0)),
                         'municipio': dados_imovel.get('municipio', ''),
                         'uf': dados_imovel.get('uf', ''),
+                        'sistemaReferencia': 'SIRGAS 2000',  # Valor padrão do botão "Preencher Dados"
                         'coordenadas': {
                             'latitude': float(dados_imovel.get('lat', 0)),
                             'longitude': float(dados_imovel.get('long', 0))

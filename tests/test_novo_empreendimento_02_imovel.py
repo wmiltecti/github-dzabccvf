@@ -424,6 +424,83 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         contexto['dados_gerais_ok'] = True
         
         # =================================================================
+        # GERAR JSON PARCIAL DA ETAPA IMÓVEL
+        # =================================================================
+        import json
+        from datetime import datetime
+        import os
+        
+        # Montar JSON parcial com dados até a etapa Imóvel
+        json_parcial = {
+            'metadados': {
+                'etapa_atual': 'IMOVEL',
+                'timestamp': datetime.now().isoformat(),
+                'versao': '2.5.2',
+                'branch': 'feature/working-branch'
+            },
+            'etapa_02_imovel': {}
+        }
+        
+        # Estruturar conforme tipo de imóvel
+        if 'car' in dados:  # RURAL
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'RURAL',
+                'nomeImovel': dados.get('nome', ''),
+                'codigoCar': dados.get('car', ''),
+                'situacaoCar': 'ATIVO',
+                'areaTotalHa': float(dados.get('area', 0)),
+                'municipio': dados.get('municipio', ''),
+                'uf': dados.get('uf', ''),
+                'sistemaReferencia': 'SIRGAS 2000',
+                'coordenadas': {
+                    'latitude': float(dados.get('lat', 0)),
+                    'longitude': float(dados.get('long', 0))
+                }
+            }
+        elif 'cep' in dados:  # URBANO
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'URBANO',
+                'nomeImovel': dados.get('nome', ''),
+                'cep': dados.get('cep', ''),
+                'matricula': dados.get('matricula', ''),
+                'logradouro': dados.get('logradouro', ''),
+                'numero': dados.get('numero', ''),
+                'bairro': dados.get('bairro', ''),
+                'complemento': dados.get('complemento', ''),
+                'municipio': dados.get('municipio', ''),
+                'uf': dados.get('uf', ''),
+                'areaTotalM2': float(dados.get('area', 0))
+            }
+        elif 'municipio_inicio' in dados:  # LINEAR
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'LINEAR',
+                'nomeEmpreendimento': dados.get('nome', ''),
+                'pontoInicio': {
+                    'municipio': dados.get('municipio_inicio', ''),
+                    'uf': dados.get('uf_inicio', '')
+                },
+                'pontoFinal': {
+                    'municipio': dados.get('municipio_final', ''),
+                    'uf': dados.get('uf_final', '')
+                },
+                'extensaoKm': float(dados.get('extensao', 0))
+            }
+        
+        # Salvar JSON parcial
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"imovel_json_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+        
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json_parcial, f, indent=2, ensure_ascii=False)
+            print(f"\n📦 JSON parcial salvo: {filepath}")
+        except Exception as e:
+            print(f"\n⚠️ Erro ao salvar JSON parcial: {e}")
+        
+        # =================================================================
         # CONCLUSÃO DO TESTE 02
         # =================================================================
         print("\n" + "=" * 80)
@@ -436,6 +513,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         print(f"  ✓ Formulário específico preenchido")
         print(f"  ✓ Imóvel salvo no sistema")
         print(f"  ✓ Avançou para Dados Gerais")
+        print(f"  ✓ JSON parcial gerado: {filename}")
         print("\n" + "=" * 80)
         
         contexto['status'] = 'sucesso'
