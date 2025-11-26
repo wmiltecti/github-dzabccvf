@@ -196,6 +196,34 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             
             if not situacao_valor or situacao_valor == '':
                 print(f"  ⚠️ Campo vazio - PREENCHENDO MANUALMENTE (campo obrigatório)")
+                # Selecionar primeira opção válida (geralmente "Planejamento" ou similar)
+                from selenium.webdriver.support.ui import Select
+                select = Select(situacao_select)
+                # Pular a opção vazia e selecionar a primeira válida
+                if len(select.options) > 1:
+                    select.select_by_index(1)
+                    time.sleep(0.5)
+                    situacao_valor = situacao_select.get_attribute('value')
+                    print(f"  ✅ Situação preenchida manualmente: {situacao_valor}")
+                    contexto['situacao_preenchida'] = situacao_valor
+            else:
+                print(f"  ✅ Campo já preenchido")
+                contexto['situacao_preenchida'] = situacao_valor
+        except Exception as e:
+            print(f"⚠️ Erro ao validar/preencher situação: {e}")
+            raise Exception("Campo Situação é obrigatório e não foi preenchido")
+        
+        # Validar Número de Empregados
+        try:
+            situacao_select = driver.find_element(
+                By.XPATH,
+                "//label[contains(text(), 'Situação')]//following::select[1]"
+            )
+            situacao_valor = situacao_select.get_attribute('value')
+            print(f"✓ Situação: {situacao_valor}")
+            
+            if not situacao_valor or situacao_valor == '':
+                print(f"  ⚠️ Campo vazio - PREENCHENDO MANUALMENTE (campo obrigatório)")
                 # Selecionar primeira opção válida (geralmente "Planejamento")
                 from selenium.webdriver.support.ui import Select
                 select = Select(situacao_select)
