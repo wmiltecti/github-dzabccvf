@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FileText, ArrowRight, ArrowLeft, Upload, Wand2, Save } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useEmpreendimentoStore, SituacaoEmpreendimento, EmpreendimentoParticipe } from '../../lib/store/empreendimento';
@@ -25,21 +25,11 @@ export default function DadosGeraisEmpreendimentoPage({
   } = useEmpreendimentoStore();
 
   const [formData, setFormData] = useState({
-    tipo_pessoa: dadosGerais?.tipo_pessoa || 'juridica',
-    cnpj_cpf: dadosGerais?.cnpj_cpf || '',
-    razao_social: dadosGerais?.razao_social || '',
-    nome_fantasia: dadosGerais?.nome_fantasia || '',
     nome_empreendimento: dadosGerais?.nome_empreendimento || '',
-    situacao: dadosGerais?.situacao || ('' as SituacaoEmpreendimento | ''),
+    situacao: dadosGerais?.situacao || undefined,
     numero_empregados: dadosGerais?.numero_empregados || 0,
     horario_funcionamento: dadosGerais?.horario_funcionamento || '',
     descricao: dadosGerais?.descricao || '',
-    endereco: dadosGerais?.endereco || '',
-    cidade: dadosGerais?.cidade || '',
-    estado: dadosGerais?.estado || '',
-    cep: dadosGerais?.cep || '',
-    telefone: dadosGerais?.telefone || '',
-    email: dadosGerais?.email || '',
     prazo_implantacao: dadosGerais?.prazo_implantacao || '',
     area_construida: dadosGerais?.area_construida || '',
     capacidade_producao: dadosGerais?.capacidade_producao || ''
@@ -61,24 +51,13 @@ export default function DadosGeraisEmpreendimentoPage({
     // Carrega dados do store independente se está vazio ou não
     // Isso garante que sempre sincroniza com o store
     console.log('📝 [DADOS GERAIS] dadosGerais.nome_empreendimento:', dadosGerais?.nome_empreendimento);
-    console.log('📝 [DADOS GERAIS] dadosGerais.razao_social:', dadosGerais?.razao_social);
     
     const newFormData = {
-      tipo_pessoa: dadosGerais?.tipo_pessoa || 'juridica',
-      cnpj_cpf: dadosGerais?.cnpj_cpf || '',
-      razao_social: dadosGerais?.razao_social || '',
-      nome_fantasia: dadosGerais?.nome_fantasia || '',
       nome_empreendimento: dadosGerais?.nome_empreendimento || '',
-      situacao: dadosGerais?.situacao || ('' as SituacaoEmpreendimento | ''),
+      situacao: dadosGerais?.situacao || undefined,
       numero_empregados: dadosGerais?.numero_empregados || 0,
       horario_funcionamento: dadosGerais?.horario_funcionamento || '',
       descricao: dadosGerais?.descricao || '',
-      endereco: dadosGerais?.endereco || '',
-      cidade: dadosGerais?.cidade || '',
-      estado: dadosGerais?.estado || '',
-      cep: dadosGerais?.cep || '',
-      telefone: dadosGerais?.telefone || '',
-      email: dadosGerais?.email || '',
       prazo_implantacao: dadosGerais?.prazo_implantacao || '',
       area_construida: dadosGerais?.area_construida || '',
       capacidade_producao: dadosGerais?.capacidade_producao || ''
@@ -135,15 +114,15 @@ export default function DadosGeraisEmpreendimentoPage({
   };
 
   const preencherDadosAutomaticamente = () => {
-    // Dados de exemplo para preenchimento automático
+    // Dados de exemplo para preenchimento automático - apenas campos existentes
     const dadosExemplo = {
       nome_empreendimento: 'Complexo Industrial Mineração ABC',
       situacao: 'Planejado' as SituacaoEmpreendimento,
       numero_empregados: 150,
       horario_funcionamento: '07:00 às 17:00',
       descricao: 'Empreendimento voltado para extração e beneficiamento de minérios, com capacidade de produção mensal de 10.000 toneladas. Inclui infraestrutura de apoio, áreas de processamento e escritórios administrativos.',
-      prazo_implantacao: '24 meses',
-      area_construida: '5000 m²',
+      prazo_implantacao: '24',
+      area_construida: '5000.00',
       capacidade_producao: '10.000 ton/mês'
     };
 
@@ -153,10 +132,10 @@ export default function DadosGeraisEmpreendimentoPage({
     if (participes.length === 0) {
       const participeExemplo: EmpreendimentoParticipe = {
         id: `temp-${Date.now()}`,
-        pessoa_id: 'exemplo-pessoa-id',
+        pessoa_id: 1,
         pessoa_nome: 'Empresa Mineração ABC Ltda',
         pessoa_cpf_cnpj: '12.345.678/0001-90',
-        pessoa_tipo: 'Jurídica',
+        pessoa_tipo: 1,
         papel: 'Requerente',
         pessoa_email: 'contato@mineracaoabc.com.br',
         pessoa_telefone: '(11) 98765-4321'
@@ -260,12 +239,12 @@ export default function DadosGeraisEmpreendimentoPage({
 
       <div className="space-y-8">
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Identificação</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Informações Básicas</h3>
 
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome do Empreendimento <span className="text-red-500">*</span>
+                Nome <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -303,7 +282,7 @@ export default function DadosGeraisEmpreendimentoPage({
                   value={formData.numero_empregados}
                   onChange={(e) => handleChange('numero_empregados', parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 50"
+                  placeholder="0"
                 />
               </div>
             </div>
@@ -333,134 +312,24 @@ export default function DadosGeraisEmpreendimentoPage({
                 placeholder="Descreva o empreendimento..."
               />
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Endereço e Contato</h3>
-
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Endereço Completo
-              </label>
-              <input
-                type="text"
-                value={formData.endereco}
-                onChange={(e) => handleChange('endereco', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Ex: Rua das Flores, 123"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cidade
-                </label>
-                <input
-                  type="text"
-                  value={formData.cidade}
-                  onChange={(e) => handleChange('cidade', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: Florianópolis"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
-                </label>
-                <input
-                  type="text"
-                  value={formData.estado}
-                  onChange={(e) => handleChange('estado', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: SC"
-                  maxLength={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  CEP
-                </label>
-                <input
-                  type="text"
-                  value={formData.cep}
-                  onChange={(e) => handleChange('cep', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 88000-000"
-                />
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Telefone
-                </label>
-                <input
-                  type="text"
-                  value={formData.telefone}
-                  onChange={(e) => handleChange('telefone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: (48) 99999-9999"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: contato@empresa.com.br"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Informações Complementares</h3>
-
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Horário de Funcionamento
-                </label>
-                <input
-                  type="text"
-                  value={formData.horario_funcionamento}
-                  onChange={(e) => handleChange('horario_funcionamento', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 08:00 às 18:00"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prazo de Implantação
+                  Prazo de Implantação (meses)
                 </label>
                 <input
                   type="text"
                   value={formData.prazo_implantacao}
                   onChange={(e) => handleChange('prazo_implantacao', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="Ex: 24 meses"
+                  placeholder="Ex: 24"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Área Construída
+                  Área Construída (m²)
                 </label>
                 <input
                   type="text"
