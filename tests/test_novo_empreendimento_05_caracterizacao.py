@@ -444,6 +444,60 @@ def executar_teste_caracterizacao(
         # ===============================================================
         # SUCESSO
         # ===============================================================
+        
+        # Gerar JSON Parcial da Etapa
+        # ===============================================================
+        import json
+        import os
+        
+        timestamp_json = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(os.path.dirname(__file__), 'output')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        json_parcial = {
+            'metadados': {
+                'timestamp': datetime.now().isoformat(),
+                'versao': '2.5.2',
+                'branch': 'feature/working-branch',
+                'origem': 'teste_automatizado',
+                'etapa': '05_caracterizacao'
+            },
+            'etapa_05_caracterizacao': {
+                'recursosEnergia': {
+                    'utilizaLenha': DADOS_CARACTERIZACAO['usa_lenha'] == 'sim',
+                    'possuiCaldeira': DADOS_CARACTERIZACAO['possui_caldeira'] == 'sim',
+                    'possuiFornos': DADOS_CARACTERIZACAO['possui_fornos'] == 'sim'
+                },
+                'combustiveis': [{
+                    'tipoFonte': DADOS_CARACTERIZACAO['combustivel']['tipo_fonte'],
+                    'equipamento': DADOS_CARACTERIZACAO['combustivel']['equipamento'],
+                    'quantidade': DADOS_CARACTERIZACAO['combustivel']['quantidade'],
+                    'unidade': DADOS_CARACTERIZACAO['combustivel']['unidade']
+                }],
+                'usoAgua': {
+                    'origemAgua': DADOS_CARACTERIZACAO['origem_agua'],
+                    'consumoUsoHumano': DADOS_CARACTERIZACAO['consumo_humano'],
+                    'consumoOutrosUsos': DADOS_CARACTERIZACAO['consumo_outros'],
+                    'volumeDespejoDiario': DADOS_CARACTERIZACAO['volume_despejo'],
+                    'destinoFinalEfluente': DADOS_CARACTERIZACAO['destino_efluente']
+                },
+                'residuos': [],  # Seção pulada no teste
+                'outrasInformacoes': {
+                    'perguntas': [
+                        {'pergunta': f'Pergunta {i+1}', 'resposta': 'Não'} 
+                        for i in range(perguntas_respondidas)
+                    ],
+                    'textoAdicional': DADOS_CARACTERIZACAO['texto_livre']
+                }
+            }
+        }
+        
+        arquivo_json = os.path.join(output_dir, f'caracterizacao_json_{timestamp_json}.json')
+        with open(arquivo_json, 'w', encoding='utf-8') as f:
+            json.dump(json_parcial, f, indent=2, ensure_ascii=False)
+        
+        print(f"\n💾 JSON Parcial salvo em: {arquivo_json}")
+        
         print("\n" + "=" * 71)
         print("✅ TESTE 05 CONCLUÍDO COM SUCESSO!")
         print("=" * 71)
@@ -457,6 +511,7 @@ def executar_teste_caracterizacao(
         print(f"  ✓ {perguntas_respondidas} perguntas respondidas")
         print(f"  ✓ Informações adicionais preenchidas")
         print(f"  ✓ Cadastro finalizado com sucesso")
+        print(f"  ✓ JSON parcial gerado")
         print("\n" + "=" * 71 + "\n")
         
         # Retornar contexto

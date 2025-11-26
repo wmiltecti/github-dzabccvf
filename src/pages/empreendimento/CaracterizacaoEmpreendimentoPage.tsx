@@ -201,12 +201,127 @@ export default function CaracterizacaoEmpreendimentoPage({
     }
   };
 
+  const generateCaracterizacaoJSON = (dados: any) => {
+    const jsonData = {
+      recursosEnergia: {
+        utilizaLenha: dados.recursos_energia?.usaLenha === 'sim',
+        possuiCaldeira: dados.recursos_energia?.possuiCaldeira === 'sim',
+        possuiFornos: dados.recursos_energia?.possuiFornos === 'sim'
+      },
+      combustiveis: dados.combustiveis || [],
+      usoAgua: {
+        origens: dados.uso_agua?.origens || ['Rede Pública'],
+        consumoUsoHumano: dados.uso_agua?.consumoHumano || '5.5',
+        consumoOutrosUsos: dados.uso_agua?.consumoOutros || '12.3',
+        volumeDespejoDiario: dados.uso_agua?.volumeDespejo || '15.8',
+        destinoFinalEfluente: dados.uso_agua?.destinoFinal || 'Rede Pública de Esgoto',
+        outorgas: dados.uso_agua?.outorgas || []
+      },
+      residuos: dados.residuos || [],
+      outrasInformacoes: {
+        respostas: dados.outras_informacoes?.respostas || {},
+        observacoes: dados.outras_informacoes?.observacoes || ''
+      }
+    };
+
+    const jsonCompleto = {
+      metadados: {
+        timestamp: new Date().toISOString(),
+        versao: '2.5.2',
+        branch: 'feature/working-branch',
+        origem: 'botao_preencher_dados'
+      },
+      caracterizacao: jsonData
+    };
+
+    // Exibir no console para debug
+    console.log('📦 JSON Gerado - Caracterização:', JSON.stringify(jsonCompleto, null, 2));
+
+    // Download do arquivo JSON (desabilitado durante testes automatizados)
+    const isAutomatedTest = window.location.search.includes('automated=true') || 
+                           (window.navigator.webdriver === true);
+    
+    if (!isAutomatedTest) {
+      const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `caracterizacao_${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('JSON da Caracterização gerado e baixado!');
+    } else {
+      console.log('⚠️ Download de JSON desabilitado durante testes automatizados');
+    }
+  };
+
+  const preencherDadosAutomaticamente = () => {
+    const dadosExemplo = {
+      recursos_energia: {
+        usaLenha: 'nao',
+        possuiCaldeira: 'nao',
+        possuiFornos: 'nao'
+      },
+      combustiveis: [],
+      uso_agua: {
+        origens: ['Rede Pública'],
+        consumoHumano: '5.5',
+        consumoOutros: '12.3',
+        volumeDespejo: '15.8',
+        destinoFinal: 'Rede Pública de Esgoto',
+        outorgas: []
+      },
+      residuos: [],
+      outras_informacoes: {
+        respostas: {
+          usaRecursosNaturais: false,
+          geraEfluentesLiquidos: false,
+          geraEmissoesAtmosfericas: false,
+          geraResiduosSolidos: false,
+          geraRuidosVibracao: false,
+          localizadoAreaProtegida: false,
+          necessitaSupressaoVegetacao: false,
+          interfereCursoAgua: false,
+          armazenaSubstanciaPerigosa: false,
+          possuiPlanoEmergencia: false
+        },
+        observacoes: 'Empreendimento possui procedimentos de segurança ambiental e trabalhista em conformidade com a legislação vigente. São realizadas auditorias periódicas e treinamentos contínuos.'
+      }
+    };
+
+    setRecursosEnergiaData(dadosExemplo.recursos_energia);
+    setCombustiveisData(dadosExemplo.combustiveis);
+    setUsoAguaData(dadosExemplo.uso_agua);
+    setResiduosData(dadosExemplo.residuos);
+    setOutrasInfoData(dadosExemplo.outras_informacoes);
+
+    toast.success('Dados preenchidos automaticamente! ✨');
+
+    // Gerar JSON após preencher
+    setTimeout(() => {
+      generateCaracterizacaoJSON(dadosExemplo);
+    }, 500);
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <BarChart3 className="w-6 h-6 text-green-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Caracterização Ambiental do Empreendimento</h2>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-green-600" />
+            <h2 className="text-2xl font-bold text-gray-800">Caracterização Ambiental do Empreendimento</h2>
+          </div>
+          <button
+            onClick={preencherDadosAutomaticamente}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2 text-sm"
+            title="Preencher dados de exemplo para teste"
+          >
+            <CheckCircle className="w-4 h-4" />
+            Preencher Dados
+          </button>
         </div>
         <p className="text-gray-600 text-sm">
           Informe as características ambientais e operacionais completas do empreendimento
