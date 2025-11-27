@@ -1,0 +1,3 @@
+# Diretório para saída de JSONs dos testes
+# Os arquivos JSON gerados aqui contêm os dados completos do empreendimento
+# após execução dos testes end-to-end

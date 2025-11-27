@@ -183,3 +183,17 @@ git checkout v2.4.1
 
 Consulte a documentação oficial do Git sobre tags:
 - https://git-scm.com/book/en/v2/Git-Basics-Tagging
+
+
+# 1. Atualizar versão no package.json (ex: 2.5.0 → 2.5.1 ou 2.6.0)
+# 2. Commitar
+git add .
+git commit -m "v2.X.X: Descrição das mudanças"
+
+# 3. Criar tag
+git tag -a v2.X.X -m "Release v2.X.X: Descrição"
+
+# 4. Push
+git push origin feature/working-branch
+git push origin v2.X.X
+

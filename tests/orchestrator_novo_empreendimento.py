@@ -39,7 +39,8 @@ import test_novo_empreendimento_02_imovel as teste02
 import test_novo_empreendimento_03_dados_gerais as teste03
 import test_novo_empreendimento_04_atividades as teste04
 import test_novo_empreendimento_05_caracterizacao as teste05
-# import test_novo_empreendimento_06_validacao_dados as teste06  # Desativado - será refatorado para usar APIs
+import test_novo_empreendimento_06_coletar_json as teste06
+# import test_novo_empreendimento_06_validacao_dados as teste_validacao  # Desativado - será refatorado para usar APIs
 
 
 class OrquestradorNovoEmpreendimento:
@@ -228,6 +229,12 @@ def main():
     orquestrador.adicionar_teste(
         nome="05 - Etapa Caracterização",
         funcao=teste05.executar_teste_caracterizacao,
+        ativo=True
+    )
+    
+    orquestrador.adicionar_teste(
+        nome="06 - Coletar JSON do Store",
+        funcao=teste06.executar_teste_coletar_json,
         ativo=True
     )
     

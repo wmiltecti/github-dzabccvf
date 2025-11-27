@@ -227,53 +227,152 @@ export default function ImovelEmpreendimentoPage({ onNext, onPrevious }: ImovelE
     });
   };
 
+  const generatePropertyJSON = (type: 'RURAL' | 'URBANO' | 'LINEAR', data: any) => {
+    let jsonData: any = {};
+
+    if (type === 'RURAL') {
+      jsonData = {
+        tipoImovel: 'RURAL',
+        nomeImovel: data.nome,
+        codigoCar: data.car_codigo,
+        situacaoCar: data.car_situacao || 'ATIVO',
+        areaTotalHa: parseFloat(data.area_total) || 0,
+        municipio: data.municipio,
+        uf: data.uf,
+        sistemaReferencia: data.sistema_referencia || 'SIRGAS 2000',
+        coordenadas: {
+          latitude: parseFloat(data.coordenadas_utm_lat) || 0,
+          longitude: parseFloat(data.coordenadas_utm_long) || 0
+        }
+      };
+    } else if (type === 'URBANO') {
+      jsonData = {
+        tipoImovel: 'URBANO',
+        nomeImovel: data.nome,
+        cep: data.cep,
+        matricula: data.matricula,
+        logradouro: data.logradouro,
+        numero: data.numero,
+        bairro: data.bairro,
+        complemento: data.complemento,
+        municipio: data.municipio,
+        uf: data.uf,
+        areaTotalM2: parseFloat(data.area_total) || 0,
+        sistemaReferencia: data.sistema_referencia || 'SIRGAS 2000',
+        coordenadas: {
+          latitude: parseFloat(data.coordenadas_utm_lat) || 0,
+          longitude: parseFloat(data.coordenadas_utm_long) || 0
+        }
+      };
+    } else if (type === 'LINEAR') {
+      jsonData = {
+        tipoImovel: 'LINEAR',
+        nomeEmpreendimento: data.nome,
+        pontoInicio: {
+          municipio: data.municipio_inicio,
+          uf: data.uf_inicio
+        },
+        pontoFinal: {
+          municipio: data.municipio_final,
+          uf: data.uf_final
+        },
+        extensaoKm: parseFloat(data.extensao_km) || 0,
+        sistemaReferencia: data.sistema_referencia || 'SIRGAS 2000'
+      };
+    }
+
+    // Adicionar metadados
+    const jsonCompleto = {
+      metadados: {
+        timestamp: new Date().toISOString(),
+        versao: '2.5.2',
+        branch: 'feature/working-branch',
+        origem: 'botao_preencher_dados'
+      },
+      imovel: jsonData
+    };
+
+    // Exibir no console para debug
+    console.log('📦 JSON Gerado - Imóvel:', JSON.stringify(jsonCompleto, null, 2));
+
+    // Download do arquivo JSON (desabilitado durante testes automatizados)
+    const isAutomatedTest = window.location.search.includes('automated=true') || 
+                           (window.navigator.webdriver === true);
+    
+    if (!isAutomatedTest) {
+      const blob = new Blob([JSON.stringify(jsonCompleto, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `imovel_${type.toLowerCase()}_${new Date().getTime()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success(`JSON do imóvel ${type} gerado e baixado!`);
+    } else {
+      console.log('⚠️ Download de JSON desabilitado durante testes automatizados');
+    }
+  };
+
   const handleFillPropertyData = () => {
     if (!newPropertyType) {
       toast.warning('Selecione o tipo de imóvel primeiro');
       return;
     }
 
+    let filledData: any = {};
+
     if (newPropertyType === 'RURAL') {
-      setNewRuralData({
+      filledData = {
         nome: 'Fazenda Santa Clara',
-        car_codigo: 'MG-3106200-1234567890ABCDEF1234567890ABCDEF',
+        car_codigo: 'RO-1100205-1234567890ABCDEF1234567890ABCDEF',
         car_situacao: 'Ativo',
-        municipio: 'Belo Horizonte',
-        uf: 'MG',
+        municipio: 'Porto Velho',
+        uf: 'RO',
         area_total: '150.75',
         sistema_referencia: 'SIRGAS 2000',
-        coordenadas_utm_lat: '7789123.45',
-        coordenadas_utm_long: '609876.54'
-      });
+        coordenadas_utm_lat: '-8.761940',
+        coordenadas_utm_long: '-63.903850'
+      };
+      setNewRuralData(filledData);
     } else if (newPropertyType === 'URBANO') {
-      setNewUrbanoData({
+      filledData = {
         nome: 'Lote Comercial Centro',
-        cep: '30140-071',
-        logradouro: 'Av. Afonso Pena',
+        cep: '76801-000',
+        logradouro: 'Av. 7 de Setembro',
         numero: '1500',
         bairro: 'Centro',
         complemento: 'Sala 201',
-        municipio: 'Belo Horizonte',
-        uf: 'MG',
+        municipio: 'Porto Velho',
+        uf: 'RO',
         matricula: '12345',
         area_total: '250.00',
         sistema_referencia: 'SIRGAS 2000',
-        coordenadas_utm_lat: '7794123.45',
-        coordenadas_utm_long: '611234.56'
-      });
+        coordenadas_utm_lat: '-8.761940',
+        coordenadas_utm_long: '-63.903850'
+      };
+      setNewUrbanoData(filledData);
     } else if (newPropertyType === 'LINEAR') {
-      setNewLinearData({
-        nome: 'Rodovia MG-010',
-        municipio_inicio: 'Belo Horizonte',
-        uf_inicio: 'MG',
-        municipio_final: 'Confins',
-        uf_final: 'MG',
+      filledData = {
+        nome: 'Rodovia RO-010',
+        municipio_inicio: 'Porto Velho',
+        uf_inicio: 'RO',
+        municipio_final: 'Ariquemes',
+        uf_final: 'RO',
         extensao_km: '38.5',
         sistema_referencia: 'SIRGAS 2000'
-      });
+      };
+      setNewLinearData(filledData);
     }
 
     toast.success('Dados preenchidos automaticamente');
+
+    // Gerar JSON após preencher
+    setTimeout(() => {
+      generatePropertyJSON(newPropertyType as 'RURAL' | 'URBANO' | 'LINEAR', filledData);
+    }, 500);
   };
 
   const handleSaveNewProperty = () => {

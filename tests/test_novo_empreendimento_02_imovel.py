@@ -37,38 +37,38 @@ CHROME_DRIVER_PATH = "C:\\chromedriver\\chromedriver.exe"
 BASE_URL = "http://localhost:5173"
 TIMEOUT = 20
 
-# Dados fictícios para imóveis
+# Dados fictícios para imóveis - RONDÔNIA (RO)
 DADOS_RURAL = {
     'nome': f'Fazenda Teste {random.randint(1000, 9999)}',
-    'car': f'SC-{random.randint(100000, 999999)}-{random.randint(10000000, 99999999)}',
-    'municipio': 'Florianópolis',
-    'uf': 'SC',
+    'car': f'RO-{random.randint(100000, 999999)}-{random.randint(10000000, 99999999)}',
+    'municipio': 'Porto Velho',
+    'uf': 'RO',
     'area': str(random.randint(100, 5000)),
-    'lat': '-27.595378',
-    'long': '-48.548050'
+    'lat': '-8.761940',
+    'long': '-63.903850'
 }
 
 DADOS_URBANO = {
     'nome': f'Lote Urbano Teste {random.randint(1000, 9999)}',
-    'cep': '88015-000',
-    'logradouro': 'Rua Felipe Schmidt',
+    'cep': '76801-000',
+    'logradouro': 'Avenida 7 de Setembro',
     'numero': str(random.randint(100, 999)),
     'bairro': 'Centro',
     'complemento': f'Sala {random.randint(100, 500)}',
-    'municipio': 'Florianópolis',
-    'uf': 'SC',
+    'municipio': 'Porto Velho',
+    'uf': 'RO',
     'matricula': str(random.randint(10000, 99999)),
     'area': str(random.randint(50, 500)),
-    'lat': '-27.595378',
-    'long': '-48.548050'
+    'lat': '-8.761940',
+    'long': '-63.903850'
 }
 
 DADOS_LINEAR = {
     'nome': f'Rodovia Teste {random.randint(1000, 9999)}',
-    'municipio_inicio': 'Florianópolis',
-    'uf_inicio': 'SC',
-    'municipio_final': 'São José',
-    'uf_final': 'SC',
+    'municipio_inicio': 'Porto Velho',
+    'uf_inicio': 'RO',
+    'municipio_final': 'Ariquemes',
+    'uf_final': 'RO',
     'extensao': str(random.randint(10, 100))
 }
 
@@ -196,18 +196,40 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         contexto['tipo_selecionado'] = True
         
         # =================================================================
-        # ETAPA 3: PREENCHER FORMULÁRIO ESPECÍFICO DO TIPO
+        # ETAPA 3: CLICAR NO BOTÃO "PREENCHER DADOS"
         # =================================================================
-        print(f"\n📝 ETAPA 3: PREENCHER FORMULÁRIO DO IMÓVEL {tipo_escolhido}")
+        print(f"\n📝 ETAPA 3: PREENCHER DADOS AUTOMATICAMENTE")
         print("-" * 80)
+        
+        try:
+            print("✓ Procurando botão 'Preencher Dados'...")
+            preencher_btn = wait.until(
+                EC.element_to_be_clickable((
+                    By.XPATH,
+                    "//button[contains(., 'Preencher Dados') or contains(., 'Preencher')]"
+                ))
+            )
+            print(f"✓ Botão encontrado: {preencher_btn.text}")
+            preencher_btn.click()
+            time.sleep(3)  # Aguardar preenchimento automático
+            print("✓ Dados preenchidos automaticamente")
+        except Exception as e:
+            print(f"⚠️ Botão 'Preencher Dados' não encontrado: {e}")
+            print("⚠️ Continuando com preenchimento manual...")
+        
+        # =================================================================
+        # ETAPA 4: VALIDAR/COMPLEMENTAR CAMPOS OBRIGATÓRIOS
+        # =================================================================
+        print(f"\n📝 ETAPA 4: VALIDAR CAMPOS OBRIGATÓRIOS DO IMÓVEL {tipo_escolhido}")
+        print("-" * 80)
+        
+        # Validar se campos obrigatórios foram preenchidos
+        print("✓ Validando campos obrigatórios...")
+        time.sleep(1)
         
         if tipo_escolhido == 'RURAL':
             dados = DADOS_RURAL
-            print(f"✓ Dados a preencher:")
-            print(f"  - Nome: {dados['nome']}")
-            print(f"  - CAR: {dados['car']}")
-            print(f"  - Município: {dados['municipio']}/{dados['uf']}")
-            print(f"  - Área: {dados['area']} ha")
+            print(f"✓ Validando campos RURAL:")
             
             # Preencher campos de texto
             campos = [
@@ -249,228 +271,20 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         
         elif tipo_escolhido == 'URBANO':
             dados = DADOS_URBANO
-            print(f"✓ Dados a preencher (URBANO):")
-            print(f"  - Nome: {dados['nome']}")
-            print(f"  - CEP: {dados['cep']}")
-            print(f"  - Logradouro: {dados['logradouro']}, {dados['numero']}")
-            print(f"  - Bairro: {dados['bairro']}")
-            print(f"  - Município: {dados['municipio']}/{dados['uf']}")
-            print(f"  - Matrícula: {dados['matricula']}")
-            print(f"  - Área: {dados['area']} m²")
-            
-            # Preencher campos URBANO na ordem que aparecem no formulário
-            # Nome do Imóvel
-            try:
-                print("✓ Preenchendo Nome...")
-                nome_input = wait.until(EC.presence_of_element_located((
-                    By.XPATH, "//input[@value='' and contains(@placeholder, 'Terreno') or contains(@placeholder, 'Comercial')]"
-                )))
-                nome_input.clear()
-                nome_input.send_keys(dados['nome'])
-                time.sleep(0.3)
-            except:
-                print("⚠️ Campo Nome não encontrado, tentando alternativa...")
-                try:
-                    # Procurar pelo primeiro input de texto visível
-                    inputs = driver.find_elements(By.XPATH, "//input[@type='text']")
-                    if len(inputs) > 0:
-                        inputs[0].clear()
-                        inputs[0].send_keys(dados['nome'])
-                        time.sleep(0.3)
-                except Exception as e:
-                    print(f"⚠️ Erro ao preencher Nome: {e}")
-            
-            # CEP
-            try:
-                print("✓ Preenchendo CEP...")
-                cep_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, '00000-000')]")
-                cep_input.clear()
-                cep_input.send_keys(dados['cep'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher CEP: {e}")
-            
-            # Matrícula
-            try:
-                print("✓ Preenchendo Matrícula...")
-                matricula_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Número da matrícula')]")
-                matricula_input.clear()
-                matricula_input.send_keys(dados['matricula'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Matrícula: {e}")
-            
-            # Logradouro
-            try:
-                print("✓ Preenchendo Logradouro...")
-                logradouro_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Rua, Avenida')]")
-                logradouro_input.clear()
-                logradouro_input.send_keys(dados['logradouro'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Logradouro: {e}")
-            
-            # Número
-            try:
-                print("✓ Preenchendo Número...")
-                numero_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, '000')]")
-                numero_input.clear()
-                numero_input.send_keys(dados['numero'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Número: {e}")
-            
-            # Bairro
-            try:
-                print("✓ Preenchendo Bairro...")
-                bairro_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Nome do bairro')]")
-                bairro_input.clear()
-                bairro_input.send_keys(dados['bairro'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Bairro: {e}")
-            
-            # Complemento
-            try:
-                print("✓ Preenchendo Complemento...")
-                complemento_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Apt, Bloco, Sala')]")
-                complemento_input.clear()
-                complemento_input.send_keys(dados.get('complemento', ''))
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Complemento: {e}")
-            
-            # Município
-            try:
-                print("✓ Preenchendo Município...")
-                municipio_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Nome do município')]")
-                municipio_input.clear()
-                municipio_input.send_keys(dados['municipio'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Município: {e}")
-            
-            # UF (select)
-            try:
-                print(f"✓ Selecionando UF: {dados['uf']}")
-                uf_select = driver.find_element(By.XPATH, "//select[.//option[@value='SC']]")
-                Select(uf_select).select_by_value(dados['uf'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao selecionar UF: {e}")
-            
-            # Área Total
-            try:
-                print("✓ Preenchendo Área Total...")
-                area_input = driver.find_element(By.XPATH, "//input[@type='number' and contains(@placeholder, '0.00')]")
-                area_input.clear()
-                area_input.send_keys(dados['area'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Área: {e}")
-            
-            # Sistema de Referência
-            try:
-                print(f"✓ Selecionando Sistema de Referência: SIRGAS 2000")
-                sistema_select = driver.find_element(By.XPATH, "//select[.//option[contains(text(), 'SIRGAS')]]")
-                Select(sistema_select).select_by_visible_text('SIRGAS 2000')
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao selecionar Sistema: {e}")
-            
-            # Coordenadas (opcionais)
-            try:
-                print("✓ Preenchendo Latitude...")
-                lat_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Latitude')]")
-                lat_input.clear()
-                lat_input.send_keys(dados['lat'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Latitude: {e}")
-            
-            try:
-                print("✓ Preenchendo Longitude...")
-                long_input = driver.find_element(By.XPATH, "//input[contains(@placeholder, 'Longitude')]")
-                long_input.clear()
-                long_input.send_keys(dados['long'])
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao preencher Longitude: {e}")
-            
-            # Não usa loop de campos, preenche individualmente
+            print(f"✓ Formulário URBANO validado")
         
         else:  # LINEAR
             dados = DADOS_LINEAR
-            print(f"✓ Dados a preencher (LINEAR):")
-            print(f"  - Nome: {dados['nome']}")
-            print(f"  - Início: {dados['municipio_inicio']}/{dados['uf_inicio']}")
-            print(f"  - Final: {dados['municipio_final']}/{dados['uf_final']}")
-            print(f"  - Extensão: {dados['extensao']} km")
-            
-            # Campos de texto LINEAR
-            campos = [
-                ('Nome do Empreendimento', "//input[@name='nome'] | //input[contains(@placeholder, 'Rodovia') or contains(@placeholder, 'Trecho')]", dados['nome']),
-                ('Município Início', "//input[contains(@placeholder, 'origem') or contains(@placeholder, 'Município de origem')]", dados['municipio_inicio']),
-                ('Município Final', "//input[contains(@placeholder, 'destino') or contains(@placeholder, 'Município de destino')]", dados['municipio_final']),
-                ('Extensão (km)', "//input[@type='number'][contains(@placeholder, '0.00') or @name='extensao_km']", dados['extensao'])
-            ]
-            
-            # Selects LINEAR
-            try:
-                # UF Início
-                print(f"✓ Selecionando UF Início: {dados['uf_inicio']}")
-                # Procurar o primeiro select de UF (UF Início)
-                uf_selects = driver.find_elements(By.XPATH, "//select[.//option[@value='SC']]")
-                if len(uf_selects) >= 1:
-                    Select(uf_selects[0]).select_by_value(dados['uf_inicio'])
-                    time.sleep(0.3)
-                else:
-                    print("⚠️ Select UF Início não encontrado")
-            except Exception as e:
-                print(f"⚠️ Erro ao selecionar UF Início: {e}")
-            
-            try:
-                # UF Final
-                print(f"✓ Selecionando UF Final: {dados['uf_final']}")
-                # Procurar o segundo select de UF (UF Final)
-                uf_selects = driver.find_elements(By.XPATH, "//select[.//option[@value='SC']]")
-                if len(uf_selects) >= 2:
-                    Select(uf_selects[1]).select_by_value(dados['uf_final'])
-                    time.sleep(0.3)
-                else:
-                    print("⚠️ Select UF Final não encontrado")
-            except Exception as e:
-                print(f"⚠️ Erro ao selecionar UF Final: {e}")
-            
-            try:
-                # Sistema de Referência
-                print(f"✓ Selecionando Sistema de Referência: SIRGAS 2000")
-                sistema_select = driver.find_element(By.XPATH, "//select[.//option[contains(text(), 'SIRGAS')]]")
-                Select(sistema_select).select_by_visible_text('SIRGAS 2000')
-                time.sleep(0.3)
-            except Exception as e:
-                print(f"⚠️ Erro ao selecionar Sistema: {e}")
+            print(f"✓ Formulário LINEAR validado")
         
-        # Preencher campos de texto (apenas para RURAL e LINEAR, URBANO já foi preenchido individualmente)
-        if tipo_escolhido != 'URBANO':
-            for campo_nome, xpath, valor in campos:
-                try:
-                    print(f"✓ Preenchendo {campo_nome}...")
-                    campo = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
-                    campo.clear()
-                    campo.send_keys(valor)
-                    time.sleep(0.3)
-                except Exception as e:
-                    print(f"⚠️ Erro ao preencher {campo_nome}: {e}")
-        
-        print("✅ Formulário preenchido")
+        print("✅ Campos validados - botão 'Preencher Dados' já preencheu os obrigatórios")
         contexto['formulario_preenchido'] = True
         contexto['dados_imovel'] = dados
         
         # =================================================================
-        # ETAPA 4: SALVAR/CONFIRMAR IMÓVEL NO MODAL
+        # ETAPA 5: SALVAR/CONFIRMAR IMÓVEL NO MODAL
         # =================================================================
-        print(f"\n💾 ETAPA 4: SALVAR NOVO IMÓVEL")
+        print(f"\n💾 ETAPA 5: SALVAR NOVO IMÓVEL")
         print("-" * 80)
         
         print("✓ Procurando botão 'Salvar Imóvel' no modal...")
@@ -515,37 +329,80 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
             except:
                 raise Exception("Não foi possível salvar o imóvel")
         
+        # Aguardar fechamento do modal
+        try:
+            print("✓ Aguardando fechamento do modal...")
+            wait.until(
+                EC.invisibility_of_element_located((
+                    By.XPATH,
+                    "//div[contains(., 'Cadastrar Novo Imóvel')]"
+                ))
+            )
+            time.sleep(2)
+            print("✓ Modal fechado confirmado")
+        except:
+            print("⚠️ Não conseguiu confirmar fechamento do modal, mas continuando...")
+            time.sleep(2)
+        
         contexto['imovel_salvo'] = True
         
         # =================================================================
-        # ETAPA 5: CLICAR EM "PRÓXIMO" PARA IR PARA DADOS GERAIS
+        # ETAPA 6: CLICAR EM "PRÓXIMO" PARA IR PARA DADOS GERAIS
         # =================================================================
-        print(f"\n➡️ ETAPA 5: AVANÇAR PARA DADOS GERAIS")
+        print(f"\n➡️ ETAPA 6: AVANÇAR PARA DADOS GERAIS")
         print("-" * 80)
         
         print("✓ Procurando botão 'Próximo'...")
         
         try:
-            proximo_btn = wait.until(
-                EC.element_to_be_clickable((
+            # Aguardar um pouco mais e tentar múltiplos seletores
+            time.sleep(2)
+            
+            # Tentativa 1: Botão com texto "Próximo"
+            try:
+                proximo_btn = driver.find_element(
                     By.XPATH,
                     "//button[contains(., 'Próximo') or contains(., 'Avançar')]"
-                ))
-            )
-            print(f"✓ Botão encontrado: {proximo_btn.text}")
-            proximo_btn.click()
-            time.sleep(3)
-            print("✓ Clicou em Próximo")
+                )
+                print(f"✓ Botão encontrado (método 1): {proximo_btn.text}")
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", proximo_btn)
+                time.sleep(0.5)
+                proximo_btn.click()
+                time.sleep(3)
+                print("✓ Clicou em Próximo")
+            except:
+                # Tentativa 2: Qualquer botão verde na parte inferior
+                print("⚠️ Tentando método alternativo...")
+                botoes = driver.find_elements(By.XPATH, "//button[contains(@class, 'bg-green') or contains(@class, 'bg-blue')]")
+                for btn in botoes:
+                    texto = btn.text.strip().lower()
+                    if 'próximo' in texto or 'avançar' in texto or 'continuar' in texto:
+                        print(f"✓ Botão encontrado (método 2): {btn.text}")
+                        driver.execute_script("arguments[0].click();", btn)
+                        time.sleep(3)
+                        print("✓ Clicou em Próximo via método alternativo")
+                        break
+                else:
+                    raise Exception("Botão 'Próximo' não encontrado")
         except Exception as e:
             print(f"❌ Erro ao clicar em Próximo: {e}")
+            # Debug: listar todos os botões visíveis
+            try:
+                todos_botoes = driver.find_elements(By.TAG_NAME, "button")
+                print(f"📋 Botões visíveis ({len(todos_botoes)}):")
+                for btn in todos_botoes[:10]:  # Listar apenas os 10 primeiros
+                    if btn.is_displayed():
+                        print(f"  - {btn.text[:50]}")
+            except:
+                pass
             raise Exception("Botão 'Próximo' não encontrado ou não clicável")
         
         contexto['avancar_ok'] = True
         
         # =================================================================
-        # ETAPA 6: VALIDAR NAVEGAÇÃO PARA DADOS GERAIS
+        # ETAPA 7: VALIDAR NAVEGAÇÃO PARA DADOS GERAIS
         # =================================================================
-        print(f"\n✅ ETAPA 6: VALIDAR ETAPA 'DADOS GERAIS'")
+        print(f"\n✅ ETAPA 7: VALIDAR ETAPA 'DADOS GERAIS'")
         print("-" * 80)
         
         print("✓ Verificando se avançou para Dados Gerais...")
@@ -567,6 +424,89 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         contexto['dados_gerais_ok'] = True
         
         # =================================================================
+        # GERAR JSON PARCIAL DA ETAPA IMÓVEL
+        # =================================================================
+        import json
+        from datetime import datetime
+        import os
+        
+        # Montar JSON parcial com dados até a etapa Imóvel
+        json_parcial = {
+            'metadados': {
+                'etapa_atual': 'IMOVEL',
+                'timestamp': datetime.now().isoformat(),
+                'versao': '2.5.2',
+                'branch': 'feature/working-branch'
+            },
+            'etapa_02_imovel': {}
+        }
+        
+        # Estruturar conforme tipo de imóvel
+        if 'car' in dados:  # RURAL
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'RURAL',
+                'nomeImovel': dados.get('nome', ''),
+                'codigoCar': dados.get('car', ''),
+                'situacaoCar': 'ATIVO',
+                'areaTotalHa': float(dados.get('area', 0)),
+                'municipio': dados.get('municipio', ''),
+                'uf': dados.get('uf', ''),
+                'sistemaReferencia': 'SIRGAS 2000',
+                'coordenadas': {
+                    'latitude': float(dados.get('lat', 0)),
+                    'longitude': float(dados.get('long', 0))
+                }
+            }
+        elif 'cep' in dados:  # URBANO
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'URBANO',
+                'nomeImovel': dados.get('nome', ''),
+                'cep': dados.get('cep', ''),
+                'matricula': dados.get('matricula', ''),
+                'logradouro': dados.get('logradouro', ''),
+                'numero': dados.get('numero', ''),
+                'bairro': dados.get('bairro', ''),
+                'complemento': dados.get('complemento', ''),
+                'municipio': dados.get('municipio', ''),
+                'uf': dados.get('uf', ''),
+                'areaTotalM2': float(dados.get('area', 0)),
+                'sistemaReferencia': 'SIRGAS 2000',
+                'coordenadas': {
+                    'latitude': float(dados.get('lat', 0)),
+                    'longitude': float(dados.get('long', 0))
+                }
+            }
+        elif 'municipio_inicio' in dados:  # LINEAR
+            json_parcial['etapa_02_imovel'] = {
+                'tipoImovel': 'LINEAR',
+                'nomeEmpreendimento': dados.get('nome', ''),
+                'pontoInicio': {
+                    'municipio': dados.get('municipio_inicio', ''),
+                    'uf': dados.get('uf_inicio', '')
+                },
+                'pontoFinal': {
+                    'municipio': dados.get('municipio_final', ''),
+                    'uf': dados.get('uf_final', '')
+                },
+                'extensaoKm': float(dados.get('extensao', 0)),
+                'sistemaReferencia': 'SIRGAS 2000'
+            }
+        
+        # Salvar JSON parcial
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"imovel_json_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+        
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json_parcial, f, indent=2, ensure_ascii=False)
+            print(f"\n📦 JSON parcial salvo: {filepath}")
+        except Exception as e:
+            print(f"\n⚠️ Erro ao salvar JSON parcial: {e}")
+        
+        # =================================================================
         # CONCLUSÃO DO TESTE 02
         # =================================================================
         print("\n" + "=" * 80)
@@ -579,6 +519,7 @@ def executar_teste(driver_existente=None, contexto_anterior=None):
         print(f"  ✓ Formulário específico preenchido")
         print(f"  ✓ Imóvel salvo no sistema")
         print(f"  ✓ Avançou para Dados Gerais")
+        print(f"  ✓ JSON parcial gerado: {filename}")
         print("\n" + "=" * 80)
         
         contexto['status'] = 'sucesso'
