@@ -192,25 +192,78 @@ def executar_teste_coletar_json(driver_existente=None, contexto_anterior=None):
                 }]
             }
             
-            # Extrair dados de atividades
-            empreendimento_completo['etapa_04_atividades'] = {
-                'atividades': [{
-                    'codigo': 110101,
-                    'nome': 'Extração de Minérios',
-                    'quantidade': float(contexto_anterior.get('quantidade', 0)),
-                    'unidade': 'ton/mês',
-                    'areaOcupada': float(contexto_anterior.get('area_ocupada', 0)),
-                    'porteEmpreendimento': 'Grande',
-                    'isPrincipal': True
-                }]
-            }
+            # Extrair dados de atividades do JSON parcial gerado pelo teste 04
+            import os
+            import glob
             
-            # Extrair dados de caracterização
-            empreendimento_completo['etapa_05_caracterizacao'] = {
-                'caracterizacao_completa': contexto_anterior.get('caracterizacao_completa', False),
-                'perguntas_respondidas': contexto_anterior.get('perguntas_respondidas', 0),
-                'timestamp_finalizacao': contexto_anterior.get('timestamp', '')
-            }
+            # Procurar JSON mais recente de atividades
+            output_dir = os.path.join(os.path.dirname(__file__), "output")
+            atividades_files = glob.glob(os.path.join(output_dir, "atividades_json_*.json"))
+            
+            if atividades_files:
+                # Pegar o mais recente
+                latest_atividades = max(atividades_files, key=os.path.getmtime)
+                print(f"✓ Carregando JSON de atividades: {os.path.basename(latest_atividades)}")
+                
+                try:
+                    with open(latest_atividades, 'r', encoding='utf-8') as f:
+                        atividades_data = json.load(f)
+                        empreendimento_completo['etapa_04_atividades'] = atividades_data.get('etapa_04_atividades', {})
+                except Exception as e:
+                    print(f"⚠️ Erro ao carregar JSON de atividades: {e}")
+                    # Fallback para estrutura básica
+                    empreendimento_completo['etapa_04_atividades'] = {
+                        'atividades': [{
+                            'codigo': 110101,
+                            'nome': 'Extração de Minérios',
+                            'quantidade': float(contexto_anterior.get('quantidade', 0)),
+                            'unidade': 'ton/mês',
+                            'areaOcupada': float(contexto_anterior.get('area_ocupada', 0)),
+                            'porteEmpreendimento': 'Grande',
+                            'isPrincipal': True
+                        }]
+                    }
+            else:
+                print("⚠️ JSON parcial de atividades não encontrado")
+                empreendimento_completo['etapa_04_atividades'] = {
+                    'atividades': [{
+                        'codigo': 110101,
+                        'nome': 'Extração de Minérios',
+                        'quantidade': float(contexto_anterior.get('quantidade', 0)),
+                        'unidade': 'ton/mês',
+                        'areaOcupada': float(contexto_anterior.get('area_ocupada', 0)),
+                        'porteEmpreendimento': 'Grande',
+                        'isPrincipal': True
+                    }]
+                }
+            
+            # Extrair dados de caracterização do JSON parcial gerado pelo teste 05
+            caracterizacao_files = glob.glob(os.path.join(output_dir, "caracterizacao_json_*.json"))
+            
+            if caracterizacao_files:
+                # Pegar o mais recente
+                latest_caracterizacao = max(caracterizacao_files, key=os.path.getmtime)
+                print(f"✓ Carregando JSON de caracterização: {os.path.basename(latest_caracterizacao)}")
+                
+                try:
+                    with open(latest_caracterizacao, 'r', encoding='utf-8') as f:
+                        caracterizacao_data = json.load(f)
+                        empreendimento_completo['etapa_05_caracterizacao'] = caracterizacao_data.get('etapa_05_caracterizacao', {})
+                except Exception as e:
+                    print(f"⚠️ Erro ao carregar JSON de caracterização: {e}")
+                    # Fallback para estrutura básica
+                    empreendimento_completo['etapa_05_caracterizacao'] = {
+                        'caracterizacao_completa': contexto_anterior.get('caracterizacao_completa', False),
+                        'perguntas_respondidas': contexto_anterior.get('perguntas_respondidas', 0),
+                        'timestamp_finalizacao': contexto_anterior.get('timestamp', '')
+                    }
+            else:
+                print("⚠️ JSON parcial de caracterização não encontrado")
+                empreendimento_completo['etapa_05_caracterizacao'] = {
+                    'caracterizacao_completa': contexto_anterior.get('caracterizacao_completa', False),
+                    'perguntas_respondidas': contexto_anterior.get('perguntas_respondidas', 0),
+                    'timestamp_finalizacao': contexto_anterior.get('timestamp', '')
+                }
             
             store_data = empreendimento_completo
             contexto['store_json'] = store_data
