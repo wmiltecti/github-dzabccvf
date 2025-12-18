@@ -803,6 +803,12 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          // NOVOS CAMPOS:
+          fluxo?: string;
+          categoria_processo?: string;
+          prazo_cumprimento_oficio_dias?: number;
+          prazo_confirmacao_email_dias?: number;
+          limite_oficios_pendencias?: number;
         };
         Update: {
           id?: string;
@@ -814,6 +820,12 @@ export type Database = {
           is_active?: boolean;
           created_at?: string;
           updated_at?: string;
+          // NOVOS CAMPOS:
+          fluxo?: string;
+          categoria_processo?: string;
+          prazo_cumprimento_oficio_dias?: number;
+          prazo_confirmacao_email_dias?: number;
+          limite_oficios_pendencias?: number;
         };
       };
     };
