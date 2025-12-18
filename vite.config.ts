@@ -15,7 +15,16 @@ export default defineConfig({
     // manter seu exclude
     exclude: ['lucide-react'],
     // turf modular pré-empacotado p/ dev
-    include: ['@turf/buffer', '@turf/helpers', '@turf/difference', '@turf/area', '@turf/length'],
+    include: [
+      '@turf/buffer',
+      '@turf/helpers',
+      '@turf/difference',
+      '@turf/area',
+      '@turf/length',
+      'date-fns',
+      'date-fns/formatDistanceToNow',
+      'date-fns/locale/pt-BR',
+    ],
   },
   server: {
     proxy: {
